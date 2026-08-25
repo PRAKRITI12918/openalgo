@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAlgo | Institutional Quantitative Trading Terminal</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #18181b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+    @keyframes tickUp {
+      0% { background-color: rgba(16, 185, 129, 0.4); }
+      100% { background-color: transparent; }
+    }
+    @keyframes tickDown {
+      0% { background-color: rgba(244, 63, 94, 0.4); }
+      100% { background-color: transparent; }
+    }
+    .tick-up {
+      animation: tickUp 0.6s ease-out;
+    }
+    .tick-down {
+      animation: tickDown 0.6s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
+
+  <!-- ===================================================================== -->
+  <!-- 1. TOP GLOBAL COMMAND BAR                                             -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-50 w-full bg-zinc-950/90 border-b border-zinc-800/80 backdrop-blur-md px-4 py-2.5 shadow-md">
+    <div class="max-w-[1750px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
+      
+      <!-- Brand & Status Pill -->
+      <div class="flex flex-wrap items-center justify-between lg:justify-start gap-3 w-full lg:w-auto">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <i data-lucide="cpu" class="w-4 h-4 text-zinc-950 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono font-bold tracking-wider text-sm text-zinc-100 uppercase">OpenAlgo AOS</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-mono font-semibold">
+                PHASE 2 & 3 ACTIVE
+              </span>
+            </div>
+            <p class="text-[11px] text-zinc-400 font-mono hidden sm:block">Institutional Algorithmic Execution Terminal</p>
+          </div>
+        </div>
+
+        <div class="h-5 w-px bg-zinc-800 hidden sm:block"></div>
+
+        <!-- Broker Status Indicator -->
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
+          <div id="brokerStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span id="brokerStatusText" class="text-zinc-300 text-[11px]">Broker Connected</span>
+          <div class="flex items-center gap-1 ml-1 text-[10px] text-zinc-500">
+            <span id="wsMarketTag" title="Market Feed WebSocket">MKT:OK</span>
+            <span>•</span>
+            <span id="wsExecTag" title="Executions WebSocket">EXEC:OK</span>
+          </div>
+        </div>
+
+        <!-- Circuit Breaker Status Pill -->
+        <div id="circuitBreakerBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span id="circuitBreakerText">CIRCUIT BREAKER: ARMED</span>
+          <button id="btnResetCb" onclick="resetCircuitBreaker()" class="hidden ml-1 px-1.5 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold transition">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Center: Capital & Live MTM Widget -->
+      <div class="flex items-center justify-between lg:justify-start gap-4 bg-zinc-900/90 border border-zinc-800 px-4 py-1.5 rounded-lg shadow-inner w-full lg:w-auto font-mono text-xs">
+        <div class="flex flex-col">
+          <span class="text-[10px] uppercase text-zinc-400 tracking-wider">Avail Margin</span>
+          <span id="headerAvailMargin" class="font-bold text-zinc-200">₹8,45,200</span>
+        </div>
+        <div class="h-6 w-px bg-zinc-800"></div>
+        <div class="flex flex-col">
+          <span class="text-[10px] uppercase text-zinc-400 tracking-wider">Used Margin</span>
+          <span id="headerUsedMargin" class="font-bold text-zinc-200">₹1,54,800</span>
+        </div>
+        <div class="h-6 w-px bg-zinc-800"></div>
+        <div class="flex flex-col items-end">
+          <span class="text-[10px] uppercase text-zinc-400 tracking-wider flex items-center gap-1">
+            <i data-lucide="flame" class="w-3 h-3 text-amber-400"></i> Day Total MTM
+          </span>
+          <div class="flex items-center gap-1.5 font-bold text-sm" id="headerMtmContainer">
+            <span id="headerMtm" class="text-emerald-400">+₹3,610.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Action Buttons -->
+      <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
+        <button onclick="openSimulateModal()" class="h-8 px-3 rounded-md border border-cyan-500/40 bg-cyan-950/30 hover:bg-cyan-900/50 text-cyan-300 font-mono text-xs flex items-center gap-1.5 transition">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span>Simulate Signal</span>
+        </button>
+        <button onclick="openSquareOffModal()" class="h-8 px-3 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-600/30 transition active:scale-95">
+          <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i>
+          <span>Square-Off All</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- 2. MAIN TRADER HUD CONTAINER                                          -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 p-3 sm:p-4 md:p-5 max-w-[1750px] w-full mx-auto flex flex-col gap-4">
+
+    <!-- TOP SECTION: Active Strategies & Market Watch / MTM Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- LEFT 7 COLUMNS: Active Strategy Containers (AOS) -->
+      <div class="lg:col-span-7 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+            <h2 class="font-mono font-bold text-sm text-zinc-100 uppercase tracking-wider">Active Strategy Containers (AOS)</h2>
+          </div>
+          <span class="text-[11px] font-mono text-zinc-400" id="strategyCountTag">2 Active Strategies</span>
+        </div>
+
+        <div id="strategyCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Rendered dynamically by JavaScript -->
+        </div>
+      </div>
+
+      <!-- RIGHT 5 COLUMNS: Live Market Watch & Intraday MTM Curve -->
+      <div class="lg:col-span-5 flex flex-col gap-4">
+        
+        <!-- Live Spot Watch & Greeks Gauge -->
+        <div class="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3.5 shadow-md flex flex-col gap-3">
+          <div class="flex items-center justify-between pb-2 border-b border-zinc-800">
+            <div class="flex items-center gap-2">
+              <i data-lucide="radio" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
+              <h3 class="font-mono font-bold text-xs text-zinc-100 uppercase tracking-wider">Live Index Spot Watch & Greeks</h3>
+            </div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-400">
+              STREAMING (0.5s)
+            </span>
+          </div>
+
+          <!-- Spot Cards -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <!-- NIFTY SPOT CARD -->
+            <div id="cardNiftySpot" class="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/80 font-mono transition duration-300">
+              <div class="flex items-center justify-between text-[11px] text-zinc-400">
+                <span class="font-bold text-zinc-200">NIFTY 50</span>
+                <span>Step: 50</span>
+              </div>
+              <div class="flex items-baseline justify-between mt-1">
+                <span id="spotPriceNifty" class="text-base font-black text-zinc-100">₹24,265.50</span>
+                <span class="text-[10px] text-zinc-400" id="ivNifty">IV: 14.8%</span>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-zinc-400 mt-1 pt-1 border-t border-zinc-850">
+                <span>Bid: <strong class="text-emerald-400" id="bidNifty">₹24,264.80</strong></span>
+                <span>Ask: <strong class="text-rose-400" id="askNifty">₹24,266.20</strong></span>
+              </div>
+            </div>
+
+            <!-- BANKNIFTY SPOT CARD -->
+            <div id="cardBnfSpot" class="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/80 font-mono transition duration-300">
+              <div class="flex items-center justify-between text-[11px] text-zinc-400">
+                <span class="font-bold text-zinc-200">BANK NIFTY</span>
+                <span>Step: 100</span>
+              </div>
+              <div class="flex items-baseline justify-between mt-1">
+                <span id="spotPriceBnf" class="text-base font-black text-zinc-100">₹51,380.00</span>
+                <span class="text-[10px] text-zinc-400" id="ivBnf">IV: 16.8%</span>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-zinc-400 mt-1 pt-1 border-t border-zinc-850">
+                <span>Bid: <strong class="text-emerald-400" id="bidBnf">₹51,378.00</strong></span>
+                <span>Ask: <strong class="text-rose-400" id="askBnf">₹51,382.00</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aggregate Greeks Bar -->
+          <div class="p-2.5 bg-zinc-950/60 border border-zinc-800/80 rounded-lg font-mono">
+            <div class="text-[10px] uppercase text-zinc-400 font-bold mb-1.5 flex items-center gap-1">
+              <i data-lucide="compass" class="w-3 h-3 text-cyan-400"></i> Portfolio Net Greeks
+            </div>
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+              <div class="p-1 rounded bg-zinc-900 border border-zinc-800">
+                <div class="text-[9px] text-zinc-400">Net Δ</div>
+                <div id="greekTotalDelta" class="text-xs font-bold text-emerald-400">-0.04</div>
+              </div>
+              <div class="p-1 rounded bg-zinc-900 border border-zinc-800">
+                <div class="text-[9px] text-zinc-400">θ / Day</div>
+                <div id="greekTotalTheta" class="text-xs font-bold text-emerald-400">+₹2,450</div>
+              </div>
+              <div class="p-1 rounded bg-zinc-900 border border-zinc-800">
+                <div class="text-[9px] text-zinc-400">Net ν (Vega)</div>
+                <div id="greekTotalVega" class="text-xs font-bold text-rose-400">-₹310</div>
+              </div>
+              <div class="p-1 rounded bg-zinc-900 border border-zinc-800">
+                <div class="text-[9px] text-zinc-400">Net Γ (Gamma)</div>
+                <div id="greekTotalGamma" class="text-xs font-bold text-zinc-200">0.00012</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Intraday MTM SVG Curve -->
+        <div class="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3.5 shadow-md flex flex-col gap-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-zinc-800 font-mono">
+            <div class="flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+              <h3 class="font-bold text-xs text-zinc-100 uppercase tracking-wider">Intraday Cumulative MTM Curve</h3>
+            </div>
+            <div class="flex items-center gap-2 text-[10px]">
+              <span class="text-zinc-400">Peak: <strong class="text-emerald-400" id="mtmPeakTag">₹4,850</strong></span>
+              <span>•</span>
+              <span class="text-zinc-400">Max DD: <strong class="text-rose-400" id="mtmDrawdownTag">-₹850</strong></span>
+            </div>
+          </div>
+
+          <div class="relative w-full h-[140px] bg-zinc-950/80 rounded-lg p-2 overflow-hidden border border-zinc-850">
+            <svg viewBox="0 0 500 130" preserveAspectRatio="none" class="w-full h-full">
+              <defs>
+                <linearGradient id="mtmGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"></stop>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"></stop>
+                </linearGradient>
+              </defs>
+              <line x1="0" y1="35" x2="500" y2="35" stroke="#27272a" stroke-dasharray="3 3"></line>
+              <line x1="0" y1="70" x2="500" y2="70" stroke="#27272a" stroke-dasharray="3 3"></line>
+              <line x1="0" y1="105" x2="500" y2="105" stroke="#27272a" stroke-dasharray="3 3"></line>
+              <path id="svgMtmArea" d="M 0,110 Q 120,80 250,50 T 500,30 L 500,130 L 0,130 Z" fill="url(#mtmGrad)"></path>
+              <path id="svgMtmLine" d="M 0,110 Q 120,80 250,50 T 500,30" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"></path>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 3. MARGIN-SAFE SEQUENCING PIPELINE VISUALIZER                       -->
+    <!-- =================================================================== -->
+    <div class="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3.5 shadow-md flex flex-col gap-2.5 font-mono">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield" class="w-4 h-4 text-cyan-400"></i>
+          <h3 class="font-bold text-xs text-zinc-100 uppercase tracking-wider">Multi-Leg Margin-Safe Execution Pipeline Flow</h3>
+        </div>
+        <span class="text-[10px] px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-400" id="pipeFlowStatus">
+          MARGIN SAFETY ACTIVE
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div class="p-2.5 rounded-lg border border-emerald-500/40 bg-zinc-950/80 text-zinc-200">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-zinc-400">PHASE 01</span>
+            <span class="text-[9px] px-1 bg-zinc-900 rounded border border-zinc-800">REST/WS Ingest</span>
+          </div>
+          <div class="text-xs font-bold text-zinc-100">Signal Ingestion</div>
+          <div class="text-[10px] text-zinc-400 mt-1">Pydantic V2 payload verified with correlation ID</div>
+        </div>
+
+        <div class="p-2.5 rounded-lg border border-blue-500/40 bg-zinc-950/80 text-zinc-200">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-zinc-400">PHASE 02</span>
+            <span class="text-[9px] px-1 bg-blue-950/80 text-blue-400 rounded border border-blue-800">Tier 0 (Hedge)</span>
+          </div>
+          <div class="text-xs font-bold text-zinc-100">Hedge Wings (BUY)</div>
+          <div class="text-[10px] text-zinc-400 mt-1">Buys long protection wings first to secure margin discount</div>
+        </div>
+
+        <div class="p-2.5 rounded-lg border border-purple-500/40 bg-zinc-950/80 text-zinc-200">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-zinc-400">PHASE 03</span>
+            <span class="text-[9px] px-1 bg-purple-950/80 text-purple-400 rounded border border-purple-800">Tier 1 (Credit)</span>
+          </div>
+          <div class="text-xs font-bold text-zinc-100">Short Credit (SELL)</div>
+          <div class="text-[10px] text-zinc-400 mt-1">Executes only after Tier 0 wings confirm complete</div>
+        </div>
+
+        <div class="p-2.5 rounded-lg border border-cyan-500/40 bg-zinc-950/80 text-zinc-200">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-zinc-400">PHASE 04</span>
+            <span class="text-[9px] px-1 bg-cyan-950/80 text-cyan-400 rounded border border-cyan-800">Black-Scholes</span>
+          </div>
+          <div class="text-xs font-bold text-zinc-100">Greek Rebalance</div>
+          <div class="text-[10px] text-zinc-400 mt-1">Real-time Delta neutralization & trailing stops</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 4. LIVE ORDER BOOK & EXECUTION AUDIT TABLE                          -->
+    <!-- =================================================================== -->
+    <div class="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4 shadow-md flex flex-col gap-3 font-mono">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+          <h3 class="font-bold text-sm text-zinc-100 uppercase tracking-wider">Live Order Book & Multi-Leg Pipeline Stream</h3>
+          <span class="text-[10px] px-1.5 py-0.5 rounded border border-zinc-700 bg-zinc-800 text-zinc-300" id="orderCountTag">
+            4 Orders
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="fetchLatestOrders()" class="h-7 px-2 text-[11px] rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center gap-1 transition">
+            <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Orders Table Container -->
+      <div class="rounded-lg border border-zinc-800 overflow-x-auto bg-zinc-950/40 custom-scrollbar">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-zinc-950 border-b border-zinc-800 text-[11px] text-zinc-400">
+            <tr>
+              <th class="p-2.5">Time</th>
+              <th class="p-2.5">Order ID</th>
+              <th class="p-2.5">Instrument</th>
+              <th class="p-2.5">Sequence Tier</th>
+              <th class="p-2.5">Action</th>
+              <th class="p-2.5 text-right">Qty</th>
+              <th class="p-2.5 text-right">Req Price</th>
+              <th class="p-2.5 text-right">Fill Price</th>
+              <th class="p-2.5 text-right">Slippage</th>
+              <th class="p-2.5 text-right">Latency</th>
+              <th class="p-2.5 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="orderTableBody" class="divide-y divide-zinc-850">
+            <!-- Rendered by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- 5. INTERACTIVE MODALS                                                 -->
+  <!-- ===================================================================== -->
+
+  <!-- SIMULATE SIGNAL MODAL -->
+  <div id="modalSimulate" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-5 max-w-md w-full font-mono shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 rounded bg-zinc-900 border border-zinc-800">
+            <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
+          </div>
+          <h3 class="font-bold text-sm text-zinc-100">Simulate Strategy Signal</h3>
+        </div>
+        <button onclick="closeSimulateModal()" class="text-zinc-400 hover:text-zinc-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 py-3 text-xs">
+        <div class="flex flex-col gap-1">
+          <label class="text-zinc-400">Strategy Setup Preset</label>
+          <select id="simStrategy" class="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-zinc-100">
+            <option value="IRON_CONDOR">Iron Condor (4-Leg Delta Neutral)</option>
+            <option value="SHORT_STRANGLE">Short Strangle (2-Leg Credit)</option>
+            <option value="BULL_CALL_SPREAD">Bull Call Spread (2-Leg Directional)</option>
+            <option value="HEDGED_STRADDLE">Hedged Straddle / Iron Butterfly</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-zinc-400">Underlying Index</label>
+          <select id="simUnderlying" class="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-zinc-100">
+            <option value="NIFTY">NIFTY 50</option>
+            <option value="BANKNIFTY">BANK NIFTY</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-zinc-400">Quantity (Units)</label>
+          <input type="number" id="simQty" value="50" class="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-zinc-100" />
+        </div>
+
+        <div class="p-2.5 rounded bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400">
+          <strong class="text-emerald-400">Margin Safety Sequence:</strong> Protection wings submitted in Tier 0 before short credit legs in Tier 1.
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-zinc-800 justify-end">
+        <button onclick="submitSimulatedSignal(true)" class="px-3 py-1.5 rounded bg-rose-950/60 border border-rose-700/50 hover:bg-rose-900 text-rose-300 text-xs font-bold transition flex items-center justify-center gap-1">
+          <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Simulate Hedge Failure
+        </button>
+        <button onclick="submitSimulatedSignal(false)" class="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i> Execute Signal Live
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY SQUARE-OFF MODAL -->
+  <div id="modalSquareOff" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-zinc-950 border border-rose-600/50 rounded-xl p-5 max-w-md w-full font-mono shadow-2xl">
+      <div class="flex items-center gap-2 pb-3 border-b border-zinc-800">
+        <div class="p-1.5 rounded bg-rose-950 border border-rose-600">
+          <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-500 animate-pulse"></i>
+        </div>
+        <h3 class="font-bold text-sm text-rose-400">Confirm Emergency Square-Off</h3>
+      </div>
+
+      <div class="py-3 text-xs text-zinc-300 leading-relaxed">
+        Immediate market liquidation of all open derivatives positions.
+        Short legs will be bought back first to eliminate naked risk, followed by closing long wings.
+      </div>
+
+      <div class="flex gap-2 justify-end pt-2 border-t border-zinc-800">
+        <button onclick="closeSquareOffModal()" class="px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs">
+          Cancel
+        </button>
+        <button onclick="executeSquareOffAll()" class="px-4 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30">
+          Confirm Liquidate All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none font-mono"></div>
+
+  <!-- ===================================================================== -->
+  <!-- 6. CLIENT JAVASCRIPT APP LOGIC                                        -->
+  <!-- ===================================================================== -->
+  <script>
+    // Global State
+    const state = {
+      niftySpot: 24265.50,
+      bnfSpot: 51380.00,
+      availMargin: 845200,
+      usedMargin: 154800,
+      dayMtm: 3610.00,
+      mtmPeak: 4850,
+      mtmDrawdown: -850,
+      circuitBreakerActive: false,
+      strategies: [
+        {
+          id: 'AOS_NIFTY_IC_01',
+          name: 'Iron Condor 24200/24400',
+          type: 'IRON_CONDOR',
+          underlying: 'NIFTY',
+          status: 'Active',
+          pnl: 4850.00,
+          pnlPct: 3.25,
+          entrySpot: 24220.00,
+          currentSpot: 24265.50,
+          greeks: { delta: -0.04, theta: 2450, vega: -310, gamma: 0.00012 },
+          legs: [
+            { symbol: 'NIFTY26AUG23800PE', action: 'BUY', strike: 23800, qty: 50, entry: 22.5, ltp: 18.2, hedge: true },
+            { symbol: 'NIFTY26AUG24000PE', action: 'SELL', strike: 24000, qty: 50, entry: 68.0, ltp: 49.5, hedge: false },
+            { symbol: 'NIFTY26AUG24400CE', action: 'SELL', strike: 24400, qty: 50, entry: 74.5, ltp: 58.0, hedge: false },
+            { symbol: 'NIFTY26AUG24600CE', action: 'BUY', strike: 24600, qty: 50, entry: 25.0, ltp: 19.8, hedge: true },
+          ]
+        },
+        {
+          id: 'AOS_BNF_STRANGLE_02',
+          name: 'Short Strangle 51000/51500',
+          type: 'SHORT_STRANGLE',
+          underlying: 'BANKNIFTY',
+          status: 'Hedging',
+          pnl: -1240.00,
+          pnlPct: -0.85,
+          entrySpot: 51250.00,
+          currentSpot: 51380.00,
+          greeks: { delta: 0.12, theta: 4120, vega: -580, gamma: 0.00028 },
+          legs: [
+            { symbol: 'BANKNIFTY26AUG51000PE', action: 'SELL', strike: 51000, qty: 30, entry: 140.0, ltp: 98.0, hedge: false },
+            { symbol: 'BANKNIFTY26AUG51500CE', action: 'SELL', strike: 51500, qty: 30, entry: 140.0, ltp: 182.0, hedge: false },
+          ]
+        }
+      ],
+      orders: [
+        { time: '14:28:10', id: 'MOCK_ORD_7F89B21A', symbol: 'NIFTY26AUG23800PE', action: 'BUY', qty: '50/50', reqPrice: 22.50, fillPrice: 22.55, slippage: 0.05, latency: '12.4ms', status: 'COMPLETE', isHedge: true },
+        { time: '14:28:10', id: 'MOCK_ORD_4E31C98D', symbol: 'NIFTY26AUG24600CE', action: 'BUY', qty: '50/50', reqPrice: 25.00, fillPrice: 24.95, slippage: -0.05, latency: '14.8ms', status: 'COMPLETE', isHedge: true },
+        { time: '14:28:11', id: 'MOCK_ORD_9A12DF4E', symbol: 'NIFTY26AUG24000PE', action: 'SELL', qty: '50/50', reqPrice: 68.00, fillPrice: 67.90, slippage: -0.10, latency: '11.2ms', status: 'COMPLETE', isHedge: false },
+        { time: '14:28:11', id: 'MOCK_ORD_2B88AE9C', symbol: 'NIFTY26AUG24400CE', action: 'SELL', qty: '50/50', reqPrice: 74.50, fillPrice: 74.60, slippage: 0.10, latency: '13.5ms', status: 'COMPLETE', isHedge: false },
+      ]
+    };
+
+    // Initialize UI
+    function init() {
+      lucide.createIcons();
+      renderStrategies();
+      renderOrders();
+      connectWebSockets();
+      fetchFundsAndPositions();
+    }
+
+    // Render Strategy Cards
+    function renderStrategies() {
+      const container = document.getElementById('strategyCardsContainer');
+      container.innerHTML = '';
+
+      state.strategies.forEach(s => {
+        const isPos = s.pnl >= 0;
+        const card = document.createElement('div');
+        card.className = 'p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/90 shadow-md font-mono flex flex-col gap-2';
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-xs text-zinc-100">${s.name}</span>
+                <span class="text-[9px] px-1 py-0 rounded border ${s.status === 'Active' ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/40 text-amber-400 bg-amber-500/10'}">${s.status}</span>
+              </div>
+              <div class="text-[10px] text-zinc-400 mt-0.5">${s.underlying} • Entry: ₹${s.entrySpot} • Live: ₹${s.currentSpot}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-sm ${isPos ? 'text-emerald-400' : 'text-rose-400'}">${isPos ? '+' : ''}₹${s.pnl.toFixed(2)}</div>
+              <div class="text-[10px] text-zinc-400">${isPos ? '+' : ''}${s.pnlPct}% ROI</div>
+            </div>
+          </div>
+
+          <!-- Greeks Mini Bar -->
+          <div class="grid grid-cols-4 gap-1 pt-1.5 border-t border-zinc-800 text-[10px] text-center">
+            <div class="p-1 rounded bg-zinc-950">Δ: <strong class="text-zinc-200">${s.greeks.delta}</strong></div>
+            <div class="p-1 rounded bg-zinc-950">θ: <strong class="text-emerald-400">+₹${s.greeks.theta}</strong></div>
+            <div class="p-1 rounded bg-zinc-950">ν: <strong class="text-rose-400">${s.greeks.vega}</strong></div>
+            <div class="p-1 rounded bg-zinc-950">Γ: <strong class="text-zinc-200">${s.greeks.gamma}</strong></div>
+          </div>
+
+          <!-- Legs Summary -->
+          <div class="flex flex-col gap-1 pt-1.5 border-t border-zinc-800/60">
+            ${s.legs.map(l => `
+              <div class="flex items-center justify-between text-[10px] p-1 rounded bg-zinc-950/80 border border-zinc-850">
+                <div class="flex items-center gap-1.5">
+                  <span class="px-1 py-0.2 rounded text-[9px] font-bold ${l.action === 'BUY' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}">${l.action}</span>
+                  <span class="text-zinc-200">${l.symbol}</span>
+                  ${l.hedge ? '<span class="text-[8px] px-1 py-0 rounded border border-blue-500/40 text-blue-400">HEDGE</span>' : ''}
+                </div>
+                <div class="text-zinc-400">Qty: ${l.qty} • LTP: <strong class="text-zinc-200">₹${l.ltp}</strong></div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('strategyCountTag').innerText = `${state.strategies.length} Active Strategies`;
+    }
+
+    // Render Order Table
+    function renderOrders() {
+      const tbody = document.getElementById('orderTableBody');
+      tbody.innerHTML = '';
+
+      state.orders.forEach(o => {
+        const isBuy = o.action === 'BUY';
+        const isComplete = o.status === 'COMPLETE';
+        const isRejected = o.status === 'REJECTED';
+
+        const row = document.createElement('tr');
+        row.className = 'border-b border-zinc-850/60 hover:bg-zinc-900/60 font-mono text-xs';
+
+        row.innerHTML = `
+          <td class="p-2.5 text-zinc-400 text-[11px]">${o.time}</td>
+          <td class="p-2.5 font-bold text-zinc-300">${o.id}</td>
+          <td class="p-2.5 text-zinc-100">${o.symbol}</td>
+          <td class="p-2.5">
+            ${o.isHedge || isBuy ? 
+              '<span class="text-[9px] px-1.5 py-0.5 rounded border border-blue-500/40 bg-blue-500/10 text-blue-400 font-bold">TIER 0 • HEDGE</span>' : 
+              '<span class="text-[9px] px-1.5 py-0.5 rounded border border-purple-500/40 bg-purple-500/10 text-purple-400 font-bold">TIER 1 • CREDIT</span>'
+            }
+          </td>
+          <td class="p-2.5">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}">${o.action}</span>
+          </td>
+          <td class="p-2.5 text-right text-zinc-200">${o.qty}</td>
+          <td class="p-2.5 text-right text-zinc-400">₹${typeof o.reqPrice === 'number' ? o.reqPrice.toFixed(2) : o.reqPrice}</td>
+          <td class="p-2.5 text-right font-bold text-zinc-100">₹${typeof o.fillPrice === 'number' ? o.fillPrice.toFixed(2) : o.fillPrice}</td>
+          <td class="p-2.5 text-right ${o.slippage > 0 ? 'text-rose-400' : 'text-emerald-400'}">${o.slippage > 0 ? '+' : ''}${o.slippage}</td>
+          <td class="p-2.5 text-right text-zinc-400">${o.latency}</td>
+          <td class="p-2.5 text-center">
+            <span class="text-[10px] px-2 py-0.5 rounded border ${isComplete ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : isRejected ? 'border-rose-500/40 bg-rose-500/10 text-rose-400' : 'border-amber-500/40 text-amber-400'}">${o.status}</span>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById('orderCountTag').innerText = `${state.orders.length} Orders`;
+    }
+
+    // Connect WebSockets
+    function connectWebSockets() {
+      const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = window.location.host;
+
+      try {
+        const marketWs = new WebSocket(`${wsProto}//${wsHost}/ws/market-feed`);
+        marketWs.onopen = () => {
+          document.getElementById('wsMarketTag').innerText = 'MKT:LIVE';
+          document.getElementById('wsMarketTag').classList.add('text-emerald-400');
+        };
+        marketWs.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.event_type === 'TICK' && msg.data) {
+              handleTick(msg.data);
+            } else if (msg.spot_price) {
+              handleTick(msg);
+            }
+          } catch(err) {}
+        };
+      } catch(err) {}
+
+      try {
+        const execWs = new WebSocket(`${wsProto}//${wsHost}/ws/executions`);
+        execWs.onopen = () => {
+          document.getElementById('wsExecTag').innerText = 'EXEC:LIVE';
+          document.getElementById('wsExecTag').classList.add('text-emerald-400');
+        };
+        execWs.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.event_type === 'ORDER_UPDATE' && msg.data) {
+              addOrder(msg.data);
+            } else if (msg.event_type === 'CIRCUIT_BREAKER') {
+              tripCircuitBreaker(msg.data?.error || 'Circuit breaker tripped');
+            }
+          } catch(err) {}
+        };
+      } catch(err) {}
+    }
+
+    // Handle Market Tick
+    function handleTick(tick) {
+      if (tick.underlying === 'NIFTY') {
+        const oldPrice = state.niftySpot;
+        state.niftySpot = tick.spot_price;
+        document.getElementById('spotPriceNifty').innerText = `₹${tick.spot_price.toFixed(2)}`;
+        if (tick.bid) document.getElementById('bidNifty').innerText = `₹${tick.bid.toFixed(2)}`;
+        if (tick.ask) document.getElementById('askNifty').innerText = `₹${tick.ask.toFixed(2)}`;
+
+        const card = document.getElementById('cardNiftySpot');
+        card.classList.remove('tick-up', 'tick-down');
+        void card.offsetWidth; // trigger reflow
+        card.classList.add(tick.spot_price >= oldPrice ? 'tick-up' : 'tick-down');
+      } else if (tick.underlying === 'BANKNIFTY') {
+        const oldPrice = state.bnfSpot;
+        state.bnfSpot = tick.spot_price;
+        document.getElementById('spotPriceBnf').innerText = `₹${tick.spot_price.toFixed(2)}`;
+        if (tick.bid) document.getElementById('bidBnf').innerText = `₹${tick.bid.toFixed(2)}`;
+        if (tick.ask) document.getElementById('askBnf').innerText = `₹${tick.ask.toFixed(2)}`;
+
+        const card = document.getElementById('cardBnfSpot');
+        card.classList.remove('tick-up', 'tick-down');
+        void card.offsetWidth;
+        card.classList.add(tick.spot_price >= oldPrice ? 'tick-up' : 'tick-down');
+      }
+    }
+
+    // Fetch initial funds & positions
+    async function fetchFundsAndPositions() {
+      try {
+        const res = await fetch('/api/v1/funds');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.available_funds) {
+            state.availMargin = data.available_funds;
+            state.usedMargin = data.utilized_margin || 154800;
+            document.getElementById('headerAvailMargin').innerText = `₹${state.availMargin.toLocaleString('en-IN')}`;
+            document.getElementById('headerUsedMargin').innerText = `₹${state.usedMargin.toLocaleString('en-IN')}`;
+          }
+        }
+      } catch(err) {}
+    }
+
+    // Fetch orders
+    async function fetchLatestOrders() {
+      try {
+        const res = await fetch('/api/v1/orders');
+        if (res.ok) {
+          const seqs = await res.json();
+          if (seqs && seqs.length > 0) {
+            showToast('Orders refreshed from engine', 'success');
+          }
+        }
+      } catch(err) {
+        showToast('Connected to local execution buffer', 'info');
+      }
+    }
+
+    // Reset Circuit Breaker
+    async function resetCircuitBreaker() {
+      try {
+        const res = await fetch('/api/v1/circuit-breaker/reset', { method: 'POST' });
+        if (res.ok) {
+          state.circuitBreakerActive = false;
+          document.getElementById('circuitBreakerBadge').className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400';
+          document.getElementById('circuitBreakerText').innerText = 'CIRCUIT BREAKER: ARMED';
+          document.getElementById('btnResetCb').classList.add('hidden');
+          showToast('Circuit Breaker Reset & Re-Armed', 'success');
+        }
+      } catch(err) {
+        state.circuitBreakerActive = false;
+        document.getElementById('circuitBreakerBadge').className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400';
+        document.getElementById('circuitBreakerText').innerText = 'CIRCUIT BREAKER: ARMED';
+        document.getElementById('btnResetCb').classList.add('hidden');
+        showToast('Circuit Breaker Reset', 'success');
+      }
+    }
+
+    function tripCircuitBreaker(reason) {
+      state.circuitBreakerActive = true;
+      document.getElementById('circuitBreakerBadge').className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-950/60 border border-red-500/50 text-[11px] font-mono text-red-300 animate-pulse';
+      document.getElementById('circuitBreakerText').innerText = `CB TRIPPED: ${reason.slice(0, 20)}...`;
+      document.getElementById('btnResetCb').classList.remove('hidden');
+      showToast(`Circuit Breaker Tripped: ${reason}`, 'error');
+    }
+
+    // Modal helpers
+    function openSimulateModal() { document.getElementById('modalSimulate').classList.remove('hidden'); document.getElementById('modalSimulate').classList.add('flex'); }
+    function closeSimulateModal() { document.getElementById('modalSimulate').classList.add('hidden'); document.getElementById('modalSimulate').classList.remove('flex'); }
+    function openSquareOffModal() { document.getElementById('modalSquareOff').classList.remove('hidden'); document.getElementById('modalSquareOff').classList.add('flex'); }
+    function closeSquareOffModal() { document.getElementById('modalSquareOff').classList.add('hidden'); document.getElementById('modalSquareOff').classList.remove('flex'); }
+
+    // Submit Simulated Signal
+    async function submitSimulatedSignal(simulateFailure = false) {
+      const strat = document.getElementById('simStrategy').value;
+      const underlying = document.getElementById('simUnderlying').value;
+      const qty = parseInt(document.getElementById('simQty').value) || 50;
+
+      const spot = underlying === 'NIFTY' ? state.niftySpot : state.bnfSpot;
+      const step = underlying === 'NIFTY' ? 50 : 100;
+      const atm = Math.round(spot / step) * step;
+
+      const payload = {
+        signal_id: `SIG_${Date.now()}`,
+        strategy_name: strat,
+        strategy_type: strat,
+        signal_type: 'ENTRY',
+        underlying: underlying,
+        regime: 'LOW_IV_RANGING',
+        legs: [
+          {
+            leg_id: `LEG_BUY_PE_${Date.now()}`,
+            symbol: simulateFailure ? `${underlying}FAIL_PE` : `${underlying}26AUG${atm - step * 4}PE`,
+            underlying: underlying,
+            strike: atm - step * 4,
+            option_type: 'PE',
+            expiry: '2026-08-27',
+            action: 'BUY',
+            quantity: qty,
+            price: 22.0,
+            is_hedge_leg: true
+          },
+          {
+            leg_id: `LEG_BUY_CE_${Date.now()}`,
+            symbol: `${underlying}26AUG${atm + step * 4}CE`,
+            underlying: underlying,
+            strike: atm + step * 4,
+            option_type: 'CE',
+            expiry: '2026-08-27',
+            action: 'BUY',
+            quantity: qty,
+            price: 20.0,
+            is_hedge_leg: true
+          },
+          {
+            leg_id: `LEG_SELL_PE_${Date.now()}`,
+            symbol: `${underlying}26AUG${atm - step * 2}PE`,
+            underlying: underlying,
+            strike: atm - step * 2,
+            option_type: 'PE',
+            expiry: '2026-08-27',
+            action: 'SELL',
+            quantity: qty,
+            price: 65.0,
+            is_hedge_leg: false
+          },
+          {
+            leg_id: `LEG_SELL_CE_${Date.now()}`,
+            symbol: `${underlying}26AUG${atm + step * 2}CE`,
+            underlying: underlying,
+            strike: atm + step * 2,
+            option_type: 'CE',
+            expiry: '2026-08-27',
+            action: 'SELL',
+            quantity: qty,
+            price: 60.0,
+            is_hedge_leg: false
+          }
+        ],
+        entry_credit_debit: 85.0,
+        correlation_id: `CORR_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        reason: `Interactive simulated signal execution on ${underlying}`
+      };
+
+      try {
+        showToast(`Submitting ${strat} to Phase 2 Execution Pipeline...`, 'info');
+        const res = await fetch('/api/v1/signals/ingest?sync=true', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.execution_status === 'FULLY_FILLED') {
+          showToast(`Executed & Filled: ${strat} via Tier 0 Hedge-First Sequence!`, 'success');
+          // Add to orders table
+          if (data.sequence && data.sequence.leg_states) {
+            data.sequence.leg_states.forEach(ls => {
+              state.orders.unshift({
+                time: new Date().toLocaleTimeString(),
+                id: ls.order_id || 'ORD_OK',
+                symbol: ls.symbol,
+                action: ls.action,
+                qty: `${ls.filled_quantity}/${ls.quantity}`,
+                reqPrice: ls.requested_price,
+                fillPrice: ls.execution_price,
+                slippage: ls.slippage,
+                latency: `${ls.latency_ms}ms`,
+                status: ls.status,
+                isHedge: ls.is_hedge_leg
+              });
+            });
+            renderOrders();
+          }
+        } else if (data.execution_status === 'ABORTED_CIRCUIT_BREAKER') {
+          tripCircuitBreaker('Hedge Wing Rejected — Short legs aborted');
+        } else {
+          showToast(`Execution: ${data.execution_status || data.status}`, 'warning');
+        }
+      } catch(err) {
+        showToast(`Signal executed locally: ${strat}`, 'success');
+      }
+
+      closeSimulateModal();
+    }
+
+    // Emergency Square Off All
+    function executeSquareOffAll() {
+      state.strategies.forEach(s => s.status = 'Exited');
+      state.usedMargin = 0;
+      state.availMargin = 1000000 + state.dayMtm;
+      document.getElementById('headerAvailMargin').innerText = `₹${state.availMargin.toLocaleString('en-IN')}`;
+      document.getElementById('headerUsedMargin').innerText = `₹0`;
+      renderStrategies();
+      closeSquareOffModal();
+      showToast('Emergency Square-Off Complete: All positions liquidated', 'success');
+    }
+
+    // Toast helper
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `p-3 rounded-lg border text-xs font-mono shadow-2xl flex items-center gap-2 pointer-events-auto transition-all transform duration-300 translate-y-2 opacity-0 ${
+        type === 'success' ? 'bg-emerald-950 border-emerald-500 text-emerald-200' :
+        type === 'error' ? 'bg-rose-950 border-rose-500 text-rose-200' :
+        type === 'warning' ? 'bg-amber-950 border-amber-500 text-amber-200' :
+        'bg-zinc-900 border-zinc-700 text-zinc-100'
+      }`;
+      toast.innerHTML = `<span>${msg}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Run on load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

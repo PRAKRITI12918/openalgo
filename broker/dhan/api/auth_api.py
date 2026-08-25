@@ -21,10 +21,13 @@ def generate_consent(dhan_client_id):
 
         # Extract client_id from API key if format is client_id:::api_key
         if ":::" in BROKER_API_KEY:
-            extracted_client_id, BROKER_API_KEY = BROKER_API_KEY.split(":::")
+            extracted_client_id, BROKER_API_KEY = BROKER_API_KEY.split(":::", 1)
             # Use extracted client_id if dhan_client_id not provided
             if not dhan_client_id:
                 dhan_client_id = extracted_client_id
+
+        if ":::" in BROKER_API_SECRET:
+            _, BROKER_API_SECRET = BROKER_API_SECRET.split(":::", 1)
 
         if not dhan_client_id:
             logger.error("Dhan Client ID is required for generating consent")
@@ -87,7 +90,10 @@ def consume_consent(token_id):
 
         # Extract client_id from API key if format is client_id:::api_key
         if ":::" in BROKER_API_KEY:
-            extracted_client_id, BROKER_API_KEY = BROKER_API_KEY.split(":::")
+            extracted_client_id, BROKER_API_KEY = BROKER_API_KEY.split(":::", 1)
+
+        if ":::" in BROKER_API_SECRET:
+            _, BROKER_API_SECRET = BROKER_API_SECRET.split(":::", 1)
 
         client = get_httpx_client()
 

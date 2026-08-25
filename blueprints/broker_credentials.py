@@ -381,3 +381,98 @@ def get_capabilities():
         )
 
     return jsonify({"status": "success", "data": capabilities})
+
+
+# =============================================================================
+# Account Profiles Management Endpoints
+# =============================================================================
+
+@broker_credentials_bp.route("/profiles", methods=["GET"])
+@check_session_validity
+def api_list_profiles():
+    """List all saved broker account profiles."""
+    try:
+        from utils.account_manager import list_account_profiles, get_active_profile_name
+        profiles = list_account_profiles()
+        active = get_active_profile_name()
+        return jsonify({"status": "success", "data": {"profiles": profiles, "active_profile": active}})
+    except Exception as e:
+        logger.exception(f"Error listing account profiles: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@broker_credentials_bp.route("/profiles/save", methods=["POST"])
+@check_session_validity
+def api_save_profile():
+    """Save or update a broker account profile."""
+    try:
+        from utils.account_manager import save_account_profile, switch_account_profile
+        data = request.get_json() or {}
+        name = data.get("name", "").strip()
+        broker = data.get("broker", "").strip()
+        api_key = data.get("api_key", "").strip()
+        api_secret = data.get("api_secret", "").strip()
+        redirect_url = data.get("redirect_url")
+        api_key_market = data.get("api_key_market")
+        api_secret_market = data.get("api_secret_market")
+        description = data.get("description", "")
+        make_active = data.get("make_active", False)
+
+        success, msg = save_account_profile(
+            name=name,
+            broker=broker,
+            api_key=api_key,
+            api_secret=api_secret,
+            redirect_url=redirect_url,
+            api_key_market=api_key_market,
+            api_secret_market=api_secret_market,
+            description=description,
+        )
+
+        if not success:
+            return jsonify({"status": "error", "message": msg}), 400
+
+        if make_active:
+            s_ok, s_msg = switch_account_profile(name, restart_server=True)
+            return jsonify({"status": "success", "message": f"{msg}. {s_msg}", "restart_required": True})
+
+        return jsonify({"status": "success", "message": msg})
+    except Exception as e:
+        logger.exception(f"Error saving account profile: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@broker_credentials_bp.route("/profiles/switch", methods=["POST"])
+@check_session_validity
+def api_switch_profile():
+    """Switch active broker account profile."""
+    try:
+        from utils.account_manager import switch_account_profile
+        data = request.get_json() or {}
+        name = data.get("name", "").strip()
+        if not name:
+            return jsonify({"status": "error", "message": "Profile name is required"}), 400
+
+        success, msg = switch_account_profile(name, restart_server=True)
+        if not success:
+            return jsonify({"status": "error", "message": msg}), 400
+
+        return jsonify({"status": "success", "message": msg, "restart_required": True})
+    except Exception as e:
+        logger.exception(f"Error switching account profile: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@broker_credentials_bp.route("/profiles/<name>", methods=["DELETE"])
+@check_session_validity
+def api_delete_profile(name: str):
+    """Delete a saved broker account profile."""
+    try:
+        from utils.account_manager import delete_account_profile
+        success, msg = delete_account_profile(name)
+        if not success:
+            return jsonify({"status": "error", "message": msg}), 400
+        return jsonify({"status": "success", "message": msg})
+    except Exception as e:
+        logger.exception(f"Error deleting account profile: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500

@@ -1,0 +1,29 @@
+{
+  "profiles": {
+    "dhan_1113284554": {
+      "name": "dhan_1113284554",
+      "broker": "dhan",
+      "client_id": "1113284554",
+      "api_key": "1113284554:::a6cb4035",
+      "api_secret_encrypted": "gAAAAABqixYglqyug5lcGuiZf1PLZrqh7dDppzbGtnqXdRFNts4xBD07rJPBMZo-nqJRz8V7BO1wHliEE5VYCPlBQUlZq3-QaOuRKNMPNRwxdN5OdHO_ZkYR9XXWt_Bvq740nIQDei9q",
+      "api_key_market": "",
+      "api_secret_market_encrypted": "",
+      "redirect_url": "http://127.0.0.1:5000/dhan/callback",
+      "description": "Dhan Primary Account (1113284554)",
+      "updated_at": "2026-08-23T15:47:44.162695"
+    },
+    "dhan_1110835259": {
+      "name": "dhan_1110835259",
+      "broker": "dhan",
+      "client_id": "1110835259",
+      "api_key": "1110835259:::3d418c30",
+      "api_secret_encrypted": "gAAAAABqixYl4vu37JhkCsqJ_rmCUHsSMLSpmZNnB0sJYh4QDzs85h9quI7fA-IS-2AlqNx8k5eT1XwCAxwjfgBonqgGVQdLA26Pt6gdSMcHYqqhHK4vG2QwchU4P30bWHvgiYNAtCfM",
+      "api_key_market": "",
+      "api_secret_market_encrypted": "",
+      "redirect_url": "http://127.0.0.1:5000/dhan/callback",
+      "description": "Dhan Secondary Account (1110835259)",
+      "updated_at": "2026-08-23T15:47:49.615165"
+    }
+  },
+  "active_profile": "dhan_1110835259"
+}

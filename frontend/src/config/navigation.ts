@@ -37,6 +37,7 @@ export interface NavItem {
 // Main navigation items shown in desktop navbar
 export const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/execution-dashboard', label: 'Terminal', icon: Zap },
   { href: '/orderbook', label: 'Orderbook', icon: ClipboardList },
   { href: '/tradebook', label: 'Tradebook', icon: FileText },
   { href: '/positions', label: 'Positions', icon: TrendingUp },
@@ -50,6 +51,7 @@ export const navItems: NavItem[] = [
 // Items shown in mobile bottom navigation
 export const bottomNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/execution-dashboard', label: 'Terminal', icon: Zap },
   { href: '/orderbook', label: 'Orderbook', icon: ClipboardList },
   { href: '/tradebook', label: 'Tradebook', icon: FileText },
   { href: '/positions', label: 'Positions', icon: TrendingUp },
