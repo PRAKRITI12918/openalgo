@@ -433,8 +433,9 @@ def api_save_profile():
             return jsonify({"status": "error", "message": msg}), 400
 
         if make_active:
-            s_ok, s_msg = switch_account_profile(name, restart_server=True)
-            return jsonify({"status": "success", "message": f"{msg}. {s_msg}", "restart_required": True})
+            restart_server = data.get("restart_server", False)
+            s_ok, s_msg = switch_account_profile(name, restart_server=restart_server)
+            return jsonify({"status": "success", "message": f"{msg}. {s_msg}", "restart_required": restart_server})
 
         return jsonify({"status": "success", "message": msg})
     except Exception as e:
@@ -450,14 +451,15 @@ def api_switch_profile():
         from utils.account_manager import switch_account_profile
         data = request.get_json() or {}
         name = data.get("name", "").strip()
+        restart_server = data.get("restart_server", False)
         if not name:
             return jsonify({"status": "error", "message": "Profile name is required"}), 400
 
-        success, msg = switch_account_profile(name, restart_server=True)
+        success, msg = switch_account_profile(name, restart_server=restart_server)
         if not success:
             return jsonify({"status": "error", "message": msg}), 400
 
-        return jsonify({"status": "success", "message": msg, "restart_required": True})
+        return jsonify({"status": "success", "message": msg, "restart_required": restart_server})
     except Exception as e:
         logger.exception(f"Error switching account profile: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500

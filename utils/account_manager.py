@@ -246,6 +246,15 @@ def switch_account_profile(name: str, restart_server: bool = True) -> Tuple[bool
         with open(ENV_PATH, "w", encoding="utf-8") as f:
             f.write(content)
 
+        # Update os.environ in current process
+        os.environ["BROKER_API_KEY"] = api_key
+        os.environ["BROKER_API_SECRET"] = api_secret
+        os.environ["REDIRECT_URL"] = redirect_url
+        if api_key_market:
+            os.environ["BROKER_API_KEY_MARKET"] = api_key_market
+        if api_secret_market:
+            os.environ["BROKER_API_SECRET_MARKET"] = api_secret_market
+
         # Update active marker
         data["active_profile"] = name
         _save_profiles_data(data)
