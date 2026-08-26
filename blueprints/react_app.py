@@ -813,9 +813,8 @@ def serve_assets(filename):
     if response is None:
         response = send_from_directory(assets_dir, filename)
 
-    # Cache assets for 1 year — safe because filenames are content-hashed, so a
-    # new build produces new URLs and users never need to clear their cache.
-    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    # Set no-cache so browsers immediately pick up frontend updates
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     # Set on every branch, not just the compressed ones — see the docstring.
     response.headers["Vary"] = "Accept-Encoding"
     return response
