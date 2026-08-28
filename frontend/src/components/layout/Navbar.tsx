@@ -214,6 +214,16 @@ export function Navbar() {
 
         {/* Right Side */}
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          {/* Ask Gemini Quick Access */}
+          <a
+            href="/"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition-all"
+            title="Open Gemini AI Copilot Workspace"
+          >
+            <span>✨</span>
+            <span>Ask Gemini</span>
+          </a>
+
           {/* Broker Badge — hidden below lg to keep the bar within narrow
               (portrait/small-laptop) widths */}
           {user?.broker && (

@@ -681,6 +681,14 @@ export function ChartPane({
 
         {/* Right side: connection LED + actions */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <a
+            href="/"
+            className="inline-flex items-center gap-1 rounded bg-purple-600/20 px-2 py-1 text-xs font-medium text-purple-300 hover:bg-purple-600/30 transition-colors border border-purple-500/30"
+            title="Open Gemini Copilot Workspace"
+          >
+            <span>✨</span>
+            <span className="hidden sm:inline">Copilot Panel</span>
+          </a>
           <span
             className={cn('inline-block h-2.5 w-2.5 rounded-full', ledClass(wsState))}
             title={`WebSocket ${wsState}`}
