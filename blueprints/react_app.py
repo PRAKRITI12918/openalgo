@@ -199,6 +199,9 @@ def react_market_data():
 @react_bp.route("/copilot")
 def react_trading_copilot():
     from flask import send_file
+    workspace_template = FRONTEND_DIST.parent.parent / "templates" / "unified_workspace.html"
+    if workspace_template.exists():
+        return send_file(workspace_template)
     trading_template = FRONTEND_DIST.parent.parent / "templates" / "trading.html"
     if trading_template.exists():
         return send_file(trading_template)
