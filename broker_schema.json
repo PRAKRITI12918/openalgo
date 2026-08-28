@@ -1,0 +1,1032 @@
+{
+  "version": "1.0.0",
+  "total_brokers": 37,
+  "categories": ["All", "Discount", "Full-Service", "XTS", "Crypto", "Sandbox"],
+  "brokers": {
+    "zerodha": {
+      "broker_id": "zerodha",
+      "name": "Zerodha Kite",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "zerodha",
+      "badge": "Popular",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/zerodha",
+      "alert_notice": "Zerodha requires an active Kite Connect data subscription for market data access.",
+      "oauth_url": "https://kite.trade/connect/login?api_key={api_key}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key",
+          "type": "text",
+          "placeholder": "Enter Kite Connect API Key",
+          "required": true,
+          "validation": "^[a-zA-Z0-9_-]{6,64}$",
+          "description": "Found under your Kite Connect Developer Console app details."
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter Kite Connect API Secret",
+          "required": true,
+          "validation": "^[a-zA-Z0-9_-]{10,64}$",
+          "description": "Your confidential Kite Connect app secret."
+        }
+      ]
+    },
+    "dhan": {
+      "broker_id": "dhan",
+      "name": "Dhan",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "dhan",
+      "badge": "Direct API",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/dhan",
+      "alert_notice": "Dhan requires an active Data API subscription for market data access.",
+      "oauth_url": "/dhan/initiate-oauth",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID & API Key",
+          "type": "text",
+          "placeholder": "1113284554:::a6cb4035",
+          "required": true,
+          "validation": "^[0-9]+:::[a-zA-Z0-9_-]+$",
+          "description": "Format: client_id:::api_key from Dhan HQ developer portal."
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret / Access Token",
+          "type": "password",
+          "placeholder": "Enter Dhan API Secret",
+          "required": true,
+          "validation": ".+",
+          "description": "Confidential API Secret / 256-bit token."
+        }
+      ]
+    },
+    "angel": {
+      "broker_id": "angel",
+      "name": "Angel One (SmartAPI)",
+      "category": "Full-Service",
+      "auth_type": "totp",
+      "logo": "angel",
+      "badge": "SmartAPI",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/angel-one",
+      "alert_notice": "Requires TOTP secret for automated daily auth without manual OTP prompts.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "SmartAPI Key",
+          "type": "text",
+          "placeholder": "Enter Angel One SmartAPI Key",
+          "required": true,
+          "validation": ".+",
+          "description": "Generated from Angel One SmartAPI Developer Portal."
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Client ID / PIN / TOTP Key",
+          "type": "password",
+          "placeholder": "Enter Angel One MPIN / TOTP Key",
+          "required": true,
+          "validation": ".+",
+          "description": "Angel Client ID and TOTP secret string."
+        }
+      ]
+    },
+    "upstox": {
+      "broker_id": "upstox",
+      "name": "Upstox",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "upstox",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/upstox",
+      "alert_notice": "Ensure your Upstox App Redirect URI matches http://127.0.0.1:5000/upstox/callback exactly.",
+      "oauth_url": "https://api.upstox.com/v2/login/authorization/dialog?response_type=code&client_id={api_key}&redirect_uri={redirect_url}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key / Client ID",
+          "type": "text",
+          "placeholder": "Enter Upstox API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter Upstox API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "fyers": {
+      "broker_id": "fyers",
+      "name": "Fyers",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "fyers",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/fyers",
+      "alert_notice": "Fyers v3 API requires an App ID formatted as {AppID-100} and matching Secret Key.",
+      "oauth_url": "https://api-t1.fyers.in/api/v3/generate-authcode?client_id={api_key}&redirect_uri={redirect_url}&response_type=code",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "App ID (Client ID)",
+          "type": "text",
+          "placeholder": "e.g. XC12345-100",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Secret Key",
+          "type": "password",
+          "placeholder": "Enter Fyers Secret Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "aliceblue": {
+      "broker_id": "aliceblue",
+      "name": "Alice Blue (ANT Plus)",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "aliceblue",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/alice-blue",
+      "alert_notice": "Alice Blue uses ANT Plus authentication with User ID, API Key, and Encryption Key.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User ID / Client Code",
+          "type": "text",
+          "placeholder": "Enter Alice Blue User ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key / Encryption Key",
+          "type": "password",
+          "placeholder": "Enter API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "shoonya": {
+      "broker_id": "shoonya",
+      "name": "Shoonya (Finvasia)",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "shoonya",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/shoonya",
+      "alert_notice": "Shoonya provides zero-brokerage trading. Requires Vendor Code, API Key, and TOTP secret.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User ID ::: Vendor Code",
+          "type": "text",
+          "placeholder": "FA12345:::VC_12345",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key & Password / TOTP",
+          "type": "password",
+          "placeholder": "Enter API Key / TOTP Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "flattrade": {
+      "broker_id": "flattrade",
+      "name": "Flat Trade",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "flattrade",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/flattrade",
+      "alert_notice": "Flattrade API key must be in format 'client_id:::api_key'.",
+      "oauth_url": "https://auth.flattrade.in/?app_key={api_key}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID & API Key",
+          "type": "text",
+          "placeholder": "FT12345:::a1b2c3d4e5",
+          "required": true,
+          "validation": "^[a-zA-Z0-9]+:::[a-zA-Z0-9_-]+$",
+          "description": "Format: client_id:::api_key"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter Flattrade API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "kotak": {
+      "broker_id": "kotak",
+      "name": "Kotak Neo",
+      "category": "Full-Service",
+      "auth_type": "totp",
+      "logo": "kotak",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/kotak-neo",
+      "alert_notice": "Kotak Neo API uses Consumer Key, Consumer Secret, and Neo MPIN login.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Consumer Key",
+          "type": "text",
+          "placeholder": "Enter Kotak Neo Consumer Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Consumer Secret",
+          "type": "password",
+          "placeholder": "Enter Kotak Neo Consumer Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "deltaexchange": {
+      "broker_id": "deltaexchange",
+      "name": "Delta Exchange",
+      "category": "Crypto",
+      "auth_type": "totp",
+      "logo": "deltaexchange",
+      "badge": "Crypto",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/delta-exchange",
+      "alert_notice": "Delta Exchange enforces IP whitelisting for transactional order placement.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Delta API Key",
+          "type": "text",
+          "placeholder": "Enter Delta Exchange API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Delta API Secret",
+          "type": "password",
+          "placeholder": "Enter Delta Exchange API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "fivepaisa": {
+      "broker_id": "fivepaisa",
+      "name": "5Paisa",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "fivepaisa",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/5paisa",
+      "alert_notice": "5Paisa API key requires format: 'User_Key:::User_ID:::client_id'.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User Key ::: User ID ::: Client ID",
+          "type": "text",
+          "placeholder": "User_Key:::User_ID:::Client_ID",
+          "required": true,
+          "validation": "^.+:::.+:::.+$"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Encryption Key / Password",
+          "type": "password",
+          "placeholder": "Enter Encryption Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "fivepaisaxts": {
+      "broker_id": "fivepaisaxts",
+      "name": "5Paisa (XTS)",
+      "category": "XTS",
+      "auth_type": "totp",
+      "logo": "fivepaisa",
+      "badge": "XTS",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/5paisa",
+      "alert_notice": "5Paisa XTS utilizes Symphony XTS engine for ultra-low latency.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Interactive App Key",
+          "type": "text",
+          "placeholder": "Enter Interactive App Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Interactive Secret Key",
+          "type": "password",
+          "placeholder": "Enter Interactive Secret Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "tradejini": {
+      "broker_id": "tradejini",
+      "name": "Tradejini",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "tradejini",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/tradejini",
+      "alert_notice": "Tradejini CubePlus API requires registered App Key and TOTP.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "App Key / Client Code",
+          "type": "text",
+          "placeholder": "Enter Tradejini App Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "App Secret",
+          "type": "password",
+          "placeholder": "Enter Tradejini App Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "tradesmart": {
+      "broker_id": "tradesmart",
+      "name": "TradeSmart",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "tradesmart",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/tradesmart",
+      "alert_notice": "TradeSmart connects via OAuth 2.0 gateway.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key",
+          "type": "text",
+          "placeholder": "Enter TradeSmart API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter TradeSmart API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "samco": {
+      "broker_id": "samco",
+      "name": "Samco",
+      "category": "Full-Service",
+      "auth_type": "totp",
+      "logo": "samco",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/samco",
+      "alert_notice": "Samco TradeAPI requires User ID, Password, and TOTP key.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User ID / Client Code",
+          "type": "text",
+          "placeholder": "Enter Samco User ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret / Token",
+          "type": "password",
+          "placeholder": "Enter API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "paytm": {
+      "broker_id": "paytm",
+      "name": "Paytm Money",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "paytm",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/paytm-money",
+      "alert_notice": "Paytm Money requires Merchant API Key and Secret.",
+      "oauth_url": "https://login.paytmmoney.com/merchant-login?apiKey={api_key}&state=default",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key",
+          "type": "text",
+          "placeholder": "Enter Paytm Money API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter Paytm Money API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "compositedge": {
+      "broker_id": "compositedge",
+      "name": "Compositedge",
+      "category": "XTS",
+      "auth_type": "oauth",
+      "logo": "compositedge",
+      "badge": "XTS",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/compositedge",
+      "alert_notice": "Compositedge uses Symphony XTS interactive and market data gateways.",
+      "oauth_url": "https://xts.compositedge.com/interactive/thirdparty?appKey={api_key}&returnURL={redirect_url}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Interactive App Key",
+          "type": "text",
+          "placeholder": "Enter Interactive App Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Interactive Secret Key",
+          "type": "password",
+          "placeholder": "Enter Interactive Secret Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "wisdom": {
+      "broker_id": "wisdom",
+      "name": "Wisdom Capital",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "wisdom",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/wisdom-capital",
+      "alert_notice": "Wisdom Capital Fox Trader / Nest API integration.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret / Password",
+          "type": "password",
+          "placeholder": "Enter API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "zebu": {
+      "broker_id": "zebu",
+      "name": "Zebu",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "zebu",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/zebu",
+      "alert_notice": "Zebull API requires User ID and API Token.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User ID",
+          "type": "text",
+          "placeholder": "Enter Zebu User ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key / Password",
+          "type": "password",
+          "placeholder": "Enter API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "groww": {
+      "broker_id": "groww",
+      "name": "Groww",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "groww",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/groww",
+      "alert_notice": "Groww API integration requires valid authentication credentials.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key / Client ID",
+          "type": "text",
+          "placeholder": "Enter Groww API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter Groww Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "hdfcsky": {
+      "broker_id": "hdfcsky",
+      "name": "HDFC Sky",
+      "category": "Full-Service",
+      "auth_type": "oauth",
+      "logo": "hdfcsky",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/hdfcsky",
+      "alert_notice": "HDFC Sky developer API authentication.",
+      "oauth_url": "https://developer.hdfcsky.com/oapi/v1/login?api_key={api_key}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key",
+          "type": "text",
+          "placeholder": "Enter HDFC Sky API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter HDFC Sky API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "hdfcsecurities": {
+      "broker_id": "hdfcsecurities",
+      "name": "HDFC Securities",
+      "category": "Full-Service",
+      "auth_type": "oauth",
+      "logo": "hdfcsecurities",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/hdfc-securities",
+      "alert_notice": "HDFC Securities Developer Portal credentials.",
+      "oauth_url": "https://developer.hdfcsec.com/oapi/v1/login?api_key={api_key}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "API Key",
+          "type": "text",
+          "placeholder": "Enter HDFC Securities API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter HDFC Securities API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "motilal": {
+      "broker_id": "motilal",
+      "name": "Motilal Oswal",
+      "category": "Full-Service",
+      "auth_type": "totp",
+      "logo": "motilal",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/motilal-oswal",
+      "alert_notice": "Motilal Oswal MOSL API requires registered Client Code and TOTP Key.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client Code",
+          "type": "text",
+          "placeholder": "Enter Motilal Oswal Client Code",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key / Password",
+          "type": "password",
+          "placeholder": "Enter API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "mstock": {
+      "broker_id": "mstock",
+      "name": "mStock by Mirae Asset",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "mstock",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/mstock",
+      "alert_notice": "mStock zero brokerage API integration.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter mStock Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key / Password",
+          "type": "password",
+          "placeholder": "Enter API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "nubra": {
+      "broker_id": "nubra",
+      "name": "Nubra",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "nubra",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/nubra",
+      "alert_notice": "Nubra Trading API credentials.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter Nubra Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key",
+          "type": "password",
+          "placeholder": "Enter Nubra API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "pocketful": {
+      "broker_id": "pocketful",
+      "name": "Pocketful",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "pocketful",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/pocketful",
+      "alert_notice": "Pocketful Trade API OAuth 2.0 protocol.",
+      "oauth_url": "https://trade.pocketful.in/oauth2/auth?client_id={api_key}&redirect_uri={redirect_url}&response_type=code&scope=orders%20holdings",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter Pocketful Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter Pocketful API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "rmoney": {
+      "broker_id": "rmoney",
+      "name": "RMoney",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "rmoney",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/rmoney",
+      "alert_notice": "RMoney QuickTrade API connection.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID / API Key",
+          "type": "text",
+          "placeholder": "Enter RMoney API Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter RMoney API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "firstock": {
+      "broker_id": "firstock",
+      "name": "Firstock",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "firstock",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/firstock",
+      "alert_notice": "Firstock TheTradingAPI requires User ID, Password, and TOTP key.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User ID",
+          "type": "text",
+          "placeholder": "Enter Firstock User ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key / Password",
+          "type": "password",
+          "placeholder": "Enter API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "iifl": {
+      "broker_id": "iifl",
+      "name": "IIFL",
+      "category": "Full-Service",
+      "auth_type": "totp",
+      "logo": "iifl",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/iifl",
+      "alert_notice": "IIFL Open Broker API integration.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "User Key / Client ID",
+          "type": "text",
+          "placeholder": "Enter IIFL User Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret / Password",
+          "type": "password",
+          "placeholder": "Enter API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "iiflcapital": {
+      "broker_id": "iiflcapital",
+      "name": "IIFL Capital",
+      "category": "Full-Service",
+      "auth_type": "oauth",
+      "logo": "iifl",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/iifl-capital",
+      "alert_notice": "IIFL Capital institutional and retail API.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "App Key",
+          "type": "text",
+          "placeholder": "Enter IIFL Capital App Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "App Secret",
+          "type": "password",
+          "placeholder": "Enter IIFL Capital App Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "indmoney": {
+      "broker_id": "indmoney",
+      "name": "IndMoney",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "indmoney",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/indmoney",
+      "alert_notice": "IndMoney fast equity & F&O execution.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter IndMoney Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key",
+          "type": "password",
+          "placeholder": "Enter IndMoney API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "jainamxts": {
+      "broker_id": "jainamxts",
+      "name": "Jainam XTS",
+      "category": "XTS",
+      "auth_type": "totp",
+      "logo": "jainam",
+      "badge": "XTS",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/jainam",
+      "alert_notice": "Jainam Duck XTS ultra-low latency architecture.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Interactive App Key",
+          "type": "text",
+          "placeholder": "Enter Interactive App Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Interactive Secret Key",
+          "type": "password",
+          "placeholder": "Enter Interactive Secret Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "definedge": {
+      "broker_id": "definedge",
+      "name": "Definedge",
+      "category": "Discount",
+      "auth_type": "totp",
+      "logo": "definedge",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/definedge",
+      "alert_notice": "Definedge Securities Opstra / Zone API.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter Definedge Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Key / Password",
+          "type": "password",
+          "placeholder": "Enter API Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "ibulls": {
+      "broker_id": "ibulls",
+      "name": "Ibulls (Indiabulls)",
+      "category": "Full-Service",
+      "auth_type": "totp",
+      "logo": "ibulls",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/ibulls",
+      "alert_notice": "Indiabulls Securities API credentials.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Client ID",
+          "type": "text",
+          "placeholder": "Enter Ibulls Client ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "API Secret",
+          "type": "password",
+          "placeholder": "Enter API Secret",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "arrow": {
+      "broker_id": "arrow",
+      "name": "Arrow Trade",
+      "category": "Discount",
+      "auth_type": "oauth",
+      "logo": "arrow",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/arrow",
+      "alert_notice": "Arrow Trade direct API execution.",
+      "oauth_url": "https://app.arrow.trade/app/login?appID={api_key}",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "App ID",
+          "type": "text",
+          "placeholder": "Enter Arrow App ID",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Secret Key",
+          "type": "password",
+          "placeholder": "Enter Arrow Secret Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "dhan_sandbox": {
+      "broker_id": "dhan_sandbox",
+      "name": "Dhan (Sandbox)",
+      "category": "Sandbox",
+      "auth_type": "totp",
+      "logo": "dhan",
+      "badge": "Dev Sandbox",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/dhan",
+      "alert_notice": "Safe sandbox testing environment with simulated execution.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "Sandbox Client ID ::: API Key",
+          "type": "text",
+          "placeholder": "1000000000:::sandbox_key",
+          "required": true,
+          "validation": "^[0-9]+:::[a-zA-Z0-9_-]+$"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Sandbox Access Token",
+          "type": "password",
+          "placeholder": "Enter Sandbox Access Token",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    },
+    "icici": {
+      "broker_id": "icici",
+      "name": "ICICI Direct (Breeze)",
+      "category": "Full-Service",
+      "auth_type": "oauth",
+      "logo": "icici",
+      "docs_url": "https://docs.openalgo.in/connect-brokers/brokers/icicidirect",
+      "alert_notice": "ICICI Direct Breeze API integration.",
+      "fields": [
+        {
+          "name": "broker_api_key",
+          "label": "App Key",
+          "type": "text",
+          "placeholder": "Enter ICICI Direct App Key",
+          "required": true,
+          "validation": ".+"
+        },
+        {
+          "name": "broker_api_secret",
+          "label": "Secret Key",
+          "type": "password",
+          "placeholder": "Enter ICICI Direct Secret Key",
+          "required": true,
+          "validation": ".+"
+        }
+      ]
+    }
+  }
+}

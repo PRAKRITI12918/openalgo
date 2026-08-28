@@ -530,6 +530,16 @@ def two_factor_configure():
     )
 
 
+@auth_bp.route("/api/brokers", methods=["GET"])
+def get_api_brokers():
+    """Return central broker schema registry for all supported brokers."""
+    try:
+        from brokers import BROKER_SCHEMA_REGISTRY
+        return jsonify(BROKER_SCHEMA_REGISTRY)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @auth_bp.route("/broker", methods=["GET", "POST"])
 @limiter.limit(LOGIN_RATE_LIMIT_MIN)
 @limiter.limit(LOGIN_RATE_LIMIT_HOUR)

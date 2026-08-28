@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Data Feed & Dhan Data API | OpenAlgo</title>
+  <meta name="description" content="Manage Dhan Data API market feeds, live streaming, and historical data ingest on OpenAlgo.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/market_data.css">
+  <link rel="stylesheet" href="market_data.css">
+</head>
+<body>
+  <div class="data-feed-container">
+    <div class="data-feed-wrapper">
+      
+      <!-- Top Header Navigation -->
+      <header class="feed-header">
+        <div class="header-left">
+          <div class="source-tag">Market Data Engine</div>
+          <h1 class="page-title">Dhan <span class="gradient-text">Data API</span> Streamer</h1>
+          <p class="page-subtitle">Real-time Level-20 market depth, tick feed, and multi-timeframe OHLCV historical ingest.</p>
+        </div>
+        
+        <!-- Mode Switcher -->
+        <div class="feed-mode-toggle">
+          <span class="toggle-label">Feed Mode:</span>
+          <div class="toggle-pills">
+            <button type="button" class="mode-pill" id="mode-broker-btn" data-mode="broker">Standard Feed</button>
+            <button type="button" class="mode-pill active" id="mode-dhan-btn" data-mode="dhan">Dhan Data API</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Grid Layout -->
+      <div class="feed-grid">
+        
+        <!-- Left: Status & Configuration Glass Card -->
+        <section class="glass-card config-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="status-indicator-dot online" id="feed-status-dot"></span>
+              <h2 class="card-title">Connection Status</h2>
+            </div>
+            <span class="badge-active" id="feed-status-badge">CONNECTED</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <span class="metric-title">Latency</span>
+              <span class="metric-val text-green" id="metric-latency">24 ms</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-title">Depth Level</span>
+              <span class="metric-val" id="metric-depth">Level 20</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-title">Token Life</span>
+              <span class="metric-val text-amber" id="metric-expiry">14.2 hrs</span>
+            </div>
+          </div>
+
+          <!-- Credential Health Verification -->
+          <div class="credentials-summary">
+            <div class="cred-row">
+              <span class="cred-label">Dhan Client ID</span>
+              <span class="cred-val font-mono" id="disp-client-id">1113284554</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">Market Feed API</span>
+              <span class="cred-val text-green font-semibold">Active & Subscribed</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">WebSocket Gateway</span>
+              <span class="cred-val font-mono">wss://api-feed.dhan.co</span>
+            </div>
+          </div>
+
+          <!-- Quick Test Actions -->
+          <div class="action-buttons-stack">
+            <button type="button" id="btn-verify-api" class="btn-action primary">
+              <span class="spinner hidden" id="verify-spinner"></span>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>Verify Data API Access</span>
+            </button>
+
+            <button type="button" id="btn-fetch-sample" class="btn-action secondary">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              <span>Fetch Sample 5-Min Candle</span>
+            </button>
+          </div>
+
+          <!-- Alert Box -->
+          <div class="notice-alert" id="dhan-notice-box">
+            <svg class="notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <p class="notice-text">
+              Dhan Data API rate limits are configured for <strong>5 req/s</strong> (history) and <strong>1 req/s</strong> (quotes). Real-time stream bypasses REST limits.
+            </p>
+          </div>
+        </section>
+
+        <!-- Right: Live Ticker & Historical Visualizer -->
+        <section class="glass-card live-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <h2 class="card-title">Live Ticker & Candle Stream</h2>
+            </div>
+            <div class="symbol-selector-group">
+              <select id="symbol-select" class="symbol-select">
+                <option value="NIFTY">NIFTY 50 (Index)</option>
+                <option value="BANKNIFTY">BANK NIFTY</option>
+                <option value="FINNIFTY">FIN NIFTY</option>
+                <option value="RELIANCE">RELIANCE (EQ)</option>
+                <option value="TCS">TCS (EQ)</option>
+                <option value="HDFCBANK">HDFC BANK (EQ)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Live LTP Flash Display -->
+          <div class="live-ticker-box">
+            <div class="ticker-main">
+              <span class="ticker-symbol" id="ticker-disp-symbol">NIFTY 50</span>
+              <div class="ticker-price-row">
+                <span class="ticker-price" id="ticker-disp-price">24,850.50</span>
+                <span class="ticker-change positive" id="ticker-disp-change">+128.40 (+0.52%)</span>
+              </div>
+            </div>
+            <div class="ticker-meta">
+              <span class="meta-item">Feed: <strong class="text-green">Binary WS Active</strong></span>
+              <span class="meta-item">Last Update: <strong id="ticker-disp-time">15:29:59</strong></span>
+            </div>
+          </div>
+
+          <!-- Real-Time Historical Candlestick Viewer -->
+          <div class="candles-preview-section">
+            <div class="section-title-row">
+              <span class="section-label">Latest Ingested OHLCV Candles</span>
+              <span class="refresh-badge" id="candle-count-badge">5 Candles</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="candle-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Close</th>
+                    <th>Volume</th>
+                  </tr>
+                </thead>
+                <tbody id="candle-table-body">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Click "Fetch Sample 5-Min Candle" to query live history.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Output Stream Log -->
+          <div class="stream-log-container">
+            <div class="log-header">
+              <span class="log-title">Stream Events</span>
+              <button type="button" class="btn-clear-log" id="btn-clear-log">Clear</button>
+            </div>
+            <div class="log-output" id="stream-log-output">
+              <div class="log-entry info">[Engine] Dhan Data API module initialized and ready.</div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/static/js/market_data.js"></script>
+  <script src="market_data.js"></script>
+</body>
+</html>

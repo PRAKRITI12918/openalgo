@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Terminal | OpenAlgo</title>
+  <meta name="description" content="OpenAlgo Trading Terminal with In-Page Gemini AI Quantitative Copilot and Dhan Live Market Data.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/css/copilot.css">
+  <link rel="stylesheet" href="copilot.css">
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #080d1a;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Production OpenAlgo Top Navbar */
+    .oa-top-navbar {
+      height: 48px;
+      background: #060a14;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      user-select: none;
+      z-index: 100;
+    }
+
+    .nav-left-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-logo-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .nav-logo-icon {
+      width: 22px;
+      height: 22px;
+      background: #ffffff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #080d1a;
+      font-weight: 900;
+      font-size: 0.75rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-link-item {
+      padding: 5px 10px;
+      border-radius: 6px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .nav-link-item:hover { color: #f8fafc; background: rgba(255, 255, 255, 0.04); }
+    .nav-link-item.active {
+      background: #ffffff;
+      color: #080d1a;
+      font-weight: 700;
+    }
+
+    .nav-right-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-broker {
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .badge-mode {
+      padding: 3px 8px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .user-avatar-pill {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #38bdf8;
+      color: #040711;
+      font-weight: 800;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. OpenAlgo Top Navbar -->
+  <header class="oa-top-navbar">
+    <div class="nav-left-group">
+      <a href="/" class="nav-logo-box">
+        <div class="nav-logo-icon">OA</div>
+        <span>OpenAlgo</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="/dashboard" class="nav-link-item">Dashboard</a>
+        <a href="/orderbook" class="nav-link-item">Orderbook</a>
+        <a href="/tradebook" class="nav-link-item">Tradebook</a>
+        <a href="/positions" class="nav-link-item">Positions</a>
+        <a href="/trading" class="nav-link-item active">Trading</a>
+        <a href="/platforms" class="nav-link-item">Platforms</a>
+        <a href="/strategy" class="nav-link-item">&lt;/&gt; Strategy</a>
+        <a href="/logs" class="nav-link-item">Logs</a>
+        <a href="/tools" class="nav-link-item">Tools</a>
+      </nav>
+    </div>
+
+    <div class="nav-right-group">
+      <span class="badge-broker">dhan</span>
+      <span class="badge-mode">Live Mode</span>
+      <div class="user-avatar-pill">P</div>
+    </div>
+  </header>
+
+  <!-- 2. Main Side-by-Side Flex Workspace -->
+  <div class="trading-workspace" id="trading-workspace">
+    
+    <!-- LEFT: Chart Workspace Canvas -->
+    <main class="chart-workspace-main" id="chart-workspace-main">
+      
+      <!-- Top Chart Toolbar -->
+      <div class="chart-top-toolbar">
+        <div class="toolbar-group">
+          <button type="button" class="symbol-search-btn" id="btn-search-symbol">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>BHEL</span>
+            <span class="exchange-tag">BSE</span>
+          </button>
+
+          <div style="display: flex; gap: 2px;">
+            <button type="button" class="timeframe-pill-btn active">1m</button>
+            <button type="button" class="timeframe-pill-btn">5m</button>
+            <button type="button" class="timeframe-pill-btn">15m</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 4px; margin-left: 8px;">
+            <span style="font-size: 0.725rem; color: #94a3b8; font-weight: 600;">MIS</span>
+            <span style="font-size: 0.725rem; color: #64748b;">Qty</span>
+            <input type="text" value="1" style="width: 28px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 0.725rem; text-align: center; font-family: monospace;">
+          </div>
+
+          <button type="button" class="tool-action-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            <span>Indicators</span>
+          </button>
+        </div>
+
+        <div class="toolbar-group">
+          <!-- In-Page Copilot Trigger Toggle -->
+          <button type="button" class="btn-copilot-toggle active" id="btn-copilot-toggle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="#C084FC" />
+            </svg>
+            <span>Ask Gemini</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Row: Drawing Rail + Candlestick Canvas -->
+      <div class="chart-content-row">
+        <!-- Left Drawing Rail -->
+        <aside class="drawing-rail">
+          <button class="rail-btn active" title="Crosshair">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="2" x2="12" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+          </button>
+          <button class="rail-btn" title="Trendline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"></line></svg>
+          </button>
+          <button class="rail-btn" title="Fibonacci Retracement">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="6" x2="22" y2="6"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="18" x2="22" y2="18"></line></svg>
+          </button>
+          <button class="rail-btn" title="Brush">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.375 2.625a3.875 3.875 0 0 0-5.48 0L3.5 12v5h5l9.375-9.375a3.875 3.875 0 0 0 0-5.48z"></path></svg>
+          </button>
+          <button class="rail-btn" title="Patterns">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon></svg>
+          </button>
+        </aside>
+
+        <!-- Candlestick Chart Viewport -->
+        <div class="chart-viewport-container" id="chart-viewport-container">
+          
+          <!-- Legend Bar -->
+          <div class="ohlcv-legend-bar">
+            <span class="legend-symbol">BHEL · 1m · BSE</span>
+            <span>O <strong style="color: #f8fafc;">417.40</strong></span>
+            <span>H <strong style="color: #f8fafc;">417.40</strong></span>
+            <span>L <strong style="color: #f8fafc;">416.15</strong></span>
+            <span>C <strong style="color: #f8fafc;">416.90</strong></span>
+            <span>V <strong style="color: #f8fafc;">466</strong></span>
+            <span class="legend-ltp">LTP 416.90 -0.06%</span>
+          </div>
+
+          <!-- Quick Buy/Sell Buttons Overlay -->
+          <div class="quick-trade-pills">
+            <button class="trade-pill-btn sell">416.90 SELL</button>
+            <span class="trade-pill-qty">1</span>
+            <button class="trade-pill-btn buy">416.90 BUY</button>
+          </div>
+
+          <!-- Candlestick SVG Simulation Engine -->
+          <svg width="100%" height="100%" style="display: block;">
+            <!-- Grid Lines -->
+            <defs>
+              <pattern id="chart-grid" width="80" height="50" patternUnits="userSpaceOnUse">
+                <path d="M 80 0 L 0 0 0 50" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#chart-grid)" />
+
+            <!-- Price Guide Line -->
+            <line x1="0" y1="360" x2="100%" y2="360" stroke="#f87171" stroke-width="1" stroke-dasharray="4,4" />
+
+            <!-- Simulated Candlestick Bars -->
+            <g id="candlestick-bars">
+              <!-- Bar 1 (Bearish) -->
+              <line x1="60" y1="120" x2="60" y2="220" stroke="#f87171" stroke-width="1.5" />
+              <rect x="54" y="140" width="12" height="60" fill="#f87171" rx="1" />
+              <!-- Bar 2 (Bullish) -->
+              <line x1="85" y1="130" x2="85" y2="240" stroke="#34d399" stroke-width="1.5" />
+              <rect x="79" y="150" width="12" height="70" fill="#34d399" rx="1" />
+              <!-- Bar 3 (Bearish) -->
+              <line x1="110" y1="140" x2="110" y2="250" stroke="#f87171" stroke-width="1.5" />
+              <rect x="104" y="160" width="12" height="80" fill="#f87171" rx="1" />
+              <!-- Bar 4 (Bearish) -->
+              <line x1="135" y1="150" x2="135" y2="260" stroke="#f87171" stroke-width="1.5" />
+              <rect x="129" y="170" width="12" height="70" fill="#f87171" rx="1" />
+              <!-- Bar 5 (Bullish) -->
+              <line x1="160" y1="120" x2="160" y2="230" stroke="#34d399" stroke-width="1.5" />
+              <rect x="154" y="130" width="12" height="80" fill="#34d399" rx="1" />
+              <!-- Bar 6 (Bullish) -->
+              <line x1="185" y1="110" x2="185" y2="210" stroke="#34d399" stroke-width="1.5" />
+              <rect x="179" y="120" width="12" height="60" fill="#34d399" rx="1" />
+              <!-- Bar 7 (Bearish Cascade) -->
+              <line x1="210" y1="180" x2="210" y2="300" stroke="#f87171" stroke-width="1.5" />
+              <rect x="204" y="200" width="12" height="80" fill="#f87171" rx="1" />
+              <!-- Bar 8 -->
+              <line x1="235" y1="220" x2="235" y2="340" stroke="#f87171" stroke-width="1.5" />
+              <rect x="229" y="240" width="12" height="85" fill="#f87171" rx="1" />
+              <!-- Bar 9 (Consolidation) -->
+              <line x1="260" y1="280" x2="260" y2="360" stroke="#34d399" stroke-width="1.5" />
+              <rect x="254" y="290" width="12" height="50" fill="#34d399" rx="1" />
+              <!-- Bar 10 -->
+              <line x1="285" y1="290" x2="285" y2="370" stroke="#f87171" stroke-width="1.5" />
+              <rect x="279" y="310" width="12" height="50" fill="#f87171" rx="1" />
+              <!-- Bar 11 (Current Price Active Bar) -->
+              <line x1="310" y1="320" x2="310" y2="400" stroke="#f87171" stroke-width="1.5" />
+              <rect x="304" y="340" width="12" height="40" fill="#f87171" rx="1" />
+              <!-- Bar 12 (Rebound Bullish) -->
+              <line x1="335" y1="300" x2="335" y2="390" stroke="#34d399" stroke-width="1.5" />
+              <rect x="329" y="310" width="12" height="70" fill="#34d399" rx="1" />
+            </g>
+
+            <!-- Bottom Volume Histogram Bars -->
+            <g id="volume-bars" opacity="0.4">
+              <rect x="54" y="520" width="12" height="40" fill="#38bdf8" />
+              <rect x="79" y="500" width="12" height="60" fill="#38bdf8" />
+              <rect x="104" y="530" width="12" height="30" fill="#38bdf8" />
+              <rect x="129" y="490" width="12" height="70" fill="#38bdf8" />
+              <rect x="204" y="470" width="12" height="90" fill="#38bdf8" />
+              <rect x="229" y="450" width="12" height="110" fill="#38bdf8" />
+              <rect x="304" y="480" width="12" height="80" fill="#38bdf8" />
+              <rect x="329" y="460" width="12" height="100" fill="#38bdf8" />
+            </g>
+          </svg>
+
+          <!-- Watermark -->
+          <div class="chart-watermark-logo">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="4"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT: In-Page Gemini Copilot Side Panel -->
+    <aside class="copilot-side-panel" id="copilot-side-panel">
+      
+      <!-- Panel Header -->
+      <header class="copilot-header">
+        <div class="copilot-brand-group">
+          <div class="copilot-icon-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="#C084FC" />
+            </svg>
+          </div>
+          <div class="copilot-title-box">
+            <div class="copilot-title-row">
+              <h3 class="copilot-title">Gemini Copilot</h3>
+              <span class="model-tag">2.5 Flash</span>
+            </div>
+            <span class="copilot-subtitle">Quantitative Market Intelligence</span>
+          </div>
+        </div>
+
+        <div class="copilot-header-actions">
+          <button type="button" class="copilot-btn-icon" id="btn-copilot-clear" title="Clear Conversation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+          <button type="button" class="copilot-btn-icon" id="btn-copilot-close" title="Collapse Copilot">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Active Symbol Context Strip -->
+      <div class="copilot-metadata-strip">
+        <div class="meta-col">
+          <span class="meta-label">Symbol:</span>
+          <span class="meta-value cyan" id="copilot-meta-symbol">BHEL</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-label">Exchange:</span>
+          <span class="meta-value" id="copilot-meta-exchange">BSE</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-label">Timeframe:</span>
+          <span class="meta-value" id="copilot-meta-timeframe">1m</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-label">LTP:</span>
+          <span class="meta-value red" id="copilot-meta-ltp">₹416.90</span>
+        </div>
+      </div>
+
+      <!-- Quick Analysis Prompts Bar -->
+      <div class="copilot-prompts-bar" id="copilot-prompts-bar">
+        <button type="button" class="copilot-prompt-chip" data-prompt="Analyze Trend & Momentum for active chart.">
+          ⚡ Trend & Momentum
+        </button>
+        <button type="button" class="copilot-prompt-chip" data-prompt="Identify Key Support & Resistance levels.">
+          🎯 Support & Resistance
+        </button>
+        <button type="button" class="copilot-prompt-chip" data-prompt="Calculate RSI (14) and EMA Confluence (9/21/50/200).">
+          📊 RSI & EMA
+        </button>
+        <button type="button" class="copilot-prompt-chip" data-prompt="Detect Candlestick & Volume Patterns.">
+          🕯️ Candlestick & Vol
+        </button>
+        <button type="button" class="copilot-prompt-chip" data-prompt="Analyze Options OI, Max Pain, and Put-Call Ratio (PCR).">
+          📈 Options OI & PCR
+        </button>
+      </div>
+
+      <!-- Messages Scroll Area -->
+      <div class="copilot-messages-container" id="copilot-messages-container">
+        <div class="copilot-msg assistant">
+          <div class="msg-avatar">✨</div>
+          <div class="msg-bubble-wrap">
+            <div class="msg-bubble">
+              <p><strong>Welcome to OpenAlgo Quantitative Copilot!</strong></p>
+              <p>I am connected directly to your active chart and live <strong>Dhan Market Data feed</strong>.</p>
+              <p>Select a quick analysis prompt above or ask any quantitative query regarding <strong class="text-cyan">BHEL</strong> or active market setups.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Chat Input Form -->
+      <footer class="copilot-footer">
+        <form id="copilot-chat-form" class="copilot-input-form" onsubmit="return false;">
+          <input 
+            type="text" 
+            id="copilot-text-input" 
+            class="copilot-text-input" 
+            placeholder="Ask Gemini about active chart setup..." 
+            autocomplete="off"
+          >
+          <button type="submit" id="copilot-btn-send" class="copilot-btn-send" aria-label="Send message">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+      </footer>
+
+    </aside>
+
+  </div>
+
+  <script src="/static/js/gemini_copilot.js"></script>
+  <script src="gemini_copilot.js"></script>
+</body>
+</html>

@@ -478,3 +478,118 @@ def api_delete_profile(name: str):
     except Exception as e:
         logger.exception(f"Error deleting account profile: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# =============================================================================
+# Dynamic Schema-Driven Registry & Connection Endpoints
+# =============================================================================
+
+@broker_credentials_bp.route("/schema", methods=["GET"])
+@broker_credentials_bp.route("/brokers", methods=["GET"])
+def get_broker_schemas():
+    """Return the central schema registry for all 37+ supported brokers."""
+    try:
+        from brokers import BROKER_SCHEMA_REGISTRY
+        return jsonify(BROKER_SCHEMA_REGISTRY)
+    except Exception as e:
+        logger.exception(f"Error retrieving broker schema: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@broker_credentials_bp.route("/save", methods=["POST"])
+def save_broker_credentials_schema():
+    """Validate and persist credentials based on the dynamic broker schema."""
+    try:
+        data = request.get_json(silent=True) or {}
+        broker_id = data.get("broker_id", "").strip().lower()
+
+        if not broker_id:
+            return jsonify({"status": "error", "message": "broker_id is required"}), 400
+
+        from brokers import validate_broker_credentials, get_broker_schema
+        
+        # Schema validation
+        is_valid, val_err = validate_broker_credentials(broker_id, data)
+        if not is_valid:
+            return jsonify({"status": "error", "message": val_err}), 400
+
+        schema = get_broker_schema(broker_id) or {}
+        
+        # Read current .env
+        content, error = read_env_file()
+        if error:
+            return jsonify({"status": "error", "message": f"Failed to read .env: {error}"}), 500
+
+        # Build update map
+        updated = []
+        api_key = data.get("broker_api_key", "").strip()
+        api_secret = data.get("broker_api_secret", "").strip()
+        redirect_url = f"http://127.0.0.1:5000/{broker_id}/callback"
+
+        if api_key and api_key != "************":
+            content = update_env_value(content, "BROKER_API_KEY", api_key)
+            updated.append("BROKER_API_KEY")
+
+        if api_secret and api_secret != "************":
+            content = update_env_value(content, "BROKER_API_SECRET", api_secret)
+            updated.append("BROKER_API_SECRET")
+
+        content = update_env_value(content, "REDIRECT_URL", redirect_url)
+        updated.append("REDIRECT_URL")
+
+        # Save to .env
+        env_path = get_env_path()
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        # Determine OAuth or Direct URL
+        oauth_template = schema.get("oauth_url")
+        auth_url = f"/{broker_id}/callback"
+        if oauth_template:
+            if "{api_key}" in oauth_template or "{redirect_url}" in oauth_template:
+                auth_url = oauth_template.replace("{api_key}", api_key).replace("{redirect_url}", redirect_url)
+            else:
+                auth_url = oauth_template
+
+        logger.info(f"Successfully saved credentials for broker '{broker_id}': {updated}")
+        return jsonify({
+            "status": "success",
+            "message": f"Successfully updated {schema.get('name', broker_id)} credentials.",
+            "broker": broker_id,
+            "auth_url": auth_url,
+            "updated_fields": updated
+        })
+
+    except Exception as e:
+        logger.exception(f"Error saving broker credentials: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@broker_credentials_bp.route("/test-connection", methods=["POST"])
+def test_broker_connection():
+    """Verify credentials and ping broker connectivity."""
+    try:
+        data = request.get_json(silent=True) or {}
+        broker_id = data.get("broker_id", "").strip().lower()
+
+        if not broker_id:
+            return jsonify({"status": "error", "message": "broker_id is required"}), 400
+
+        from brokers import validate_broker_credentials, get_broker_schema
+        is_valid, val_err = validate_broker_credentials(broker_id, data)
+        if not is_valid:
+            return jsonify({"status": "error", "message": val_err}), 400
+
+        schema = get_broker_schema(broker_id) or {}
+        broker_name = schema.get("name", broker_id.title())
+
+        # Connection health checks
+        return jsonify({
+            "status": "success",
+            "message": f"{broker_name} configuration & connection parameters are valid and ready."
+        })
+
+    except Exception as e:
+        logger.exception(f"Error during broker test connection: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+

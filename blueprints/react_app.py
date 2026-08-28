@@ -105,9 +105,13 @@ npm run build</pre>
 # ============================================================
 
 
-# Index/Home route
+# Index/Home route - Unified OpenAlgo Workspace
 @react_bp.route("/")
 def react_index():
+    from flask import send_file
+    workspace_template = FRONTEND_DIST.parent.parent / "templates" / "unified_workspace.html"
+    if workspace_template.exists():
+        return send_file(workspace_template)
     return serve_react_app()
 
 
@@ -153,10 +157,66 @@ def react_rate_limited():
     return serve_react_app()
 
 
-# Broker selection - serve React at /broker (alias for /auth/broker)
+# Broker selection - serve Schema-Driven Broker UI at /broker (alias for /auth/broker)
 @react_bp.route("/broker")
+@react_bp.route("/auth/broker")
 def react_broker():
+    from flask import send_file
+    broker_template = FRONTEND_DIST.parent.parent / "templates" / "broker.html"
+    if broker_template.exists():
+        return send_file(broker_template)
+    broker_path = FRONTEND_DIST.parent.parent / "broker.html"
+    if broker_path.exists():
+        return send_file(broker_path)
     return serve_react_app()
+
+
+# Central Broker Registry API endpoint
+@react_bp.route("/api/brokers", methods=["GET"])
+def react_api_brokers():
+    from flask import jsonify
+    from brokers import _load_schema_from_json
+    return jsonify(_load_schema_from_json())
+
+
+# Market Data Feed & Dhan Data API UI route
+@react_bp.route("/market-data")
+@react_bp.route("/data-feed")
+def react_market_data():
+    from flask import send_file
+    panel_template = FRONTEND_DIST.parent.parent / "templates" / "market_data_panel.html"
+    if panel_template.exists():
+        return send_file(panel_template)
+    panel_path = FRONTEND_DIST.parent.parent / "market_data_panel.html"
+    if panel_path.exists():
+        return send_file(panel_path)
+    return serve_react_app()
+
+
+# Gemini AI Trading Copilot view & Trading Chart
+@react_bp.route("/trading")
+@react_bp.route("/trading-copilot")
+@react_bp.route("/copilot")
+def react_trading_copilot():
+    from flask import send_file
+    trading_template = FRONTEND_DIST.parent.parent / "templates" / "trading.html"
+    if trading_template.exists():
+        return send_file(trading_template)
+    trading_path = FRONTEND_DIST.parent.parent / "trading.html"
+    if trading_path.exists():
+        return send_file(trading_path)
+    return serve_react_app()
+
+
+# Serve static assets (CSS, JS) from openalgo/static/
+@react_bp.route("/static/<path:filename>")
+def serve_custom_static(filename):
+    static_dir = FRONTEND_DIST.parent.parent / "static"
+    if static_dir.exists():
+        file_path = static_dir / filename
+        if file_path.exists():
+            return send_from_directory(static_dir, filename)
+    return "Static asset not found", 404
 
 
 # Broker TOTP routes - serve React for broker authentication forms

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Your Broker | OpenAlgo</title>
+  <meta name="description" content="Connect and switch seamlessly between 32+ brokerage APIs on OpenAlgo.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/broker.css">
+  <link rel="stylesheet" href="broker.css">
+</head>
+<body>
+  <div class="broker-page-container">
+    <div class="broker-layout">
+      
+      <!-- LEFT COLUMN: Information & Help Panel -->
+      <aside class="left-panel">
+        <div class="brand-header">
+          <div class="brand-badge">OpenAlgo Engine</div>
+        </div>
+
+        <h1 class="main-title">Connect Your <span class="highlight-text">Broker</span></h1>
+        
+        <p class="subtitle">
+          Link your trading account to start executing trades through OpenAlgo's algorithmic trading platform.
+        </p>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <div class="help-icon-wrapper">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                <path d="M6 6h10"></path>
+                <path d="M6 10h10"></path>
+              </svg>
+            </div>
+            <div class="help-card-text">
+              <h3 class="help-title">Need Help?</h3>
+              <p class="help-desc">Check our documentation for broker setup guides and API key generation.</p>
+            </div>
+          </div>
+
+          <a href="https://docs.openalgo.in" target="_blank" rel="noopener noreferrer" class="btn-documentation" id="btn-docs-link">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            <span>Documentation</span>
+            <svg class="icon-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </a>
+        </div>
+
+        <div class="system-status-indicator">
+          <span class="status-dot online"></span>
+          <span class="status-text">Server Status: <strong id="server-status-label">Ready (Port 5000)</strong></span>
+        </div>
+      </aside>
+
+      <!-- RIGHT COLUMN: Anti-Gravity Floating Dropdown & Dynamic Form -->
+      <main class="right-panel">
+        <div class="broker-card">
+          
+          <!-- Dropdown Control Section -->
+          <div class="dropdown-control-section">
+            <label class="section-label" for="broker-dropdown-trigger">Select Broker</label>
+            
+            <div class="custom-select-wrapper" id="custom-select-container">
+              <button type="button" class="select-trigger" id="broker-dropdown-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <div class="selected-broker-info">
+                  <span class="broker-avatar" id="trigger-broker-icon">Z</span>
+                  <div class="broker-title-group">
+                    <span class="trigger-broker-name" id="trigger-broker-name">Zerodha Kite</span>
+                    <span class="trigger-broker-category" id="trigger-broker-category">Discount Broker</span>
+                  </div>
+                </div>
+                <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              <!-- Anti-Gravity Floating Popover -->
+              <div class="floating-popover" id="broker-popover" role="listbox" aria-label="Broker Selection List">
+                
+                <!-- Instant Search Bar -->
+                <div class="popover-search-container">
+                  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" id="broker-search-input" class="search-input" placeholder="Search 35+ brokers..." autocomplete="off">
+                  <button type="button" id="clear-search-btn" class="clear-search-btn" title="Clear search">✕</button>
+                </div>
+
+                <!-- Scrollable Broker List -->
+                <div class="broker-list-scroll-shadow top-shadow"></div>
+                <div class="broker-list-wrapper" id="broker-list-container">
+                  <!-- Populated dynamically via broker.js -->
+                </div>
+                <div class="broker-list-scroll-shadow bottom-shadow"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Form Container -->
+          <form id="broker-credentials-form" class="credentials-form" onsubmit="return false;">
+            
+            <div class="form-header">
+              <h2 class="form-title" id="form-broker-title">ZERODHA Credentials</h2>
+              <span class="active-badge" id="form-broker-type-badge">OAuth 2.0</span>
+            </div>
+
+            <!-- Dynamic Fields Rendered by JS -->
+            <div id="dynamic-fields-container" class="fields-container">
+              <!-- Field templates rendered here -->
+            </div>
+
+            <!-- Broker Alert Notice Box -->
+            <div class="alert-notice-box" id="broker-alert-box">
+              <div class="alert-icon-wrapper">
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <p class="alert-notice-text" id="broker-alert-text">
+                Zerodha requires an active Kite Connect data subscription for market data access.
+              </p>
+            </div>
+
+            <!-- Message Alert Banner -->
+            <div id="status-message-banner" class="status-banner hidden">
+              <span class="status-message" id="status-banner-text"></span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons-group">
+              <button type="button" id="btn-test-connection" class="btn-secondary">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+                <span>Test Connection</span>
+              </button>
+
+              <button type="submit" id="btn-save-connect" class="btn-primary">
+                <span class="btn-spinner hidden" id="save-spinner"></span>
+                <span id="save-btn-text">Save & Connect Account</span>
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <script src="/static/js/broker.js"></script>
+  <script src="broker.js"></script>
+</body>
+</html>
