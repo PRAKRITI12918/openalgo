@@ -1338,7 +1338,62 @@
       document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
       event.currentTarget.classList.add('active');
       document.getElementById('copilotCtxTf').innerText = tf;
+      saveWorkspaceState();
     }
+
+    // 7. Workspace State Persistence & Resync
+    function saveWorkspaceState() {
+      try {
+        const state = {
+          symbol: document.getElementById('chartActiveSymbol')?.innerText || 'BHEL',
+          exchange: document.getElementById('chartActiveExch')?.innerText || 'BSE',
+          tf: document.getElementById('copilotCtxTf')?.innerText || '1m',
+          tab: activeTab,
+          drawerOpen: isDrawerOpen,
+          broker: selectedBroker
+        };
+        localStorage.setItem('oa-unified-workspace-state', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function restoreWorkspaceState() {
+      try {
+        const raw = localStorage.getItem('oa-unified-workspace-state');
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (state.symbol) {
+          const symEl = document.getElementById('chartActiveSymbol');
+          const ctxSymEl = document.getElementById('copilotCtxSymbol');
+          if (symEl) symEl.innerText = state.symbol;
+          if (ctxSymEl) ctxSymEl.innerText = state.symbol;
+        }
+        if (state.exchange) {
+          const exchEl = document.getElementById('chartActiveExch');
+          const ctxExchEl = document.getElementById('copilotCtxExch');
+          if (exchEl) exchEl.innerText = state.exchange;
+          if (ctxExchEl) ctxExchEl.innerText = state.exchange;
+        }
+        if (state.tf) {
+          document.querySelectorAll('.tf-btn').forEach(b => {
+            b.classList.toggle('active', b.innerText === state.tf);
+          });
+          const ctxTfEl = document.getElementById('copilotCtxTf');
+          if (ctxTfEl) ctxTfEl.innerText = state.tf;
+        }
+        if (state.tab) switchDrawerTab(state.tab);
+        if (state.drawerOpen === false) toggleDrawer(false);
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', restoreWorkspaceState);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        window.dispatchEvent(new Event('resize'));
+      }
+    });
+    window.addEventListener('focus', () => {
+      window.dispatchEvent(new Event('resize'));
+    });
   </script>
 </body>
 </html>

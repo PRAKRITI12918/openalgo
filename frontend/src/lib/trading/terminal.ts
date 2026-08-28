@@ -489,6 +489,9 @@ export class TradingTerminal {
   private bookTimer: ReturnType<typeof setInterval> | null = null
   private reconcileTimer: ReturnType<typeof setTimeout> | null = null
   private ltpPollTimer: ReturnType<typeof setInterval> | null = null
+  private resizeObs: ResizeObserver | null = null
+  private onVisibilityChangeHandler: (() => void) | null = null
+  private onFocusHandler: (() => void) | null = null
   private destroyed = false
 
   constructor(opts: TerminalOptions) {
@@ -950,14 +953,37 @@ export class TradingTerminal {
     this.joinLink()
     this.setPriceData()
 
-    // Default zoom: a FIXED number of recent bars, so the visible price range
-    // (and cursor→price mapping) is the same on every screen width.
-    if (this.shownCount > VISIBLE_BARS) {
-      const to = this.shownCount - 1 + 4
-      this.chart.timeScale.setVisibleLogicalRange({ from: to - VISIBLE_BARS, to })
-    } else if (this.chart.timeScale.barSpacing > 14) {
-      this.chart.timeScale.setBarSpacing(14)
+    // Restore saved viewport range (zoom & pan memory) or apply default zoom
+    let restoredRange = false
+    if (this.sym) {
+      try {
+        const rawRange = this.lsGet(`range-${this.sym.symbol}-${this.interval}`)
+        if (rawRange) {
+          const parsed = JSON.parse(rawRange) as { from: number; to: number }
+          if (parsed && typeof parsed.from === 'number' && typeof parsed.to === 'number') {
+            this.chart.timeScale.setVisibleLogicalRange(parsed)
+            restoredRange = true
+          }
+        }
+      } catch {
+        /* ignore parsing error */
+      }
     }
+    if (!restoredRange) {
+      if (this.shownCount > VISIBLE_BARS) {
+        const to = this.shownCount - 1 + 4
+        this.chart.timeScale.setVisibleLogicalRange({ from: to - VISIBLE_BARS, to })
+      } else if (this.chart.timeScale.barSpacing > 14) {
+        this.chart.timeScale.setBarSpacing(14)
+      }
+    }
+
+    // Persist viewport zoom/scroll state whenever visible logical range changes
+    this.chart.timeScale.subscribeVisibleLogicalRangeChange((range) => {
+      if (range && !this.loadingOlder && this.shownCount > 0 && this.sym) {
+        this.lsSet(`range-${this.sym.symbol}-${this.interval}`, JSON.stringify(range))
+      }
+    })
 
     const lp =
       this.lastLtp != null
@@ -1101,7 +1127,10 @@ export class TradingTerminal {
    */
   private restoreChartTools(): void {
     try {
-      const raw = this.lsGet('draw')
+      const symKey = this.sym
+        ? this.lsGet(`draw-${this.sym.symbol}-${this.interval}`) || this.lsGet(`draw-${this.sym.symbol}`)
+        : null
+      const raw = symKey || this.lsGet('draw')
       const parsed = raw ? (JSON.parse(raw) as DrawingJson[]) : []
       if (Array.isArray(parsed) && parsed.length) {
         this.drawJson = parsed
@@ -1235,6 +1264,17 @@ export class TradingTerminal {
     this.draw = draw
     this.drawShortcuts = drawingShortcuts()
     this.matchShortcut = matchDrawingShortcut
+    const symKey = this.sym
+      ? this.lsGet(`draw-${this.sym.symbol}-${this.interval}`) || this.lsGet(`draw-${this.sym.symbol}`)
+      : null
+    if (symKey) {
+      try {
+        const parsed = JSON.parse(symKey) as DrawingJson[]
+        if (Array.isArray(parsed)) this.drawJson = parsed
+      } catch {
+        /* ignore */
+      }
+    }
     if (this.drawJson.length) {
       try {
         draw.fromJSON(this.drawJson)
@@ -1269,6 +1309,10 @@ export class TradingTerminal {
     this.drawTool = this.draw.activeTool()
     this.drawJson = this.draw.toJSON()
     this.lsSet('draw', JSON.stringify(this.drawJson))
+    if (this.sym) {
+      this.lsSet(`draw-${this.sym.symbol}-${this.interval}`, JSON.stringify(this.drawJson))
+      this.lsSet(`draw-${this.sym.symbol}`, JSON.stringify(this.drawJson))
+    }
     this.cb.onDrawChange?.(this.drawStats())
     this.cb.onDrawSelect?.(this.drawSelection())
   }
@@ -2442,6 +2486,32 @@ export class TradingTerminal {
     if (this.bookTimer) clearInterval(this.bookTimer)
     this.bookTimer = setInterval(() => this.pollBook(), 8000)
 
+    if (typeof ResizeObserver !== 'undefined' && this.container) {
+      this.resizeObs = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const w = entry.contentRect.width
+          const h = entry.contentRect.height
+          if (w > 0 && h > 0 && this.chart) {
+            this.chart.applyOptions({ width: Math.floor(w), height: Math.floor(h) })
+          }
+        }
+      })
+      this.resizeObs.observe(this.container)
+    }
+
+    this.onVisibilityChangeHandler = () => {
+      if (!document.hidden && !this.destroyed) {
+        this.handleTabFocus()
+      }
+    }
+    this.onFocusHandler = () => {
+      if (!this.destroyed) {
+        this.handleTabFocus()
+      }
+    }
+    document.addEventListener('visibilitychange', this.onVisibilityChangeHandler)
+    window.addEventListener('focus', this.onFocusHandler)
+
     // restore the last symbol; fall back to BHEL/NSE if it's gone or has no data.
     let loaded = false
     try {
@@ -2468,8 +2538,84 @@ export class TradingTerminal {
     }
   }
 
+  /**
+   * Called whenever the user returns to the Trading tab from another page
+   * or switches focus back to the window. Restores dimensions, reconnects WS if
+   * dropped, and backfills missed candles.
+   */
+  handleTabFocus(): void {
+    if (this.destroyed || !this.chart) return
+    const w = this.container.clientWidth
+    const h = this.container.clientHeight
+    if (w > 0 && h > 0) {
+      this.chart.applyOptions({ width: w, height: h })
+    }
+    if (this.ws && (this.ws.state() === 'closed' || this.ws.state() === 'error')) {
+      this.ws.connect()
+      if (this.sym) {
+        this.connectLive()
+      }
+    }
+    void this.reconcileImmediate()
+  }
+
+  /**
+   * Immediate history reconcile (delta backfill) to fetch any bars that completed
+   * while the component was backgrounded or inactive.
+   */
+  async reconcileImmediate(): Promise<void> {
+    if (!this.sym || !this.rest || this.destroyed) return
+    try {
+      const to = nowSec()
+      const fresh = await this.rest.getBars({
+        symbol: this.sym.symbol,
+        exchange: this.sym.exchange,
+        interval: this.interval,
+        from: to - Math.min(3, lookbackDays(this.interval)) * 86400,
+        to,
+      })
+      if (this.destroyed || !this.chart || !fresh.length) return
+      const byTime = new Map(fresh.map((b) => [b.time, b]))
+      let changed = false
+      for (let i = 0; i < this.rawBars.length; i++) {
+        const f = byTime.get(this.rawBars[i].time)
+        if (f && (this.liveBucket == null || f.time < this.liveBucket)) {
+          this.rawBars[i] = f
+          changed = true
+        }
+      }
+      const lastExistingTime = this.rawBars.length ? this.rawBars[this.rawBars.length - 1].time : 0
+      const newBars = fresh.filter((b) => b.time > lastExistingTime)
+      if (newBars.length) {
+        this.rawBars.push(...newBars)
+        changed = true
+      }
+      if (changed) {
+        this.setPriceData()
+        if (this.rawBars.length) {
+          this.lastLtp = this.rawBars[this.rawBars.length - 1].close
+          this.cb.onLtp(this.lastLtp)
+        }
+      }
+    } catch {
+      /* transient */
+    }
+  }
+
   destroy() {
     this.destroyed = true
+    if (this.onVisibilityChangeHandler) {
+      document.removeEventListener('visibilitychange', this.onVisibilityChangeHandler)
+      this.onVisibilityChangeHandler = null
+    }
+    if (this.onFocusHandler) {
+      window.removeEventListener('focus', this.onFocusHandler)
+      this.onFocusHandler = null
+    }
+    if (this.resizeObs) {
+      this.resizeObs.disconnect()
+      this.resizeObs = null
+    }
     this.detachDrawing()
     if (this.bookTimer) clearInterval(this.bookTimer)
     if (this.reconcileTimer) clearTimeout(this.reconcileTimer)
