@@ -1,11 +1,10 @@
-import { LayoutGrid, Link2 as LinkIcon, Sparkles } from 'lucide-react'
+import { LayoutGrid, Link2 as LinkIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { createLinkGroup, type LinkGroup } from 'openalgo-charts'
 import { TickBox } from '@/components/trading/TickBox'
 import { ChartPane } from '@/components/trading/ChartPane'
 import { DrawingRail } from '@/components/trading/DrawingRail'
-import { GeminiCopilot } from '@/components/trading/GeminiCopilot'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -149,7 +148,6 @@ function LayoutIcon({ preset, className }: { preset: LayoutPreset; className?: s
 }
 
 export default function Trading() {
-  const [isCopilotOpen, setIsCopilotOpen] = useState(true)
   const [layoutId, setLayoutId] = useState(() => {
     const saved = localStorage.getItem(LAYOUT_KEY)
     return LAYOUTS.some((l) => l.id === saved) ? (saved as string) : 'single'
@@ -418,19 +416,6 @@ export default function Trading() {
                       <>
                         {layoutPicker}
                         {syncPicker}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsCopilotOpen((v) => !v)}
-                          className={cn(
-                            'h-8 gap-1.5 px-2.5 text-xs font-semibold shrink-0 border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300',
-                            isCopilotOpen && 'border-purple-500/60 bg-purple-500/20 text-purple-300 shadow-sm'
-                          )}
-                          title={isCopilotOpen ? 'Collapse Gemini Copilot' : 'Open Gemini Copilot'}
-                        >
-                          <Sparkles className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Ask Gemini</span>
-                        </Button>
                       </>
                     ) : undefined
                   }
@@ -443,14 +428,6 @@ export default function Trading() {
             </div>
           )}
           </div>
-          <GeminiCopilot
-            isOpen={isCopilotOpen}
-            onClose={() => setIsCopilotOpen(false)}
-            symbol="BHEL"
-            exchange="BSE"
-            timeframe="1m"
-            ltp="416.90"
-          />
         </main>
       </div>
     </>
