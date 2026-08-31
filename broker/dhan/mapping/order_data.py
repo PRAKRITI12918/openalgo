@@ -17,42 +17,46 @@ def map_order_data(order_data):
     Returns:
     - The modified order_data with updated 'tradingsymbol' and 'product' fields.
     """
-    # Check if 'data' is None
     if order_data is None:
-        # Handle the case where there is no data
-        # For example, you might want to display a message to the user
-        # or pass an empty list or dictionary to the template.
         logger.info("No data available.")
-        order_data = {}  # or set it to an empty list if it's supposed to be a list
-    else:
-        order_data = order_data
+        return []
 
-    if order_data:
-        for order in order_data:
-            # Extract the instrument_token and exchange for the current order
-            instrument_token = order["securityId"]
-            exchange = map_exchange(order["exchangeSegment"])
-            order["exchangeSegment"] = exchange
+    if not isinstance(order_data, list):
+        if isinstance(order_data, dict) and "data" in order_data and isinstance(order_data["data"], list):
+            order_data = order_data["data"]
+        else:
+            logger.warning(f"map_order_data received non-list data: {type(order_data)}")
+            return []
 
-            # Use the get_symbol function to fetch the symbol from the database
-            symbol_from_db = get_symbol(instrument_token, exchange)
+    for order in order_data:
+        if not isinstance(order, dict):
+            continue
+        # Extract the instrument_token and exchange for the current order
+        instrument_token = order.get("securityId")
+        if not instrument_token:
+            continue
+        exchange = map_exchange(order.get("exchangeSegment", ""))
+        order["exchangeSegment"] = exchange
 
-            # Check if a symbol was found; if so, update the trading_symbol in the current order
-            if symbol_from_db:
-                order["tradingSymbol"] = symbol_from_db
-                if (
-                    order["exchangeSegment"] == "NSE" or order["exchangeSegment"] == "BSE"
-                ) and order["productType"] == "CNC":
-                    order["productType"] = "CNC"
+        # Use the get_symbol function to fetch the symbol from the database
+        symbol_from_db = get_symbol(instrument_token, exchange)
 
-                elif order["productType"] == "INTRADAY":
-                    order["productType"] = "MIS"
+        # Check if a symbol was found; if so, update the trading_symbol in the current order
+        if symbol_from_db:
+            order["tradingSymbol"] = symbol_from_db
+            if (
+                order.get("exchangeSegment") in ("NSE", "BSE")
+            ) and order.get("productType") == "CNC":
+                order["productType"] = "CNC"
 
-                elif (
-                    order["exchangeSegment"] in ["NFO", "MCX", "BFO", "CDS"]
-                    and order["productType"] == "MARGIN"
-                ):
-                    order["productType"] = "NRML"
+            elif order.get("productType") == "INTRADAY":
+                order["productType"] = "MIS"
+
+            elif (
+                order.get("exchangeSegment") in ["NFO", "MCX", "BFO", "CDS"]
+                and order.get("productType") == "MARGIN"
+            ):
+                order["productType"] = "NRML"
             else:
                 # Symbol resolution failed (e.g. stale/partial master contract).
                 # Never leave a null tradingSymbol — fall back to the raw broker

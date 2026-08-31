@@ -105,19 +105,25 @@ npm run build</pre>
 # ============================================================
 
 
-# Index/Home route - Unified OpenAlgo Workspace
+# Index/Home route
 @react_bp.route("/")
 def react_index():
-    from flask import send_file
-    workspace_template = FRONTEND_DIST.parent.parent / "templates" / "unified_workspace.html"
-    if workspace_template.exists():
-        return send_file(workspace_template)
-    return serve_react_app()
+    from flask import redirect, session
+    if session.get("logged_in") or session.get("user"):
+        return redirect("/dashboard")
+    return redirect("/login")
 
 
-# Login route
+# Login route - Dedicated Dhan Login Page
 @react_bp.route("/login")
 def react_login():
+    from flask import send_file
+    broker_template = FRONTEND_DIST.parent.parent / "templates" / "broker.html"
+    if broker_template.exists():
+        return send_file(broker_template)
+    broker_path = FRONTEND_DIST.parent.parent / "broker.html"
+    if broker_path.exists():
+        return send_file(broker_path)
     return serve_react_app()
 
 
@@ -193,22 +199,6 @@ def react_market_data():
     return serve_react_app()
 
 
-# Gemini AI Trading Copilot view & Trading Chart
-@react_bp.route("/trading")
-@react_bp.route("/trading-copilot")
-@react_bp.route("/copilot")
-def react_trading_copilot():
-    from flask import send_file
-    workspace_template = FRONTEND_DIST.parent.parent / "templates" / "unified_workspace.html"
-    if workspace_template.exists():
-        return send_file(workspace_template)
-    trading_template = FRONTEND_DIST.parent.parent / "templates" / "trading.html"
-    if trading_template.exists():
-        return send_file(trading_template)
-    trading_path = FRONTEND_DIST.parent.parent / "trading.html"
-    if trading_path.exists():
-        return send_file(trading_path)
-    return serve_react_app()
 
 
 # Serve static assets (CSS, JS) from openalgo/static/
@@ -249,6 +239,12 @@ def react_broker_auth(broker):
 # Dashboard
 @react_bp.route("/dashboard")
 def react_dashboard():
+    return serve_react_app()
+
+
+# Market News
+@react_bp.route("/news", strict_slashes=False)
+def react_news():
     return serve_react_app()
 
 

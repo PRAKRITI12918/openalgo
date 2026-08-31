@@ -2,6 +2,15 @@ import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
+// Helper to get stored access token
+export function getStoredAccessToken(): string {
+  try {
+    return localStorage.getItem('access-token') || localStorage.getItem('dhan_access_token') || ''
+  } catch {
+    return ''
+  }
+}
+
 // Helper to fetch CSRF token
 export async function fetchCSRFToken(): Promise<string> {
   const response = await fetch('/auth/csrf-token', {
@@ -19,10 +28,13 @@ export const apiClient = axios.create({
   withCredentials: true,
 })
 
-// Request interceptor
+// Request interceptor: Attach stored access-token header to API calls
 apiClient.interceptors.request.use(
   (config) => {
-    // API key can be added here if needed for specific endpoints
+    const token = getStoredAccessToken()
+    if (token) {
+      config.headers['access-token'] = token
+    }
     return config
   },
   (error) => {
@@ -54,9 +66,14 @@ export const authClient = axios.create({
 // Endpoints that don't require CSRF token (no session yet)
 const CSRF_EXEMPT_ENDPOINTS = ['/auth/login', '/auth/setup']
 
-// Add CSRF token to auth client requests (except for initial login/setup)
+// Add CSRF token and access-token to auth client requests (except for initial login/setup)
 authClient.interceptors.request.use(
   async (config) => {
+    const token = getStoredAccessToken()
+    if (token) {
+      config.headers['access-token'] = token
+    }
+
     // Check if endpoint is exempt from CSRF (exact match or starts with path + query/fragment)
     const url = config.url || ''
     const isExempt = CSRF_EXEMPT_ENDPOINTS.some((exempt) => {
@@ -92,9 +109,14 @@ export const webClient = axios.create({
   withCredentials: true,
 })
 
-// Add CSRF token to web client requests
+// Add CSRF token and access-token to web client requests
 webClient.interceptors.request.use(
   async (config) => {
+    const token = getStoredAccessToken()
+    if (token) {
+      config.headers['access-token'] = token
+    }
+
     const method = config.method?.toLowerCase()
     if (method === 'post' || method === 'put' || method === 'delete') {
       try {
@@ -149,5 +171,24 @@ webClient.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Install global fetch interceptor in browser environment so all outgoing fetch calls include access-token
+if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+  const originalFetch = window.fetch.bind(window)
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const token = getStoredAccessToken()
+    if (token) {
+      const headers = new Headers(init?.headers || {})
+      if (!headers.has('access-token')) {
+        headers.set('access-token', token)
+      }
+      init = {
+        ...init,
+        headers,
+      }
+    }
+    return originalFetch(input, init)
+  }
+}
 
 export default apiClient

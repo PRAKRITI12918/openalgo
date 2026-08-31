@@ -361,7 +361,7 @@ def login():
                               failure_reason="invalid_credentials")
             return jsonify({"status": "error", "message": "Invalid credentials"}), 401
 
-    # Handle GET requests - redirect to React frontend
+    # Handle GET requests - serve Dhan login page
     if find_user_by_username() is None:
         return redirect("/setup")
 
@@ -371,11 +371,18 @@ def login():
 
         revoke_user_tokens()
         session.clear()
+        return redirect("/login")
 
-    if "user" in session:
-        return redirect("/broker")
-
-    return redirect("/login")
+    from pathlib import Path
+    from flask import send_file
+    broker_template = Path(__file__).parent.parent / "templates" / "broker.html"
+    if broker_template.exists():
+        return send_file(broker_template)
+    broker_path = Path(__file__).parent.parent / "broker.html"
+    if broker_path.exists():
+        return send_file(broker_path)
+    from blueprints.react_app import serve_react_app
+    return serve_react_app()
 
 
 @auth_bp.route("/login/totp", methods=["POST"])

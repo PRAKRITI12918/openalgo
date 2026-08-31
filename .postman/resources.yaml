@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 910d1422-e54e-4bf8-8f3c-459ec2b3b21c
+
+localResources:
+  collections:
+    - ../collections/postman/openalgo.postman_collection.json
+  environments:
+    - ../collections/postman/openalgo.postman_environment.json
+  specs:
+    - ../broker/hdfcsecurities/streaming/hdfcsecurities_market.proto
+    - ../broker/hdfcsky/streaming/hdfcsky_market.proto
+    - ../broker/upstox/streaming/MarketDataFeedV3.proto

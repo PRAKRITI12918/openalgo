@@ -2,7 +2,7 @@
 // toolbar buttons carry no caret: a chevron on every control is dead
 // weight when the whole row opens menus, and it reads as a dated form
 // control. Reserve the glyph for where it distinguishes something.
-import { ChevronDown, RefreshCw, Search, Settings } from 'lucide-react'
+import { ChevronDown, Newspaper, RefreshCw, Search, Settings } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,6 +37,7 @@ import { DrawingTextDialog, type TextRequest } from './DrawingTextDialog'
 import { IndicatorPickerDialog } from './IndicatorPickerDialog'
 import { IndicatorSettingsDialog } from './IndicatorSettingsDialog'
 import { SymbolSearchDialog } from './SymbolSearchDialog'
+import { SymbolNewsDrawer } from '@/components/news/SymbolNewsDrawer'
 
 /** Camera (screenshot) glyph. */
 function CameraIcon({ className }: { className?: string }) {
@@ -198,6 +199,9 @@ interface Props {
    * than to a pane, so the page passes it in, and passes it to one pane only.
    */
   layoutPicker?: React.ReactNode
+  /** Toggle the Copilot / Trading multi-panel sidebar */
+  onToggleSidebar?(): void
+  isSidebarOpen?: boolean
 }
 
 /**
@@ -218,6 +222,8 @@ export function ChartPane({
   onToggleRail,
   railVisible,
   layoutPicker,
+  onToggleSidebar,
+  isSidebarOpen,
 }: Props) {
   const chartRef = useRef<HTMLDivElement>(null)
   const legendRef = useRef<HTMLDivElement>(null)
@@ -274,6 +280,7 @@ export function ChartPane({
   // schema depends on the live series type, theme and timezone.
   const [chartSettings, setChartSettings] = useState<ChartSettingsRequest | null>(null)
   const [textReq, setTextReq] = useState<TextRequest | null>(null)
+  const [newsDrawerOpen, setNewsDrawerOpen] = useState(false)
 
   // right-click menu: order entry, then the view actions
   const [ctx, setCtx] = useState<{ x: number; y: number; items: CtxItem[] } | null>(null)
@@ -681,14 +688,6 @@ export function ChartPane({
 
         {/* Right side: connection LED + actions */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <a
-            href="/"
-            className="inline-flex items-center gap-1 rounded bg-purple-600/20 px-2 py-1 text-xs font-medium text-purple-300 hover:bg-purple-600/30 transition-colors border border-purple-500/30"
-            title="Open Gemini Copilot Workspace"
-          >
-            <span>✨</span>
-            <span className="hidden sm:inline">Copilot Panel</span>
-          </a>
           <span
             className={cn('inline-block h-2.5 w-2.5 rounded-full', ledClass(wsState))}
             title={`WebSocket ${wsState}`}
@@ -988,6 +987,12 @@ export function ChartPane({
         }
         onPick={(row) => terminalRef.current?.loadSymbol(row)}
         initialQuery={sym?.symbol}
+      />
+
+      <SymbolNewsDrawer
+        symbol={sym?.symbol || ''}
+        open={newsDrawerOpen}
+        onOpenChange={setNewsDrawerOpen}
       />
     </section>
   )

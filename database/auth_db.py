@@ -714,13 +714,13 @@ def get_auth_token_dbquery(name):
             logger.debug("get_auth_token_dbquery called with empty/None name")
             return None
 
-        auth_obj = Auth.query.filter_by(name=name).first()
+        auth_obj = Auth.query.filter((Auth.name == name) | (Auth.user_id == name)).first()
         if auth_obj and not auth_obj.is_revoked:
             return auth_obj
         else:
             # Only log warning for actual usernames, not None/empty
             if name:
-                logger.warning(f"No valid auth token found for name '{name}'.")
+                logger.warning(f"No valid auth token found for name/user_id '{name}'.")
             return None
     except Exception as e:
         logger.exception(f"Error while querying the database for auth token: {e}")
@@ -761,7 +761,7 @@ def get_feed_token_dbquery(name):
     """Fetch the feed token record directly from the database.
 
     Args:
-        name: The user identifier (username) to look up.
+        name: The user identifier (username or user_id) to look up.
 
     Returns:
         The ``Auth`` ORM instance if a valid record exists,
@@ -773,13 +773,13 @@ def get_feed_token_dbquery(name):
             logger.debug("get_feed_token_dbquery called with empty/None name")
             return None
 
-        auth_obj = Auth.query.filter_by(name=name).first()
+        auth_obj = Auth.query.filter((Auth.name == name) | (Auth.user_id == name)).first()
         if auth_obj and not auth_obj.is_revoked:
             return auth_obj
         else:
             # Only log warning for actual usernames, not None/empty
             if name:
-                logger.warning(f"No valid feed token found for name '{name}'.")
+                logger.warning(f"No valid feed token found for name/user_id '{name}'.")
             return None
     except Exception as e:
         logger.exception(f"Error while querying the database for feed token: {e}")
@@ -793,9 +793,9 @@ def get_user_id(name):
             logger.debug("get_user_id called with empty/None name")
             return None
 
-        auth_obj = Auth.query.filter_by(name=name).first()
+        auth_obj = Auth.query.filter((Auth.name == name) | (Auth.user_id == name)).first()
         if auth_obj and not auth_obj.is_revoked:
-            return auth_obj.user_id  # This should return "1272808" for DefinEdge
+            return auth_obj.user_id
         else:
             if name:
                 logger.warning(f"No valid user_id found for name '{name}'.")

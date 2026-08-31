@@ -134,6 +134,66 @@ def consume_consent(token_id):
         return None, f"An exception occurred: {str(e)}"
 
 
+def generate_access_token_with_totp(dhan_client_id, pin, totp):
+    """Generate access token using Dhan Client ID + PIN + TOTP.
+
+    Endpoint: POST https://auth.dhan.co/app/generateAccessToken
+    """
+    if not dhan_client_id or not pin or not totp:
+        return None, None, "Client ID, PIN, and TOTP are required"
+
+    try:
+        client = get_httpx_client()
+        url = f"{AUTH_BASE_URL}/app/generateAccessToken"
+        params = {
+            "dhanClientId": str(dhan_client_id).strip(),
+            "pin": str(pin).strip(),
+            "totp": str(totp).strip(),
+        }
+
+        response = client.post(url, params=params)
+        logger.info(f"Dhan generateAccessToken response status: {response.status_code}")
+
+        try:
+            data = response.json()
+        except Exception:
+            return None, None, f"Invalid response from Dhan API: {response.text}"
+
+        if response.status_code == 200:
+            if data.get("status") == "error" or data.get("errorType"):
+                error_msg = (
+                    data.get("message")
+                    or data.get("errorMessage")
+                    or data.get("errors")
+                    or "Authentication failed"
+                )
+                return None, None, error_msg
+
+            access_token = data.get("accessToken")
+            if not access_token:
+                return None, None, data.get("message") or "Access token not found in response"
+
+            metadata = {
+                "dhan_client_id": data.get("dhanClientId") or str(dhan_client_id).strip(),
+                "dhan_client_name": data.get("dhanClientName"),
+                "dhan_client_ucc": data.get("dhanClientUcc"),
+                "ddpi_status": data.get("givenPowerOfAttorney", False),
+                "token_expiry": data.get("expiryTime"),
+            }
+            return access_token, metadata, None
+        else:
+            error_msg = (
+                data.get("message")
+                or data.get("errorMessage")
+                or f"HTTP {response.status_code}: {response.text}"
+            )
+            return None, None, error_msg
+
+    except Exception as e:
+        logger.error(f"Exception in generate_access_token_with_totp: {str(e)}")
+        return None, None, f"An exception occurred: {str(e)}"
+
+
 def get_direct_access_token(access_token):
     """Validate a direct access token obtained from Dhan web"""
     try:
@@ -148,14 +208,20 @@ def get_direct_access_token(access_token):
         return None, f"An exception occurred: {str(e)}"
 
 
-def authenticate_broker(code):
-    """Main authentication function - handles direct token or OAuth flow"""
+def authenticate_broker(code, pin=None, totp=None):
+    """Main authentication function - handles TOTP direct auth, direct token, or OAuth flow"""
     try:
+        # If pin and totp are provided, perform direct TOTP authentication
+        if pin and totp:
+            access_token, metadata, err = generate_access_token_with_totp(code, pin, totp)
+            if access_token:
+                client_id = metadata.get("dhan_client_id") if isinstance(metadata, dict) else code
+                return access_token, client_id, None
+            return None, None, err
+
         # Check if code is actually a direct access token (for manual entry)
         if code and len(code) > 100:  # Access tokens are typically long JWT strings
             logger.info("Detected direct access token input")
-            # For direct token, we don't have client_id immediately
-            # It will be fetched when needed during order placement
             return get_direct_access_token(code)
         # Otherwise, handle OAuth flow with tokenId
         elif code:
@@ -171,7 +237,7 @@ def authenticate_broker(code):
                 # additional_data contains error message if failed
                 return None, None, additional_data
         else:
-            return None, None, "No token ID provided for authentication"
+            return None, None, "No token ID or credentials provided for authentication"
 
     except Exception as e:
         logger.error(f"Exception in authenticate_broker: {str(e)}")

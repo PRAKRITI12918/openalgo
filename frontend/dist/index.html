@@ -1,46 +1,1100 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="OpenAlgo - Open Source Algorithmic Trading Platform" />
-    <meta name="theme-color" content="#3b82f6" />
-    <title>OpenAlgo</title>
-    <script type="module" crossorigin src="/assets/index-CB4H3Sra.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-Cyuzqnbw.js">
-    <link rel="modulepreload" crossorigin href="/assets/react-vendor-LH7mBByU.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-BLo2_6o6.js">
-    <link rel="modulepreload" crossorigin href="/assets/utils-BhWVr7uv.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-yXZ0zodO.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-C5OJGryk.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-DNZC92vP.js">
-    <link rel="modulepreload" crossorigin href="/assets/es2015-Cqn3aZd5.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-B5bpzcPw.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-DgvDHVFK.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-CjPpDnLY.js">
-    <link rel="modulepreload" crossorigin href="/assets/dist-CwqMUpbH.js">
-    <link rel="modulepreload" crossorigin href="/assets/esm-DhMjgn0M.js">
-    <link rel="modulepreload" crossorigin href="/assets/tanstack-DzV2ax6k.js">
-    <link rel="modulepreload" crossorigin href="/assets/createLucideIcon-CxEvg8o7.js">
-    <link rel="modulepreload" crossorigin href="/assets/bell-SdmhINZu.js">
-    <link rel="modulepreload" crossorigin href="/assets/chart-candlestick-Dm30wEMq.js">
-    <link rel="modulepreload" crossorigin href="/assets/chart-column-DTjrT2_U.js">
-    <link rel="modulepreload" crossorigin href="/assets/check-CoPgGe79.js">
-    <link rel="modulepreload" crossorigin href="/assets/chevron-right-CQIwlJ_Q.js">
-    <link rel="modulepreload" crossorigin href="/assets/clipboard-list-Cj2d5W7A.js">
-    <link rel="modulepreload" crossorigin href="/assets/x-Ss0E4fUB.js">
-    <link rel="modulepreload" crossorigin href="/assets/middleware-C-A90thJ.js">
-    <link rel="modulepreload" crossorigin href="/assets/react-CBMccZbX.js">
-    <link rel="modulepreload" crossorigin href="/assets/alertStore-CQQdlj3p.js">
-    <link rel="modulepreload" crossorigin href="/assets/button-DUI7KsSM.js">
-    <link rel="modulepreload" crossorigin href="/assets/brokerStore-D-76yg2m.js">
-    <link rel="modulepreload" crossorigin href="/assets/authStore-CCAfKKmo.js">
-    <link rel="modulepreload" crossorigin href="/assets/sessionStore-BXMf6Bi7.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-21IofHHz.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="OpenAlgo - Open Source Algorithmic Trading Platform" />
+  <meta name="theme-color" content="#3b82f6" />
+  <title>OpenAlgo</title>
+  <script type="module" crossorigin src="/assets/index-CB4H3Sra.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-Cyuzqnbw.js">
+  <link rel="modulepreload" crossorigin href="/assets/react-vendor-LH7mBByU.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-BLo2_6o6.js">
+  <link rel="modulepreload" crossorigin href="/assets/utils-BhWVr7uv.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-yXZ0zodO.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-C5OJGryk.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-DNZC92vP.js">
+  <link rel="modulepreload" crossorigin href="/assets/es2015-Cqn3aZd5.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-B5bpzcPw.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-DgvDHVFK.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-CjPpDnLY.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-CwqMUpbH.js">
+  <link rel="modulepreload" crossorigin href="/assets/esm-DhMjgn0M.js">
+  <link rel="modulepreload" crossorigin href="/assets/tanstack-DzV2ax6k.js">
+  <link rel="modulepreload" crossorigin href="/assets/createLucideIcon-CxEvg8o7.js">
+  <link rel="modulepreload" crossorigin href="/assets/bell-SdmhINZu.js">
+  <link rel="modulepreload" crossorigin href="/assets/chart-candlestick-Dm30wEMq.js">
+  <link rel="modulepreload" crossorigin href="/assets/chart-column-DTjrT2_U.js">
+  <link rel="modulepreload" crossorigin href="/assets/check-CoPgGe79.js">
+  <link rel="modulepreload" crossorigin href="/assets/chevron-right-CQIwlJ_Q.js">
+  <link rel="modulepreload" crossorigin href="/assets/clipboard-list-Cj2d5W7A.js">
+  <link rel="modulepreload" crossorigin href="/assets/x-Ss0E4fUB.js">
+  <link rel="modulepreload" crossorigin href="/assets/middleware-C-A90thJ.js">
+  <link rel="modulepreload" crossorigin href="/assets/react-CBMccZbX.js">
+  <link rel="modulepreload" crossorigin href="/assets/alertStore-CQQdlj3p.js">
+  <link rel="modulepreload" crossorigin href="/assets/button-DUI7KsSM.js">
+  <link rel="modulepreload" crossorigin href="/assets/brokerStore-D-76yg2m.js">
+  <link rel="modulepreload" crossorigin href="/assets/authStore-CCAfKKmo.js">
+  <link rel="modulepreload" crossorigin href="/assets/sessionStore-BXMf6Bi7.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-21IofHHz.css">
+
+  <style>
+    /* =========================================================================
+         FLOATING "ASK ME" PILL & CHATBOT (Matches Exact Image 1 Design)
+         ========================================================================= */
+    #oa-trading-gemini-root {
+      position: fixed;
+      top: 64px;
+      right: 115px;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    /* Glowing Capsule Pill (Image 1 Style) */
+    .oa-gemini-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 28px;
+      padding: 0 14px 0 8px;
+      background: #090d18;
+      border: 1.5px solid #a855f7;
+      border-radius: 9999px;
+      box-shadow: 0 0 14px rgba(168, 85, 247, 0.45), inset 0 0 7px rgba(59, 130, 246, 0.25), 0 2px 10px rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
+      box-sizing: border-box;
+    }
+
+    .oa-gemini-pill:hover {
+      transform: translateY(-1px) scale(1.02);
+      border-color: #c084fc;
+      box-shadow: 0 0 18px rgba(168, 85, 247, 0.65), inset 0 0 9px rgba(59, 130, 246, 0.35), 0 4px 15px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Soundwave / Chart Signal Icon */
+    .oa-soundwave-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(147, 51, 234, 0.3));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.8px;
+      flex-shrink: 0;
+    }
+
+    .oa-soundwave-bar {
+      width: 1.8px;
+      border-radius: 1px;
+      background: #38bdf8;
+    }
+
+    .oa-soundwave-bar:nth-child(1) {
+      height: 6px;
+      background: #38bdf8;
+    }
+
+    .oa-soundwave-bar:nth-child(2) {
+      height: 12px;
+      background: #60a5fa;
+    }
+
+    .oa-soundwave-bar:nth-child(3) {
+      height: 9px;
+      background: #818cf8;
+    }
+
+    .oa-soundwave-bar:nth-child(4) {
+      height: 5px;
+      background: #38bdf8;
+    }
+
+    .oa-gemini-pill-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+
+    /* Expanded Floating Dialog Window */
+    .oa-gemini-chat-dialog {
+      display: none;
+      width: 410px;
+      height: 520px;
+      background: #090e1c;
+      border: 1.5px solid rgba(168, 85, 247, 0.5);
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 25px rgba(168, 85, 247, 0.3);
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .oa-gemini-chat-dialog.open {
+      display: flex;
+    }
+
+    /* Header */
+    .oa-dialog-header {
+      padding: 10px 14px;
+      background: #050814;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .oa-dialog-header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .oa-tag-dhan {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      font-weight: 700;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .oa-dialog-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .oa-dialog-action-btn {
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.12s ease;
+    }
+
+    .oa-dialog-action-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Chips Row */
+    .oa-dialog-chips {
+      padding: 7px 10px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      background: #060a14;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .oa-chip-btn {
+      padding: 4px 9px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .oa-chip-btn:hover {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+    }
+
+    /* Messages Feed */
+    .oa-dialog-messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #080d1a;
+    }
+
+    .oa-msg {
+      padding: 11px 13px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 95%;
+      word-break: break-word;
+    }
+
+    .oa-msg.assistant {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      align-self: flex-start;
+    }
+
+    .oa-msg.user {
+      background: linear-gradient(135deg, #4f46e5, #2563eb);
+      color: #ffffff;
+      align-self: flex-end;
+      font-weight: 500;
+    }
+
+    /* Step-by-Step Readable Formatting (No Emojis) */
+    .oa-analysis-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 8px;
+    }
+
+    .oa-step-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 6px;
+      padding: 4px 8px;
+      background: rgba(147, 51, 234, 0.12);
+      border: 1px solid rgba(147, 51, 234, 0.3);
+      border-radius: 6px;
+    }
+
+    .oa-step-tag {
+      background: #9333ea;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .oa-step-name {
+      font-weight: 600;
+      color: #e9d5ff;
+      font-size: 12px;
+    }
+
+    .oa-bullet-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      margin: 3px 0;
+    }
+
+    .oa-bullet-dot {
+      color: #38bdf8;
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .oa-bullet-text {
+      flex: 1;
+    }
+
+    .oa-code-pill {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .oa-order-card {
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 6px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .oa-order-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 7px 10px;
+      background: #22c55e;
+      border: none;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .oa-order-btn:hover {
+      background: #16a34a;
+    }
+
+    /* Input Box Bar */
+    .oa-dialog-input-area {
+      padding: 8px 10px;
+      background: #040711;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      gap: 6px;
+    }
+
+    .oa-input-box {
+      flex: 1;
+      height: 34px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      padding: 0 10px;
+      color: #ffffff;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.12s ease;
+    }
+
+    .oa-input-box:focus {
+      border-color: rgba(168, 85, 247, 0.6);
+    }
+
+    .oa-send-btn {
+      padding: 0 14px;
+      height: 34px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #9333ea, #6366f1);
+      border: none;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: opacity 0.12s ease;
+    }
+
+    .oa-send-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <!-- Floating "Ask me" Chatbot Widget (Matches Image 1) -->
+  <div id="oa-trading-gemini-root">
+
+    <!-- Glowing Capsule Pill -->
+    <div class="oa-gemini-pill" id="oaGeminiPill">
+      <div class="oa-soundwave-icon">
+        <div class="oa-soundwave-bar"></div>
+        <div class="oa-soundwave-bar"></div>
+        <div class="oa-soundwave-bar"></div>
+        <div class="oa-soundwave-bar"></div>
+      </div>
+      <span class="oa-gemini-pill-text">Ask me</span>
+    </div>
+
+    <!-- Expanded Dialog -->
+    <div class="oa-gemini-chat-dialog" id="oaGeminiDialog">
+      <div class="oa-dialog-header">
+        <div class="oa-dialog-header-title">
+          <div class="oa-soundwave-icon" style="width:22px;height:22px;">
+            <div class="oa-soundwave-bar" style="height:6px;"></div>
+            <div class="oa-soundwave-bar" style="height:12px;"></div>
+            <div class="oa-soundwave-bar" style="height:10px;"></div>
+            <div class="oa-soundwave-bar" style="height:5px;"></div>
+          </div>
+          <span>Ask me · Quantitative Assistant</span>
+          <span class="oa-tag-dhan">Dhan Live</span>
+        </div>
+        <div class="oa-dialog-btn-group">
+          <button type="button" class="oa-dialog-action-btn" id="oaClearChatBtn">Clear</button>
+          <button type="button" class="oa-dialog-action-btn" id="oaCloseDialogBtn">Close</button>
+        </div>
+      </div>
+
+      <div class="oa-dialog-chips">
+        <button type="button" class="oa-chip-btn" data-prompt="Analyze trend, momentum and key pivot levels">Trend &
+          Pivots</button>
+        <button type="button" class="oa-chip-btn" data-prompt="Calculate Support and Resistance levels">Support &
+          Resistance</button>
+        <button type="button" class="oa-chip-btn" data-prompt="Check Dhan margin and available funds">Margin &
+          Funds</button>
+        <button type="button" class="oa-chip-btn" data-prompt="List active open positions and PnL">Open
+          Positions</button>
+      </div>
+
+      <div class="oa-dialog-messages" id="oaDialogMessages">
+        <!-- Populated from localStorage -->
+      </div>
+
+      <form class="oa-dialog-input-area" id="oaChatForm">
+        <input type="text" class="oa-input-box" id="oaChatInput"
+          placeholder="Ask about active chart, technicals, or trade..." autocomplete="off" />
+        <button type="submit" class="oa-send-btn">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'oa_trading_chat_history_v2';
+
+      const rootWidget = document.getElementById('oa-trading-gemini-root');
+      const pill = document.getElementById('oaGeminiPill');
+      const dialog = document.getElementById('oaGeminiDialog');
+      const closeBtn = document.getElementById('oaCloseDialogBtn');
+      const clearBtn = document.getElementById('oaClearChatBtn');
+      const chatForm = document.getElementById('oaChatForm');
+      const chatInput = document.getElementById('oaChatInput');
+      const messagesBox = document.getElementById('oaDialogMessages');
+
+      let isAiLoading = false;
+
+      // Strip all Emojis
+      function removeEmojis(str) {
+        if (!str) return '';
+        return str.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2300}-\u{23FF}\u{2B50}\u{2728}\u{2705}\u{274C}\u{26A0}]/gu, '').trim();
+      }
+
+      // LocalStorage Helpers
+      function getStoredMessages() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveMessage(msg) {
+        try {
+          const list = getStoredMessages();
+          list.push(msg);
+          if (list.length > 50) list.splice(0, list.length - 50);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch (e) { }
+      }
+
+      function renderStoredMessages() {
+        const list = getStoredMessages();
+        if (!messagesBox) return;
+
+        if (list.length === 0) {
+          messagesBox.innerHTML = `
+              <div class="oa-msg assistant">
+                <div class="oa-analysis-title">Ask me · Trading Assistant</div>
+                <div class="oa-bullet-row">
+                  <span class="oa-bullet-dot">›</span>
+                  <span class="oa-bullet-text">Connected live to <strong>Dhan Market Data API</strong>. Ask about technical setups, pivots, or 2-step order execution.</span>
+                </div>
+              </div>
+            `;
+          return;
+        }
+
+        messagesBox.innerHTML = '';
+        list.forEach(item => {
+          const div = document.createElement('div');
+          div.className = item.role === 'user' ? 'oa-msg user' : 'oa-msg assistant';
+          if (item.role === 'user') {
+            div.textContent = item.content;
+          } else {
+            div.innerHTML = item.html || parseToStructuredHTML(item.content);
+            if (item.orderConfirmation) {
+              const oc = item.orderConfirmation;
+              const ocDiv = document.createElement('div');
+              ocDiv.className = 'oa-order-card';
+              ocDiv.innerHTML = `
+                  <div style="font-weight:bold;color:#e9d5ff;margin-bottom:4px;">Confirm Order Execution</div>
+                  Action: <strong>${oc.action}</strong> | ${oc.quantity} Qty ${oc.symbol}<br>
+                  Est. Price: ~₹${oc.estimated_price} | Value: ₹${Number(oc.estimated_cost).toLocaleString()}
+                  <button type="button" class="oa-order-btn" onclick="executeDhanConfirmedOrder('${oc.token}')">
+                    Confirm & Place Dhan Order
+                  </button>
+                `;
+              div.appendChild(ocDiv);
+            }
+          }
+          messagesBox.appendChild(div);
+        });
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+      }
+
+      // Initialize history from localStorage
+      renderStoredMessages();
+
+      // Route Tracking for /trading
+      function checkRoute() {
+        const isTrading = window.location.pathname.startsWith('/trading');
+        if (rootWidget) {
+          rootWidget.style.display = isTrading ? 'flex' : 'none';
+        }
+      }
+
+      const pushState = history.pushState;
+      history.pushState = function () {
+        pushState.apply(history, arguments);
+        checkRoute();
+      };
+      const replaceState = history.replaceState;
+      history.replaceState = function () {
+        replaceState.apply(history, arguments);
+        checkRoute();
+      };
+      window.addEventListener('popstate', checkRoute);
+      setInterval(checkRoute, 300);
+      checkRoute();
+
+      function openDialog() {
+        if (pill) pill.style.display = 'none';
+        if (dialog) dialog.classList.add('open');
+        if (chatInput) setTimeout(() => chatInput.focus(), 100);
+      }
+
+      function closeDialog() {
+        if (dialog) dialog.classList.remove('open');
+        if (pill) pill.style.display = 'flex';
+      }
+
+      if (pill) pill.addEventListener('click', openDialog);
+      if (closeBtn) closeBtn.addEventListener('click', closeDialog);
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          localStorage.removeItem(STORAGE_KEY);
+          renderStoredMessages();
+        });
+      }
+
+      document.querySelectorAll('.oa-chip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const prompt = btn.getAttribute('data-prompt');
+          if (prompt) sendPrompt(prompt);
+        });
+      });
+
+      if (chatForm) {
+        chatForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const text = chatInput ? chatInput.value.trim() : '';
+          if (text) {
+            chatInput.value = '';
+            sendPrompt(text);
+          }
+        });
+      }
+
+      // Clean Step-by-Step HTML Parser
+      function parseToStructuredHTML(rawMarkdown) {
+        let text = removeEmojis(rawMarkdown || '');
+
+        text = text.replace(/^###\s*(.*$)/gim, '<div class="oa-analysis-title">$1</div>');
+        text = text.replace(/^####\s*(.*$)/gim, '<div class="oa-step-card"><div class="oa-step-tag">Step</div><div class="oa-step-name">$1</div></div>');
+        text = text.replace(/\*\*Step\s*(\d+):?\s*([^*]+)\*\*/gim, '<div class="oa-step-card"><div class="oa-step-tag">Step $1</div><div class="oa-step-name">$2</div></div>');
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/`([^`]+)`/g, '<code class="oa-code-pill">$1</code>');
+        text = text.replace(/^•\s*(.*$)/gim, '<div class="oa-bullet-row"><span class="oa-bullet-dot">›</span><span class="oa-bullet-text">$1</span></div>');
+        text = text.replace(/\n\n/g, '<div style="height:6px;"></div>');
+        text = text.replace(/\n/g, '<br>');
+
+        return text;
+      }
+
+      // Step-by-Step Progressive Fading Animation
+      function animateStepByStep(container, htmlContent, orderConfirmation, rawText) {
+        container.innerHTML = '';
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlContent;
+
+        const nodes = Array.from(temp.childNodes);
+        let i = 0;
+
+        function renderNext() {
+          if (i < nodes.length) {
+            const node = nodes[i].cloneNode(true);
+            if (node.nodeType === 1) {
+              node.style.opacity = '0';
+              node.style.transform = 'translateY(4px)';
+              node.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+              container.appendChild(node);
+              setTimeout(() => {
+                node.style.opacity = '1';
+                node.style.transform = 'translateY(0)';
+              }, 20);
+            } else {
+              container.appendChild(node);
+            }
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+            i++;
+            setTimeout(renderNext, 140);
+          } else {
+            if (orderConfirmation) {
+              const oc = orderConfirmation;
+              const ocDiv = document.createElement('div');
+              ocDiv.className = 'oa-order-card';
+              ocDiv.innerHTML = `
+                  <div style="font-weight:bold;color:#e9d5ff;margin-bottom:4px;">Confirm Order Execution</div>
+                  Action: <strong>${oc.action}</strong> | ${oc.quantity} Qty ${oc.symbol}<br>
+                  Est. Price: ~₹${oc.estimated_price} | Value: ₹${Number(oc.estimated_cost).toLocaleString()}
+                  <button type="button" class="oa-order-btn" onclick="executeDhanConfirmedOrder('${oc.token}')">
+                    Confirm & Place Dhan Order
+                  </button>
+                `;
+              container.appendChild(ocDiv);
+              messagesBox.scrollTop = messagesBox.scrollHeight;
+            }
+
+            // Persist Assistant Message to localStorage
+            saveMessage({
+              role: 'assistant',
+              content: rawText,
+              html: htmlContent,
+              orderConfirmation: orderConfirmation,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+        renderNext();
+      }
+
+      async function sendPrompt(promptText) {
+        if (!messagesBox || isAiLoading) return;
+        openDialog();
+
+        const cleanPrompt = removeEmojis(promptText);
+
+        // User Msg
+        const userRow = document.createElement('div');
+        userRow.className = 'oa-msg user';
+        userRow.textContent = cleanPrompt;
+        messagesBox.appendChild(userRow);
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+
+        // Persist User Message
+        saveMessage({
+          role: 'user',
+          content: cleanPrompt,
+          timestamp: new Date().toISOString()
+        });
+
+        // Loading Msg
+        const loadRow = document.createElement('div');
+        loadRow.className = 'oa-msg assistant';
+        loadRow.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><div class="oa-soundwave-icon" style="width:18px;height:18px;"><div class="oa-soundwave-bar" style="height:5px;"></div><div class="oa-soundwave-bar" style="height:10px;"></div><div class="oa-soundwave-bar" style="height:8px;"></div><div class="oa-soundwave-bar" style="height:4px;"></div></div><em>Synthesizing Dhan market feeds step by step...</em></div>';
+        messagesBox.appendChild(loadRow);
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+
+        isAiLoading = true;
+
+        try {
+          const res = await fetch('/api/copilot/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: 'trading-gemini-session',
+              message: cleanPrompt,
+              active_symbol: 'NIFTY',
+              active_timeframe: '5m'
+            })
+          });
+          const data = await res.json();
+
+          if (data.status === 'success' || data.response_text) {
+            const raw = data.response_text || data.response || '';
+            const structuredHTML = parseToStructuredHTML(raw);
+            animateStepByStep(loadRow, structuredHTML, data.order_confirmation, raw);
+          } else {
+            loadRow.innerHTML = `<span style="color:#dc2626;">Notice: ${data.message || 'Complete.'}</span>`;
+          }
+        } catch (e) {
+          loadRow.innerHTML = `<span style="color:#dc2626;">Error: ${e.message}</span>`;
+        } finally {
+          isAiLoading = false;
+          messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+      }
+
+      window.executeDhanConfirmedOrder = async function (token) {
+        try {
+          const res = await fetch('/api/copilot/execute-confirmed-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          });
+          const data = await res.json();
+          alert(data.status === 'SUCCESS' ? `Order Placed!\nOrder ID: ${data.order_id}` : `Notice: ${data.message}`);
+        } catch (e) {
+          alert('Error placing order: ' + e.message);
+        }
+      };
+
+      /* =========================================================================
+         MARKET NEWS FEATURE INTEGRATION (Main Navigation & Real-Time Cards)
+         ========================================================================= */
+
+      // 1. Inject "News" in Top Navigation Bar & Handle Tab Highlighting
+      function ensureNewsNavLink() {
+        const navLinks = document.querySelectorAll('header nav a, nav a');
+        let tradingLink = null;
+        let platformsLink = null;
+        let newsLink = document.getElementById('oa-nav-news-link');
+
+        navLinks.forEach(link => {
+          const href = link.getAttribute('href') || '';
+          const txt = link.textContent.trim().toLowerCase();
+          if (href === '/trading' || txt.includes('trading')) tradingLink = link;
+          if (href === '/platforms' || txt.includes('platforms')) platformsLink = link;
+          if (link.id === 'oa-nav-news-link') newsLink = link;
+
+          if (!link.dataset.hasNewsNavListener && link.id !== 'oa-nav-news-link') {
+            link.dataset.hasNewsNavListener = 'true';
+            link.addEventListener('click', () => {
+              setTimeout(handleRouteNews, 50);
+            });
+          }
+        });
+
+        if (!newsLink && tradingLink && tradingLink.parentElement) {
+          newsLink = document.createElement('a');
+          newsLink.id = 'oa-nav-news-link';
+          newsLink.href = '/news';
+          newsLink.innerHTML = `
+            <svg style="width:15px;height:15px;margin-right:6px;display:inline-block;vertical-align:text-bottom;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path>
+              <path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path>
+            </svg>
+            <span>News</span>
+          `;
+          newsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            history.pushState(null, '', '/news');
+            window.dispatchEvent(new Event('popstate'));
+            handleRouteNews();
+          });
+          tradingLink.parentElement.insertBefore(newsLink, tradingLink.nextSibling);
+        }
+
+        // Apply active/inactive styles correctly based on current URL path
+        if (newsLink) {
+          const isNews = window.location.pathname === '/news' || window.location.pathname === '/news/';
+          const isTrading = window.location.pathname.startsWith('/trading');
+
+          if (isNews) {
+            // Set News active (white background pill like active tab)
+            newsLink.style.cssText = 'display:inline-flex;align-items:center;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;background:#ffffff;color:#000000;box-shadow:0 1px 3px rgba(0,0,0,0.2);cursor:pointer;';
+            if (tradingLink) {
+              tradingLink.style.background = 'transparent';
+              tradingLink.style.color = '#94a3b8';
+              tradingLink.style.boxShadow = 'none';
+            }
+          } else {
+            // Set News inactive (transparent background with muted text)
+            newsLink.style.cssText = 'display:inline-flex;align-items:center;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;background:transparent;color:#94a3b8;cursor:pointer;';
+            if (isTrading && tradingLink) {
+              tradingLink.style.background = '';
+              tradingLink.style.color = '';
+              tradingLink.style.boxShadow = '';
+            }
+          }
+        }
+      }
+
+      setInterval(ensureNewsNavLink, 400);
+      ensureNewsNavLink();
+
+      // 2. Real-Time Market News Page
+      const newsOverlaysHtml = `
+        <style>
+          /* Full News Page Container */
+          #oa-news-page-container {
+            display: none;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 45;
+            background: #030712;
+            color: #f8fafc;
+            padding: 24px 28px 60px 28px;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          }
+          #oa-news-page-container.active { display: block; }
+
+          .oa-news-tab-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            color: #94a3b8;
+            transition: all 0.15s;
+            white-space: nowrap;
+          }
+          .oa-news-tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255,255,255,0.08);
+          }
+          .oa-news-tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #3b82f6;
+          }
+          .oa-news-card {
+            background: #0b1120;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+          }
+          .oa-news-card:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            background: #0f172a;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+          }
+          .oa-impact-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+          }
+          .oa-impact-high { background: rgba(225, 29, 72, 0.2); color: #fb7185; border: 1px solid rgba(225, 29, 72, 0.4); }
+          .oa-impact-medium { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
+          .oa-impact-low { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.3); }
+        </style>
+
+        <div id="oa-news-page-container">
+          <div style="max-width:1240px;margin:0 auto;">
+            <!-- Header -->
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:16px;gap:12px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <h1 style="font-size:22px;font-weight:800;margin:0;">Market News</h1>
+                  <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;"></span> Live Feed
+                  </span>
+                </div>
+                <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Real-time market intelligence, multi-source event clusters, and algorithmic trending ranking</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="text" id="oa-news-search-input" placeholder="Search news, stocks, RBI, Fed..." style="background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;color:#ffffff;font-size:12px;width:240px;" />
+                <button type="button" id="oa-news-refresh-btn" style="background:#1e293b;border:1px solid rgba(255,255,255,0.15);color:#ffffff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">Refresh</button>
+              </div>
+            </div>
+
+            <!-- Tabs Bar -->
+            <div style="display:flex;overflow-x:auto;gap:6px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);" id="oa-news-tabs-bar">
+              <button class="oa-news-tab-btn active" data-tab="All">All</button>
+              <button class="oa-news-tab-btn" data-tab="Trending">Trending</button>
+              <button class="oa-news-tab-btn" data-tab="Breaking">Breaking</button>
+              <button class="oa-news-tab-btn" data-tab="India">India</button>
+              <button class="oa-news-tab-btn" data-tab="Global">Global</button>
+              <button class="oa-news-tab-btn" data-tab="Stocks">Stocks</button>
+              <button class="oa-news-tab-btn" data-tab="Indices">Indices</button>
+              <button class="oa-news-tab-btn" data-tab="Sectors">Sectors</button>
+              <button class="oa-news-tab-btn" data-tab="Commodities">Commodities</button>
+              <button class="oa-news-tab-btn" data-tab="Economy">Economy</button>
+            </div>
+
+            <!-- 2-Column Grid -->
+            <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;margin-top:18px;" id="oa-news-grid">
+              <!-- Left Feed -->
+              <div id="oa-news-feed-col">
+                <div style="text-align:center;padding:40px;color:#94a3b8;">Loading latest market intelligence...</div>
+              </div>
+
+              <!-- Right Sidebar -->
+              <div id="oa-news-sidebar-col" style="display:flex;flex-direction:column;gap:16px;">
+                <div style="background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;">
+                  <div style="font-size:12px;font-weight:700;color:#f8fafc;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                    🔥 Trending Market Movers
+                  </div>
+                  <div id="oa-trending-list" style="display:flex;flex-direction:column;gap:10px;font-size:12px;"></div>
+                </div>
+
+                <div style="background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;">
+                  <div style="font-size:12px;font-weight:700;color:#f8fafc;text-transform:uppercase;margin-bottom:8px;">
+                    📈 My Market Watchlist
+                  </div>
+                  <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">Filter catalysts for core heavyweights:</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;" id="oa-watchlist-chips">
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('NIFTY')">NIFTY</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('BANKNIFTY')">BANKNIFTY</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('SENSEX')">SENSEX</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('RELIANCE')">RELIANCE</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('HDFCBANK')">HDFCBANK</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('TCS')">TCS</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('BHEL')">BHEL</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('CRUDEOIL')">CRUDEOIL</button>
+                    <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('GOLD')">GOLD</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', newsOverlaysHtml);
+
+      // Route handling for News Page
+      const newsPage = document.getElementById('oa-news-page-container');
+      let currentNewsTab = 'All';
+
+      function handleRouteNews() {
+        const isNews = window.location.pathname === '/news' || window.location.pathname === '/news/';
+        if (newsPage) {
+          newsPage.classList.toggle('active', isNews);
+          newsPage.style.display = isNews ? 'block' : 'none';
+          if (isNews) {
+            loadNewsFeedData();
+          }
+        }
+      }
+
+      window.addEventListener('popstate', handleRouteNews);
+      setInterval(handleRouteNews, 400);
+      handleRouteNews();
+
+      // Load News Feed Data for /news Page
+      async function loadNewsFeedData() {
+        const feedCol = document.getElementById('oa-news-feed-col');
+        const trendingList = document.getElementById('oa-trending-list');
+        const searchInput = document.getElementById('oa-news-search-input');
+        const query = searchInput ? searchInput.value.trim() : '';
+
+        try {
+          const url = query
+            ? `/api/news/search?q=${encodeURIComponent(query)}`
+            : `/api/news/feed?tab=${encodeURIComponent(currentNewsTab)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+
+          const arts = data.articles || [];
+          const trending = data.trending_news || [];
+
+          if (feedCol) {
+            if (arts.length === 0) {
+              feedCol.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No market news found for this selection.</div>';
+            } else {
+              feedCol.innerHTML = arts.map(art => renderNewsCardHTML(art)).join('');
+            }
+          }
+
+          if (trendingList && trending.length > 0) {
+            trendingList.innerHTML = trending.slice(0, 5).map((t, idx) => `
+              <div style="border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:8px;">
+                <div style="color:#38bdf8;font-size:10px;font-weight:700;">#${idx+1} ${t.source}</div>
+                <a href="${t.source_url || t.url || '#'}" target="_blank" rel="noopener noreferrer" style="font-weight:600;color:#f1f5f9;margin-top:2px;display:block;text-decoration:none;line-height:1.3;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#f1f5f9'">${t.title}</a>
+                <div style="margin-top:4px;"><span class="oa-impact-badge oa-impact-medium">Score ${t.trending_score}</span></div>
+              </div>
+            `).join('');
+          }
+        } catch (e) {
+          if (feedCol) feedCol.innerHTML = `<div style="color:#f43f5e;padding:20px;">News temporarily unavailable. Retrying... (${e.message})</div>`;
+        }
+      }
+
+      function renderNewsCardHTML(art) {
+        const impactClass = art.market_impact === 'HIGH' ? 'oa-impact-high' : (art.market_impact === 'MEDIUM' ? 'oa-impact-medium' : 'oa-impact-low');
+        const sourcesText = art.sources_count > 1 ? `<span style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:10px;margin-left:6px;">👥 ${art.sources_count} sources</span>` : '';
+        const symbolsTags = (art.symbols || []).map(s => `<span style="background:rgba(56,189,248,0.15);color:#38bdf8;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:4px;font-weight:bold;">${s}</span>`).join('');
+        const articleUrl = art.source_url || art.url || '#';
+
+        return `
+          <div class="oa-news-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:8px;">
+              <div><strong>${art.source}</strong>${sourcesText}</div>
+              <div><span class="oa-impact-badge ${impactClass}">${art.market_impact_label || 'Potential Market Impact: '+art.market_impact}</span></div>
+            </div>
+            <a href="${articleUrl}" target="_blank" rel="noopener noreferrer" style="font-size:15px;font-weight:700;color:#f8fafc;line-height:1.35;margin-bottom:8px;display:block;text-decoration:none;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#f8fafc'">
+              ${art.title}
+            </a>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.45;margin-bottom:10px;">
+              ${art.summary || ''}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
+              <div>${symbolsTags}</div>
+              <a href="${articleUrl}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;font-weight:600;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                Read Full Story ↗
+              </a>
+            </div>
+          </div>
+        `;
+      }
+
+      window.filterByWatchlistSymbol = function(sym) {
+        const searchInput = document.getElementById('oa-news-search-input');
+        if (searchInput) {
+          searchInput.value = sym;
+          loadNewsFeedData();
+        }
+      };
+
+      // Wire Tab Buttons
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('oa-news-tab-btn') && e.target.hasAttribute('data-tab')) {
+          document.querySelectorAll('.oa-news-tab-btn[data-tab]').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentNewsTab = e.target.getAttribute('data-tab');
+          loadNewsFeedData();
+        }
+      });
+
+      const refreshBtn = document.getElementById('oa-news-refresh-btn');
+      if (refreshBtn) refreshBtn.addEventListener('click', loadNewsFeedData);
+
+      const searchInput = document.getElementById('oa-news-search-input');
+      if (searchInput) {
+        let searchTimeout = null;
+        searchInput.addEventListener('input', () => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(loadNewsFeedData, 350);
+        });
+      }
+    })();
+  </script>
+</body>
+
 </html>

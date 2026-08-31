@@ -436,45 +436,92 @@ def broker_callback(broker, para=None):
                 return redirect("/dhan/initiate-oauth")
 
         elif request.method == "POST":
-            # This should only handle direct access token submission now
-            # OAuth flow is handled by /dhan/initiate-oauth
-            access_token = request.form.get("access_token")
+            # Extract credentials from JSON or Form data
+            payload = request.get_json(silent=True) or {}
+            dhan_client_id = (
+                payload.get("dhanClientId")
+                or payload.get("dhan_client_id")
+                or payload.get("clientId")
+                or payload.get("client_id")
+                or request.form.get("dhanClientId")
+                or request.form.get("dhan_client_id")
+                or request.form.get("client_id")
+                or request.form.get("userid")
+            )
+            pin = payload.get("pin") or request.form.get("pin")
+            totp = payload.get("totp") or request.form.get("totp")
+            access_token = payload.get("access_token") or request.form.get("access_token")
 
-            if access_token:
-                # Direct token authentication
+            # Case 1: Direct TOTP authentication (dhanClientId + pin + totp)
+            if dhan_client_id and pin and totp:
+                logger.info(f"Processing direct Dhan TOTP authentication for client: {dhan_client_id}")
+                from broker.dhan.api.auth_api import generate_access_token_with_totp
+                from broker.dhan.api.funds import test_auth_token
+
+                auth_token, metadata, err = generate_access_token_with_totp(dhan_client_id, pin, totp)
+                if auth_token:
+                    is_valid, validation_error = test_auth_token(auth_token)
+                    if is_valid:
+                        user_id = str(dhan_client_id).strip()
+                        forward_url = "broker.html"
+                        if request.is_json:
+                            # Handle session and DB persistence immediately for API calls
+                            user_session_key = session.get("user")
+                            if not user_session_key:
+                                from database.user_db import find_user_by_username
+                                admin_user = find_user_by_username()
+                                user_session_key = admin_user.username if admin_user else "admin"
+                                session["user"] = user_session_key
+
+                            handle_auth_success(auth_token, user_session_key, "dhan", user_id=user_id)
+                            return jsonify({
+                                "status": "success",
+                                "accessToken": auth_token,
+                                "dhanClientId": user_id,
+                                "redirect_url": "/dashboard",
+                            }), 200
+                    else:
+                        logger.error(f"Dhan TOTP token validation failed: {validation_error}")
+                        return jsonify({
+                            "status": "error",
+                            "message": f"Token validation failed: {validation_error}",
+                        }), 401
+                else:
+                    return jsonify({
+                        "status": "error",
+                        "message": err or "Authentication failed. Please verify Client ID, PIN, and TOTP.",
+                    }), 400
+
+            # Case 2: Direct Access Token
+            elif access_token:
                 logger.info("Processing direct access token for Dhan")
                 auth_token, error_message = auth_function(access_token)
 
                 if auth_token:
-                    # Validate authentication by testing funds API
                     from broker.dhan.api.funds import test_auth_token
 
                     is_valid, validation_error = test_auth_token(auth_token)
-
                     if is_valid:
                         logger.info("Dhan direct token authentication successful")
                         forward_url = "broker.html"
-                        # The auth_token will be handled by the common success flow below
+                        if dhan_client_id:
+                            user_id = str(dhan_client_id).strip()
                     else:
                         logger.error(f"Dhan direct token validation failed: {validation_error}")
-                        return jsonify(
-                            {
-                                "status": "error",
-                                "message": f"Token validation failed: {validation_error}",
-                            }
-                        ), 401
+                        return jsonify({
+                            "status": "error",
+                            "message": f"Token validation failed: {validation_error}",
+                        }), 401
                 else:
-                    return jsonify(
-                        {"status": "error", "message": error_message or "Invalid access token"}
-                    ), 401
-            else:
-                # If no access token provided, return error
-                return jsonify(
-                    {
+                    return jsonify({
                         "status": "error",
-                        "message": "Please provide either Client ID for OAuth or Access Token for direct login",
-                    }
-                ), 400
+                        "message": error_message or "Invalid access token",
+                    }), 401
+            else:
+                return jsonify({
+                    "status": "error",
+                    "message": "Please provide Client ID, PIN, and TOTP to authenticate.",
+                }), 400
     elif broker == "indmoney":
         # Two credential shapes are supported (docs 04-authentication-users):
         #   BROKER_API_SECRET set -> a manually generated 24h access token; use
@@ -1099,14 +1146,75 @@ def dhan_initiate_oauth():
         return handle_auth_failure(error_message, forward_url="broker.html")
 
 
-# Old Kotak SMS OTP flow - deprecated in favor of TOTP authentication
-# Keeping this commented for reference if needed
-# @brlogin_bp.route('/<broker>/loginflow', methods=['POST','GET'])
-# @limiter.limit(LOGIN_RATE_LIMIT_MIN)
-# @limiter.limit(LOGIN_RATE_LIMIT_HOUR)
-# def broker_loginflow(broker):
-#     # This function is no longer used for Kotak TOTP authentication
-#     pass
+@brlogin_bp.route("/api/dhan/generate-token", methods=["POST"])
+@brlogin_bp.route("/dhan/generate-token", methods=["POST"])
+@limiter.limit(LOGIN_RATE_LIMIT_MIN)
+@limiter.limit(LOGIN_RATE_LIMIT_HOUR)
+def dhan_generate_token():
+    """Direct Dhan TOTP Token Generation endpoint.
+
+    Expects JSON or Form with dhanClientId, pin, and totp.
+    Calls POST https://auth.dhan.co/app/generateAccessToken
+    and registers the session on success.
+    """
+    payload = request.get_json(silent=True) or {}
+    dhan_client_id = (
+        payload.get("dhanClientId")
+        or payload.get("dhan_client_id")
+        or payload.get("clientId")
+        or payload.get("client_id")
+        or request.form.get("dhanClientId")
+        or request.form.get("dhan_client_id")
+        or request.form.get("client_id")
+        or request.form.get("userid")
+    )
+    pin = payload.get("pin") or request.form.get("pin")
+    totp = payload.get("totp") or request.form.get("totp")
+
+    if not dhan_client_id or not pin or not totp:
+        return jsonify({
+            "status": "error",
+            "message": "Client ID, PIN, and TOTP are all required.",
+        }), 400
+
+    from broker.dhan.api.auth_api import generate_access_token_with_totp
+    from broker.dhan.api.funds import test_auth_token
+
+    access_token, metadata, err = generate_access_token_with_totp(dhan_client_id, pin, totp)
+    if not access_token:
+        return jsonify({
+            "status": "error",
+            "message": err or "Authentication failed. Please verify Client ID, PIN, and TOTP.",
+        }), 400
+
+    is_valid, validation_error = test_auth_token(access_token)
+    if not is_valid:
+        return jsonify({
+            "status": "error",
+            "message": f"Token validation failed: {validation_error}",
+        }), 401
+
+    # Ensure user session is populated
+    user_session_key = session.get("user")
+    if not user_session_key:
+        from database.user_db import find_user_by_username
+        admin_user = find_user_by_username()
+        user_session_key = admin_user.username if admin_user else "admin"
+        session["user"] = user_session_key
+
+    client_id_str = str(dhan_client_id).strip()
+    session["broker"] = "dhan"
+    session["USER_ID"] = client_id_str
+
+    handle_auth_success(access_token, user_session_key, "dhan", user_id=client_id_str)
+
+    return jsonify({
+        "status": "success",
+        "accessToken": access_token,
+        "dhanClientId": client_id_str,
+        "message": "Dhan account connected successfully",
+        "redirect_url": "/dashboard",
+    }), 200
 
 
 # ============================================================

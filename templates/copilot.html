@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAlgo | Gemini Quantitative AI Copilot</title>
+  <meta name="description" content="Dedicated institutional AI quantitative analyst powered by Google Gemini LLM and Dhan live market feeds.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================================================
+       1. CORE DESIGN SYSTEM & TOKENS
+       ========================================================================= */
+    :root {
+      --bg-base: #060a14;
+      --bg-surface: #0b1120;
+      --bg-card: #0f172a;
+      --bg-card-hover: #1e293b;
+      --bg-input: #040711;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.14);
+      --border-active: rgba(168, 85, 247, 0.5);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --brand-purple: #c084fc;
+      --brand-indigo: #6366f1;
+      --brand-cyan: #38bdf8;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-amber: #fbbf24;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 9999px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --nav-height: 52px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-full); }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* =========================================================================
+       2. TOP GLOBAL NAVIGATION BAR
+       ========================================================================= */
+    .oa-navbar {
+      height: var(--nav-height);
+      background: #040711;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      user-select: none;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-logo-img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .nav-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-tab-btn.active {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+      font-weight: 700;
+    }
+    .nav-tab-btn.active-copilot {
+      color: #ffffff;
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(79, 70, 229, 0.3));
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      font-weight: 700;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1px solid var(--border-subtle);
+    }
+    .pill-broker {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+    .pill-model {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: #c084fc;
+    }
+    .pill-mode {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.25);
+      color: #7dd3fc;
+    }
+
+    /* =========================================================================
+       3. MAIN TWO-COLUMN WORKSTATION LAYOUT
+       ========================================================================= */
+    .copilot-workstation {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - var(--nav-height));
+      overflow: hidden;
+    }
+
+    /* LEFT SIDEBAR: Context, Portfolio & Prompt Library */
+    .copilot-sidebar {
+      width: 360px;
+      background: #080d1a;
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .sidebar-section-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Active Watchlist & Selector */
+    .symbol-pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .symbol-pill {
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .symbol-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+    .symbol-pill.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--brand-cyan);
+    }
+    .symbol-price-badge {
+      font-size: 0.68rem;
+      color: var(--accent-green);
+    }
+
+    /* Capital & Margin Card */
+    .portfolio-mini-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+    .metric-label {
+      color: var(--text-secondary);
+    }
+    .metric-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Quick Prompt Library */
+    .prompt-library-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .prompt-card-btn {
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      text-align: left;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prompt-card-btn:hover {
+      background: rgba(168, 85, 247, 0.12);
+      border-color: rgba(168, 85, 247, 0.35);
+      color: #e9d5ff;
+      transform: translateX(2px);
+    }
+
+    /* RIGHT WORKSTATION: Chat Feed & Rich Input Area */
+    .copilot-main {
+      flex: 1;
+      background: #060a14;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Copilot Workstation Header Bar */
+    .copilot-header-bar {
+      height: 48px;
+      padding: 0 20px;
+      background: #090e1c;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .copilot-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    /* Chat Messages Thread */
+    .copilot-chat-thread {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chat-bubble-container {
+      display: flex;
+      gap: 12px;
+      max-width: 85%;
+    }
+    .chat-bubble-container.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .chat-bubble-container.assistant {
+      align-self: flex-start;
+    }
+
+    .chat-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .chat-avatar.assistant {
+      background: linear-gradient(135deg, #9333ea, #6366f1);
+      box-shadow: 0 2px 8px rgba(147, 51, 234, 0.35);
+      color: #ffffff;
+    }
+    .chat-avatar.user {
+      background: #334155;
+      color: #e2e8f0;
+    }
+
+    .chat-bubble {
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .chat-bubble.assistant {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border-top-left-radius: 2px;
+    }
+    .chat-bubble.user {
+      background: linear-gradient(135deg, #4f46e5, #2563eb);
+      color: #ffffff;
+      border-top-right-radius: 2px;
+      font-weight: 500;
+    }
+
+    /* Order Execution Confirmation Box */
+    .order-confirm-card {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+    .order-confirm-title {
+      font-weight: 700;
+      color: #e9d5ff;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .order-confirm-details {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+    .btn-execute-order {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #22c55e;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-execute-order:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    /* Bottom Input Bar */
+    .copilot-input-container {
+      padding: 16px 20px;
+      background: #080d1a;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .quick-symbol-chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .chip-tag {
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip-tag:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .input-form-row {
+      display: flex;
+      gap: 10px;
+    }
+    .chat-input-box {
+      flex: 1;
+      height: 44px;
+      background: #040711;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      padding: 0 16px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .chat-input-box:focus {
+      border-color: var(--brand-purple);
+      box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.2);
+    }
+
+    .btn-submit-chat {
+      height: 44px;
+      padding: 0 20px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
+      border: none;
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(147, 51, 234, 0.35);
+    }
+    .btn-submit-chat:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+    .btn-submit-chat:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP GLOBAL NAVBAR -->
+  <header class="oa-navbar">
+    <div class="nav-left">
+      <a href="/dashboard" class="brand-logo-link">
+        <img src="/logo.png" alt="OpenAlgo" class="brand-logo-img" />
+        <span>OpenAlgo</span>
+      </a>
+
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn" onclick="location.href='/dashboard'">Dashboard</button>
+        <button class="nav-tab-btn" onclick="location.href='/orderbook'">Orderbook</button>
+        <button class="nav-tab-btn" onclick="location.href='/tradebook'">Tradebook</button>
+        <button class="nav-tab-btn" onclick="location.href='/positions'">Positions</button>
+        <button class="nav-tab-btn" onclick="location.href='/trading'">Trading</button>
+        <button class="nav-tab-btn" onclick="location.href='/platforms'">Platforms</button>
+        <button class="nav-tab-btn" onclick="location.href='/strategy'">&lt;/&gt; Strategy</button>
+        <button class="nav-tab-btn" onclick="location.href='/logs'">Logs</button>
+        <button class="nav-tab-btn" onclick="location.href='/tools'">Tools</button>
+        <button class="nav-tab-btn active-copilot" onclick="location.href='/copilot'">✨ Copilot</button>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <div class="pill-badge pill-broker">
+        <span>●</span>
+        <span>Dhan (1113284554)</span>
+      </div>
+      <div class="pill-badge pill-model">
+        <span>✨</span>
+        <span>Gemini 2.5 Flash</span>
+      </div>
+      <div class="pill-badge pill-mode">
+        <span>Live Mode</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSTATION -->
+  <div class="copilot-workstation">
+    
+    <!-- LEFT CONTEXT SIDEBAR -->
+    <aside class="copilot-sidebar">
+      
+      <!-- 1. Active Instrument Watch -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <span>Active Instrument</span>
+          <span style="font-size: 0.65rem; color: var(--brand-cyan);" id="activeTfBadge">5m Timeframe</span>
+        </div>
+        <div class="symbol-pill-list" id="symbolPills">
+          <div class="symbol-pill active" data-symbol="BHEL">
+            <span>BHEL</span>
+            <span class="symbol-price-badge">₹430.85</span>
+          </div>
+          <div class="symbol-pill" data-symbol="NIFTY">
+            <span>NIFTY</span>
+            <span class="symbol-price-badge">24,520</span>
+          </div>
+          <div class="symbol-pill" data-symbol="BANKNIFTY">
+            <span>BANKNIFTY</span>
+            <span class="symbol-price-badge">51,480</span>
+          </div>
+          <div class="symbol-pill" data-symbol="RELIANCE">
+            <span>RELIANCE</span>
+            <span class="symbol-price-badge">2,885</span>
+          </div>
+          <div class="symbol-pill" data-symbol="TCS">
+            <span>TCS</span>
+            <span class="symbol-price-badge">4,190</span>
+          </div>
+          <div class="symbol-pill" data-symbol="INFY">
+            <span>INFY</span>
+            <span class="symbol-price-badge">1,825</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Account Funds & Margin Overview -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <span>Dhan Account Capital</span>
+          <span style="color: var(--accent-green);">● Active</span>
+        </div>
+        <div class="portfolio-mini-card">
+          <div class="metric-row">
+            <span class="metric-label">Available Cash:</span>
+            <span class="metric-val" style="color: #4ade80;" id="valCash">₹0.18</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Collateral Margin:</span>
+            <span class="metric-val" id="valCollateral">₹0.00</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Utilized Margin:</span>
+            <span class="metric-val" id="valUtilized">₹0.00</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Open Positions:</span>
+            <span class="metric-val" style="color: var(--brand-cyan);" id="valPositions">0 Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Quantitative Analysis Prompt Library -->
+      <div class="sidebar-section" style="flex: 1;">
+        <div class="sidebar-section-title">
+          <span>Quantitative Analysis</span>
+          <span>Prompt Library</span>
+        </div>
+        <div class="prompt-library-list">
+          <button class="prompt-card-btn" data-prompt="Analyze Trend, Momentum, and Volume Profile for active symbol.">
+            <span>⚡</span>
+            <span>Trend & Momentum Structure</span>
+          </button>
+          <button class="prompt-card-btn" data-prompt="Calculate Key Support, Resistance, and Structural Pivot levels.">
+            <span>🎯</span>
+            <span>Support & Resistance Levels</span>
+          </button>
+          <button class="prompt-card-btn" data-prompt="Evaluate RSI (14) and EMA Confluence (9/21/50/200).">
+            <span>📊</span>
+            <span>RSI & Multi-EMA Confluence</span>
+          </button>
+          <button class="prompt-card-btn" data-prompt="Evaluate Options OI Distribution, Max Pain, and Put-Call Ratio (PCR).">
+            <span>📑</span>
+            <span>Options OI & PCR Analysis</span>
+          </button>
+          <button class="prompt-card-btn" data-prompt="Summarize portfolio risk exposure, available capital limits, and funds.">
+            <span>🛡️</span>
+            <span>Risk Exposure & Capital Check</span>
+          </button>
+          <button class="prompt-card-btn" data-prompt="Detect Candlestick patterns and intraday volume anomalies.">
+            <span>🕯️</span>
+            <span>Candlestick & Volume Anomalies</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT CHAT WORKSTATION -->
+    <main class="copilot-main">
+      
+      <!-- Header Action Bar -->
+      <div class="copilot-header-bar">
+        <div class="copilot-status-indicator">
+          <span class="status-dot"></span>
+          <span>Active Context: <strong style="color: var(--brand-cyan);" id="headerActiveSymbol">BHEL</strong> (NSE) | Timeframe: <strong>5m</strong></span>
+        </div>
+        <div>
+          <button type="button" class="nav-tab-btn" id="btnClearChat" style="font-size: 0.75rem;">
+            <span>🗑️</span>
+            <span>Clear Conversation</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Thread -->
+      <div class="copilot-chat-thread" id="chatThread">
+        <div class="chat-bubble-container assistant">
+          <div class="chat-avatar assistant">✨</div>
+          <div class="chat-bubble assistant">
+            <p><strong>✨ Welcome to OpenAlgo Quantitative Copilot!</strong></p>
+            <p style="margin-top: 6px;">I am your institutional AI trading assistant powered by <strong>Google Gemini LLM</strong> and real-time <strong>Dhan Market Data & Broker APIs</strong>.</p>
+            <p style="margin-top: 6px; color: #94a3b8;">Select any prompt from the library on the left, or type any technical analysis query (e.g. <em>"What is the trend for BHEL?"</em> or <em>"Buy 10 shares of BHEL"</em>).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Chat Input Bar -->
+      <div class="copilot-input-container">
+        <div class="quick-symbol-chips">
+          <span>Active Tickers:</span>
+          <span class="chip-tag" data-tag="BHEL">+ BHEL</span>
+          <span class="chip-tag" data-tag="NIFTY">+ NIFTY</span>
+          <span class="chip-tag" data-tag="BANKNIFTY">+ BANKNIFTY</span>
+          <span class="chip-tag" data-tag="RELIANCE">+ RELIANCE</span>
+          <span class="chip-tag" data-tag="TCS">+ TCS</span>
+        </div>
+
+        <form class="input-form-row" id="copilotChatForm" onsubmit="return false;">
+          <input 
+            type="text" 
+            id="copilotInput" 
+            class="chat-input-box" 
+            placeholder="Ask Gemini about chart structure, key pivot levels, or order execution..." 
+            autocomplete="off"
+          />
+          <button type="submit" id="btnSend" class="btn-submit-chat">
+            <span>Send</span>
+            <span>➤</span>
+          </button>
+        </form>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      let activeSymbol = 'BHEL';
+      let activeTimeframe = '5m';
+      let isSending = false;
+
+      const chatThread = document.getElementById('chatThread');
+      const chatInput = document.getElementById('copilotInput');
+      const btnSend = document.getElementById('btnSend');
+      const btnClear = document.getElementById('btnClearChat');
+      const headerSymbol = document.getElementById('headerActiveSymbol');
+
+      // 1. Symbol Pill Selection
+      document.getElementById('symbolPills')?.addEventListener('click', (e) => {
+        const pill = e.target.closest('.symbol-pill');
+        if (!pill) return;
+
+        document.querySelectorAll('.symbol-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        activeSymbol = pill.getAttribute('data-symbol') || 'BHEL';
+        if (headerSymbol) headerSymbol.textContent = activeSymbol;
+      });
+
+      // 2. Quick Symbol Tag Injector
+      document.querySelectorAll('.chip-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+          const sym = tag.getAttribute('data-tag');
+          if (sym && chatInput) {
+            chatInput.value += ` ${sym} `;
+            chatInput.focus();
+          }
+        });
+      });
+
+      // 3. Prompt Library Click
+      document.querySelectorAll('.prompt-card-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const prompt = btn.getAttribute('data-prompt');
+          if (prompt) {
+            const formatted = prompt.replace('active symbol', activeSymbol);
+            sendMessage(formatted);
+          }
+        });
+      });
+
+      // 4. Form Submission
+      document.getElementById('copilotChatForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = chatInput ? chatInput.value.trim() : '';
+        if (text) {
+          chatInput.value = '';
+          sendMessage(text);
+        }
+      });
+
+      // 5. Clear Thread
+      btnClear?.addEventListener('click', () => {
+        if (chatThread) {
+          chatThread.innerHTML = `
+            <div class="chat-bubble-container assistant">
+              <div class="chat-avatar assistant">✨</div>
+              <div class="chat-bubble assistant">
+                <p><strong>Conversation Cleared.</strong> Ready for your next query on <strong style="color:#38bdf8;">${activeSymbol}</strong>.</p>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      // 6. Send Message to Backend
+      async function sendMessage(text) {
+        if (!chatThread || isSending) return;
+
+        // Append User Message
+        const userWrap = document.createElement('div');
+        userWrap.className = 'chat-bubble-container user';
+        userWrap.innerHTML = `
+          <div class="chat-avatar user">👤</div>
+          <div class="chat-bubble user">${escapeHtml(text)}</div>
+        `;
+        chatThread.appendChild(userWrap);
+        chatThread.scrollTop = chatThread.scrollHeight;
+
+        // Append Assistant Loading Bubble
+        const loadWrap = document.createElement('div');
+        loadWrap.className = 'chat-bubble-container assistant';
+        loadWrap.innerHTML = `
+          <div class="chat-avatar assistant">✨</div>
+          <div class="chat-bubble assistant">
+            <em>Analyzing live Dhan market data, technical levels & portfolio with Gemini...</em>
+          </div>
+        `;
+        chatThread.appendChild(loadWrap);
+        chatThread.scrollTop = chatThread.scrollHeight;
+
+        isSending = true;
+        if (btnSend) btnSend.disabled = true;
+
+        try {
+          const payload = {
+            session_id: 'dedicated-copilot-page-session',
+            message: text,
+            active_symbol: activeSymbol,
+            active_timeframe: activeTimeframe,
+          };
+
+          const res = await fetch('/api/copilot/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json();
+          const bubble = loadWrap.querySelector('.chat-bubble');
+
+          if (data.status === 'success' || data.response_text) {
+            let formattedHtml = (data.response_text || data.response || '')
+              .replace(/\n/g, '<br>')
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);padding:2px 5px;border-radius:4px;font-family:monospace;">$1</code>');
+
+            if (data.order_confirmation) {
+              const oc = data.order_confirmation;
+              formattedHtml += `
+                <div class="order-confirm-card">
+                  <div class="order-confirm-title">🛡️ 2-Step Order Confirmation Required</div>
+                  <div class="order-confirm-details">
+                    Action: <strong>${oc.action}</strong> | Symbol: <strong>${oc.symbol} [NSE]</strong><br>
+                    Quantity: <strong>${oc.quantity}</strong> | Type: <strong>${oc.order_type}</strong> (~₹${oc.estimated_price})<br>
+                    Estimated Value: <strong>₹${Number(oc.estimated_cost).toLocaleString()}</strong><br>
+                    Risk Check: <span style="color:#4ade80;">✅ ${oc.risk_check_message || 'Passed'}</span>
+                  </div>
+                  <button type="button" class="btn-execute-order" onclick="executeConfirmedOrder('${oc.token}')">
+                    <span>⚡ Confirm & Route Order to Dhan</span>
+                  </button>
+                </div>
+              `;
+            }
+
+            if (bubble) bubble.innerHTML = formattedHtml;
+          } else {
+            if (bubble) bubble.innerHTML = `<span style="color:#f87171;">Notice: ${data.message || 'Analysis complete.'}</span>`;
+          }
+        } catch (err) {
+          const bubble = loadWrap.querySelector('.chat-bubble');
+          if (bubble) bubble.innerHTML = `<span style="color:#f87171;">Error connecting to Gemini Assistant: ${err.message}</span>`;
+        } finally {
+          isSending = false;
+          if (btnSend) btnSend.disabled = false;
+          chatThread.scrollTop = chatThread.scrollHeight;
+        }
+      }
+
+      // Order Execution Handler
+      window.executeConfirmedOrder = async function (token) {
+        try {
+          const res = await fetch('/api/copilot/execute-confirmed-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token }),
+          });
+          const data = await res.json();
+          alert(data.status === 'SUCCESS' ? `✅ Order Placed Successfully!\nOrder ID: ${data.order_id}\nSymbol: ${data.symbol}` : `❌ Execution Notice:\n${data.message}`);
+        } catch (e) {
+          alert('Error executing confirmed order: ' + e.message);
+        }
+      };
+
+      function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      // Fetch live margin data on load
+      async function updateMarginSummary() {
+        try {
+          const res = await fetch('/api/copilot/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: 'funds-fetch',
+              message: 'Check available margin and funds',
+              active_symbol: 'BHEL'
+            })
+          });
+          const data = await res.json();
+          const f = data.data_payload?.funds;
+          if (f) {
+            const cashEl = document.getElementById('valCash');
+            if (cashEl && f.available_balance !== undefined) cashEl.textContent = `₹${Number(f.available_balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+          }
+        } catch (e) {}
+      }
+
+      updateMarginSummary();
+    })();
+  </script>
+</body>
+</html>

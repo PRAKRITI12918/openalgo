@@ -1,5 +1,5 @@
 {
-  "name": "openalgo",
+  "name": "Openalgo",
   "version": "1",
   "items": [
     {
@@ -565,7 +565,7 @@
   "environments": [],
   "brunoConfig": {
     "version": "1",
-    "name": "openalgo",
+    "name": "Openalgo",
     "type": "collection",
     "ignore": [
       "node_modules",

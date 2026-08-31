@@ -46,6 +46,7 @@ const ActionCenter = lazy(() => import('@/pages/ActionCenter'))
 
 // Platform pages
 const Platforms = lazy(() => import('@/pages/Platforms'))
+const News = lazy(() => import('@/pages/News'))
 const TradingView = lazy(() => import('@/pages/TradingView'))
 const GoCharting = lazy(() => import('@/pages/GoCharting'))
 const PnLTracker = lazy(() => import('@/pages/PnLTracker'))
@@ -196,7 +197,8 @@ function App() {
                 <Route path="/search" element={<Search />} />
                 {/* API Key management */}
                 <Route path="/apikey" element={<ApiKey />} />
-                {/* Phase 4: Charts & Webhook Configuration */}
+                {/* News & Phase 4: Charts & Webhook Configuration */}
+                <Route path="/news" element={<News />} />
                 <Route path="/platforms" element={<Platforms />} />
                 <Route path="/tradingview" element={<TradingView />} />
                 <Route path="/portfolio-backtester" element={<PortfolioBacktester />} />

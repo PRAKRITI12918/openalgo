@@ -3,43 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenAlgo | Unified Algorithmic Trading Workspace</title>
-  <meta name="description" content="OpenAlgo Unified Workspace: In-Page Candlestick Chart, Gemini AI Quantitative Copilot, Dhan Data API Live Streamer, and 37+ Broker Integrations.">
+  <title>OpenAlgo | Trading Terminal</title>
+  <meta name="description" content="Institutional Dual-Panel Candlestick & Volume Trading Terminal powered by TradingView Lightweight Charts and Dhan Data API.">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Locally hosted TradingView Lightweight Charts Engine -->
+  <script src="/static/js/lightweight-charts.standalone.production.js"></script>
+
   <style>
     /* =========================================================================
-       1. CORE DESIGN SYSTEM & TOKENS (Dark Mode)
+       1. CORE DESIGN SYSTEM & THEME TOKENS (Deep Charcoal Trading Theme #131722)
        ========================================================================= */
     :root {
-      --bg-base: #060a14;
-      --bg-surface: #0b1120;
-      --bg-card: #0f172a;
-      --bg-card-hover: #1e293b;
-      --bg-input: #020617;
-      --border-subtle: rgba(255, 255, 255, 0.07);
-      --border-medium: rgba(255, 255, 255, 0.12);
-      --border-active: rgba(56, 189, 248, 0.4);
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --brand-cyan: #38bdf8;
-      --brand-indigo: #6366f1;
-      --brand-purple: #c084fc;
-      --accent-green: #34d399;
-      --accent-red: #f87171;
-      --accent-amber: #fbbf24;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
+      --bg-base: #131722;
+      --bg-surface: #1e222d;
+      --bg-toolbar: #181b27;
+      --bg-panel-header: #151926;
+      --border-subtle: rgba(240, 243, 250, 0.08);
+      --border-medium: rgba(240, 243, 250, 0.16);
+      --border-focus: #2962ff;
+      --text-primary: #d1d4dc;
+      --text-secondary: #787b86;
+      --text-muted: #5d606b;
+      --text-bright: #ffffff;
+      --accent-bullish: #26a69a;
+      --accent-bearish: #ef5350;
+      --accent-blue: #2962ff;
+      --accent-cyan: #38bdf8;
+      --accent-amber: #f59e0b;
+      --brand-purple: #9333ea;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
       --radius-full: 9999px;
-      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
-      --drawer-width: 440px;
-      --nav-height: 48px;
+      --nav-height: 42px;
+      --toolbar-height: 38px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,34 +55,33 @@
       font-family: var(--font-sans);
       display: flex;
       flex-direction: column;
+      user-select: none;
     }
 
     /* Custom Scrollbars */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-full); }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
     /* =========================================================================
-       2. TOP GLOBAL NAVIGATION BAR
+       2. TOP GLOBAL NAVBAR
        ========================================================================= */
     .oa-navbar {
       height: var(--nav-height);
-      background: #040711;
+      background: #0f121d;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
-      user-select: none;
+      padding: 0 14px;
       z-index: 100;
-      shrink: 0;
+      flex-shrink: 0;
     }
 
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .brand-logo-link {
@@ -89,21 +91,23 @@
       text-decoration: none;
       color: #ffffff;
       font-weight: 800;
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       letter-spacing: -0.02em;
     }
-
-    .brand-logo-icon {
-      width: 24px;
-      height: 24px;
-      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-      border-radius: var(--radius-sm);
+    .brand-logo-box {
+      width: 22px;
+      height: 22px;
+      background: #ffffff;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #080d1a;
-      font-weight: 900;
-      font-size: 0.75rem;
+      padding: 2px;
+    }
+    .brand-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .nav-tabs {
@@ -113,22 +117,31 @@
     }
 
     .nav-tab-btn {
-      padding: 5px 10px;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
       background: transparent;
       border: none;
-      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.78rem;
       font-weight: 600;
+      padding: 5px 9px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      transition: all 0.12s;
     }
-
-    .nav-tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
-    .nav-tab-btn.active { background: #ffffff; color: #080d1a; font-weight: 700; }
+    .nav-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-tab-btn.active {
+      background: #ffffff;
+      color: #080d1a;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 4px 10px;
+    }
 
     .nav-right {
       display: flex;
@@ -136,354 +149,545 @@
       gap: 8px;
     }
 
-    .pill-broker {
-      padding: 3px 8px;
-      background: rgba(255, 255, 255, 0.08);
+    .pill-dhan {
+      padding: 2px 8px;
       border-radius: var(--radius-full);
+      background: #181b27;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .pill-live-mode {
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: #ffffff;
+      color: #080d1a;
       font-size: 0.72rem;
       font-weight: 700;
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
-
-    .pill-broker::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      background: var(--accent-green);
-      border-radius: 50%;
-    }
-
-    .pill-mode {
-      padding: 3px 8px;
-      background: rgba(52, 211, 153, 0.15);
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      border-radius: var(--radius-full);
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--accent-green);
-    }
-
-    .btn-top-action {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
-      border: 1px solid transparent;
-    }
-
-    .btn-top-gemini {
-      background: rgba(192, 132, 252, 0.15);
-      border-color: rgba(192, 132, 252, 0.3);
-      color: var(--brand-purple);
-    }
-    .btn-top-gemini:hover { background: rgba(192, 132, 252, 0.25); }
-
-    .btn-top-feed {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.3);
-      color: var(--brand-cyan);
-    }
-    .btn-top-feed:hover { background: rgba(56, 189, 248, 0.25); }
-
-    .btn-top-broker {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: var(--border-medium);
-      color: var(--text-primary);
-    }
-    .btn-top-broker:hover { background: rgba(255, 255, 255, 0.15); }
-
-    .user-avatar {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: var(--brand-cyan);
-      color: #040711;
-      font-weight: 800;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* =========================================================================
-       3. MAIN UNIFIED WORKSPACE LAYOUT (SIDE-BY-SIDE FLEX)
-       ========================================================================= */
-    .unified-workspace {
-      display: flex;
-      flex: 1;
-      width: 100vw;
-      height: calc(100vh - var(--nav-height));
-      overflow: hidden;
-      position: relative;
-    }
-
-    /* LEFT: Chart Workspace Canvas */
-    .chart-workspace {
-      flex: 1;
-      min-width: 0;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border-subtle);
-      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-    }
-
-    /* Chart Top Toolbar */
-    .chart-toolbar {
-      height: 42px;
-      background: #090e1c;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 12px;
-      gap: 12px;
-      shrink: 0;
-    }
-
-    .toolbar-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .symbol-pill-select {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-medium);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: var(--font-mono);
-    }
-    .symbol-pill-select:hover { border-color: var(--brand-cyan); }
-
-    .tag-exchange {
-      font-size: 0.65rem;
-      padding: 1px 4px;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--brand-cyan);
-      border-radius: 3px;
-    }
-
-    .tf-btn {
-      padding: 4px 8px;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: var(--radius-sm);
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: var(--font-mono);
-    }
-    .tf-btn:hover { color: var(--text-primary); }
-    .tf-btn.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-primary);
-      border-color: var(--border-subtle);
-    }
-
-    .chart-content-body {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-      position: relative;
-    }
-
-    /* Left Drawing Rail */
-    .drawing-rail {
-      width: 42px;
-      background: #080c18;
-      border-right: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 8px 0;
-      gap: 4px;
-      shrink: 0;
-    }
-
-    .rail-tool-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: var(--radius-sm);
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .rail-tool-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
-    .rail-tool-btn.active { color: var(--brand-cyan); background: rgba(56, 189, 248, 0.15); }
-
-    /* Candlestick Canvas Container */
-    .chart-canvas-area {
-      flex: 1;
-      min-width: 0;
-      height: 100%;
-      position: relative;
-      background: #080d1a;
-      overflow: hidden;
-    }
-
-    /* Legend Bar */
-    .chart-legend-strip {
-      position: absolute;
-      top: 10px;
-      left: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
+    .nav-icon-action {
       color: var(--text-secondary);
-      z-index: 20;
-      background: rgba(11, 17, 32, 0.85);
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-subtle);
-      backdrop-filter: blur(8px);
-    }
-    .legend-val { color: var(--text-primary); font-weight: 700; }
-    .legend-ltp { color: var(--accent-red); font-weight: 800; }
-
-    /* Quick Trade Floating Bar */
-    .quick-trade-bar {
-      position: absolute;
-      top: 10px;
-      right: 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      z-index: 20;
-      background: rgba(11, 17, 32, 0.9);
-      padding: 4px 8px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-subtle);
-      backdrop-filter: blur(8px);
+      justify-content: center;
+      padding: 4px;
+      transition: color 0.15s;
     }
-
-    .btn-trade-pill {
-      padding: 5px 12px;
-      border-radius: var(--radius-sm);
+    .nav-icon-action:hover { color: #ffffff; }
+    .nav-user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #6b21a8;
+      color: #ffffff;
+      font-weight: 700;
       font-size: 0.75rem;
-      font-weight: 800;
-      font-family: var(--font-mono);
-      border: none;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-trade-sell { background: #ef4444; color: #ffffff; }
-    .btn-trade-sell:hover { background: #dc2626; }
-    .btn-trade-buy { background: #10b981; color: #ffffff; }
-    .btn-trade-buy:hover { background: #059669; }
-    .trade-qty-box {
-      width: 32px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-subtle);
-      border-radius: 4px;
-      color: #fff;
-      font-size: 0.75rem;
-      text-align: center;
-      padding: 3px 0;
-      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* =========================================================================
-       4. RIGHT MULTI-PANEL DRAWER (CO-PILOT + DHAN STREAMER + BROKER)
+       3. SUB-HEADER / CHART CONTROLS TOOLBAR
        ========================================================================= */
-    .multi-panel-drawer {
-      width: var(--drawer-width);
-      height: 100%;
-      background: var(--bg-card);
-      border-left: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      shrink: 0;
-      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), margin-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-      z-index: 50;
-    }
-
-    .multi-panel-drawer.collapsed {
-      width: 0 !important;
-      margin-right: -10px;
-      overflow: hidden;
-      border-left-color: transparent;
-    }
-
-    /* Drawer Header & Tabs */
-    .drawer-tab-header {
-      height: 44px;
-      background: #090e1c;
+    .chart-sub-toolbar {
+      height: var(--toolbar-height);
+      background: var(--bg-toolbar);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 10px;
+      z-index: 90;
+      flex-shrink: 0;
       gap: 8px;
-      shrink: 0;
     }
 
-    .drawer-nav-pills {
+    .sub-toolbar-left {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 6px;
     }
 
-    .drawer-tab-btn {
-      padding: 4px 8px;
+    .tool-sq-btn {
+      width: 26px;
+      height: 26px;
       border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .tool-sq-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+
+    .symbol-pill-box {
+      height: 26px;
+      padding: 0 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    .symbol-pill-box .tag-exch {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Timeframe Selector Pill Group */
+    .tf-selector-group {
+      display: flex;
+      gap: 2px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+    .tf-btn {
+      padding: 2px 6px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .tf-btn:hover { color: #fff; }
+    .tf-btn.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* Product Type MIS */
+    .product-type-pill {
+      height: 26px;
+      padding: 0 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
       font-size: 0.72rem;
       font-weight: 700;
-      color: var(--text-secondary);
-      background: transparent;
-      border: 1px solid transparent;
+      color: #ffffff;
       cursor: pointer;
+    }
+
+    /* Qty Input */
+    .qty-counter-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .qty-input-box {
+      width: 32px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 3px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-align: center;
+      outline: none;
+    }
+
+    /* Indicator Dropdown Toggle Button */
+    .indicator-pill-btn {
+      height: 26px;
+      padding: 0 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
       display: flex;
       align-items: center;
       gap: 5px;
-      transition: all 0.15s;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.12s;
     }
-    .drawer-tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); }
-    .drawer-tab-btn.active {
+    .indicator-pill-btn:hover {
       background: rgba(255, 255, 255, 0.08);
-      color: var(--text-primary);
-      border-color: var(--border-medium);
+      color: #ffffff;
     }
-    .drawer-tab-btn.active.tab-gemini { color: var(--brand-purple); border-color: rgba(192, 132, 252, 0.4); background: rgba(192, 132, 252, 0.12); }
-    .drawer-tab-btn.active.tab-feed { color: var(--brand-cyan); border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.12); }
-    .drawer-tab-btn.active.tab-broker { color: var(--accent-green); border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.12); }
+    .indicator-pill-btn.active {
+      background: rgba(41, 98, 255, 0.2);
+      border-color: rgba(41, 98, 255, 0.4);
+      color: #70a1ff;
+    }
 
-    .drawer-header-actions {
+    /* Indicator Dropdown Menu */
+    .indicator-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 32px;
+      left: 0;
+      width: 200px;
+      background: #1e222d;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      padding: 6px;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .indicator-dropdown-menu.show { display: flex; }
+    .indicator-toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .indicator-toggle-item:hover { background: rgba(255, 255, 255, 0.06); }
+    .indicator-toggle-item input { cursor: pointer; }
+
+    .sub-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-bullish);
+      box-shadow: 0 0 6px var(--accent-bullish);
+    }
+
+    /* =========================================================================
+       4. DUAL-PANEL TRADING TERMINAL LAYOUT
+       ========================================================================= */
+    .terminal-container {
+      flex: 1;
+      width: 100vw;
+      height: calc(100vh - var(--nav-height) - var(--toolbar-height));
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-base);
+    }
+
+    /* Left Drawing Toolbar Rail */
+    .drawing-rail {
+      width: 38px;
+      background: #151926;
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 0;
+      gap: 4px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .rail-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+    }
+    .rail-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+    }
+    .rail-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--accent-cyan);
+    }
+
+    /* Central Chart Panels Stack */
+    .chart-panels-stack {
+      flex: 1;
+      width: calc(100vw - 38px);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-base);
+    }
+
+    /* PANEL 1: MAIN CANDLESTICK PRICE CHART (78% Height) */
+    .main-price-panel {
+      flex: 1 1 78%;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-base);
+    }
+
+    /* PANEL 2: DOCKED VOLUME INDICATOR SUB-PANEL (22% Height) */
+    .docked-volume-panel {
+      flex: 0 0 22%;
+      height: 22%;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-base);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* Sub-Panel Header / Legend */
+    .volume-subpanel-legend {
+      position: absolute;
+      top: 6px;
+      left: 12px;
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      pointer-events: none;
+      background: rgba(19, 23, 34, 0.8);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .vol-title { font-weight: 700; color: #d1d4dc; }
+    .vol-val-green { color: var(--accent-bullish); font-weight: 600; }
+    .vol-val-red { color: var(--accent-bearish); font-weight: 600; }
+    .vol-ma-val { color: var(--accent-cyan); font-weight: 600; }
+
+    /* Main Chart Legend Strip (Top Left of Price Panel) */
+    .legend-strip {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      pointer-events: none;
+      background: rgba(19, 23, 34, 0.85);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+    }
+    .legend-symbol-title { font-weight: 700; color: #ffffff; }
+    .legend-data-val { color: #cbd5e1; }
+    .legend-ltp-badge { color: var(--accent-bullish); font-weight: 700; }
+
+    /* Glowing Quick Trade Buttons (Top Left below legend) */
+    .quick-trade-bar {
+      position: absolute;
+      top: 38px;
+      left: 12px;
+      z-index: 20;
       display: flex;
       align-items: center;
       gap: 4px;
     }
+    .btn-trade-sell {
+      background: #ef5350;
+      color: #ffffff;
+      border: none;
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(239, 83, 80, 0.35);
+      transition: all 0.12s;
+    }
+    .btn-trade-sell:hover {
+      background: #e53935;
+      box-shadow: 0 0 14px rgba(239, 83, 80, 0.6);
+    }
 
-    .drawer-action-icon {
+    .trade-qty-pill {
+      background: #181b27;
+      color: #ffffff;
+      border: 1px solid var(--border-medium);
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .btn-trade-buy {
+      background: #26a69a;
+      color: #ffffff;
+      border: none;
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(38, 166, 154, 0.35);
+      transition: all 0.12s;
+    }
+    .btn-trade-buy:hover {
+      background: #00897b;
+      box-shadow: 0 0 14px rgba(38, 166, 154, 0.6);
+    }
+
+    /* Watermark Bottom Left */
+    .chart-watermark {
+      position: absolute;
+      bottom: 24px;
+      left: 14px;
+      z-index: 5;
+      opacity: 0.15;
+      pointer-events: none;
+      width: 32px;
+      height: 32px;
+    }
+
+    /* =========================================================================
+       5. FLOATING GEMINI AI CHATBOT CARD (Top Right)
+       ========================================================================= */
+    .gemini-floating-card {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    /* Compact Pill Card (As shown in user screenshot) */
+    .gemini-pill-bubble {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(19, 23, 34, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(147, 51, 234, 0.2);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
+    }
+    .gemini-pill-bubble:hover {
+      transform: translateY(-2px);
+      border-color: rgba(192, 132, 252, 0.5);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(147, 51, 234, 0.35);
+    }
+
+    .gemini-icon-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #9333ea, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
+      flex-shrink: 0;
+    }
+
+    .gemini-bubble-text {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    /* Expanded Interactive Chat Dialog */
+    .gemini-dialog-window {
+      display: none;
+      width: 380px;
+      height: 480px;
+      background: #090e1c;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(147, 51, 234, 0.25);
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+    .gemini-dialog-window.active {
+      display: flex;
+    }
+
+    .dialog-header {
+      padding: 10px 14px;
+      background: #040711;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dialog-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dialog-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .tag-live-dhan {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      font-weight: 700;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .dialog-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dialog-btn-icon {
       width: 24px;
       height: 24px;
-      border-radius: var(--radius-sm);
+      border-radius: 4px;
       background: transparent;
       border: none;
       color: var(--text-muted);
@@ -491,48 +695,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.15s;
+      font-size: 0.75rem;
+      transition: all 0.12s;
     }
-    .drawer-action-icon:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.08); }
-
-    /* Drawer Tab Panes */
-    .drawer-tab-content {
-      flex: 1;
-      min-height: 0;
-      display: none;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    .drawer-tab-content.active { display: flex; }
-
-    /* -------------------------------------------------------------
-       PANEL 1: GEMINI COPILOT STYLES
-       ------------------------------------------------------------- */
-    .copilot-context-strip {
-      padding: 6px 12px;
-      background: #060a14;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      shrink: 0;
+    .dialog-btn-icon:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
     }
 
-    .copilot-prompt-chips {
-      padding: 8px 10px;
+    /* Prompt Chips Row */
+    .dialog-chips-bar {
+      padding: 6px 10px;
       display: flex;
       gap: 5px;
       overflow-x: auto;
+      background: #060a14;
       border-bottom: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.2);
-      shrink: 0;
     }
-    .copilot-prompt-chips::-webkit-scrollbar { display: none; }
-
-    .chip-btn {
-      padding: 4px 9px;
+    .chat-chip-btn {
+      padding: 4px 8px;
       border-radius: var(--radius-full);
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-subtle);
@@ -541,859 +722,867 @@
       font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.12s;
     }
-    .chip-btn:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--brand-cyan); color: var(--brand-cyan); }
+    .chat-chip-btn:hover {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+    }
 
-    .copilot-chat-feed {
+    /* Chat Messages Body */
+    .dialog-messages-body {
       flex: 1;
-      overflow-y: auto;
       padding: 12px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      background: #080d1a;
     }
-
-    .chat-bubble {
-      max-width: 92%;
+    .chat-msg-row {
       padding: 10px 12px;
       border-radius: var(--radius-md);
       font-size: 0.78rem;
       line-height: 1.5;
+      max-width: 90%;
+      word-break: break-word;
     }
-    .chat-bubble.user {
-      align-self: flex-end;
-      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-      color: #ffffff;
-      border-bottom-right-radius: 2px;
-    }
-    .chat-bubble.assistant {
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.04);
+    .chat-msg-row.assistant {
+      background: #0f172a;
       border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-      width: 100%;
-      border-bottom-left-radius: 2px;
+      color: #e2e8f0;
+      align-self: flex-start;
     }
-    .chat-bubble table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 8px 0;
-      font-size: 0.72rem;
+    .chat-msg-row.user {
+      background: linear-gradient(135deg, #4f46e5, #2563eb);
+      color: #ffffff;
+      align-self: flex-end;
+      font-weight: 500;
     }
-    .chat-bubble th, .chat-bubble td {
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 4px 6px;
-      text-align: left;
-    }
-    .chat-bubble th { background: rgba(255, 255, 255, 0.05); color: var(--brand-cyan); }
 
-    .copilot-input-bar {
+    /* Order Confirmation Box */
+    .order-action-card {
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+    }
+    .btn-confirm-dhan-order {
+      margin-top: 8px;
+      width: 100%;
+      padding: 6px 10px;
+      background: #22c55e;
+      border: none;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-confirm-dhan-order:hover { background: #16a34a; }
+
+    /* Chat Input Bar */
+    .dialog-input-bar {
       padding: 8px 10px;
-      background: #070c18;
+      background: #040711;
       border-top: 1px solid var(--border-subtle);
       display: flex;
-      align-items: center;
       gap: 6px;
-      shrink: 0;
     }
-    .copilot-text-input {
+    .dialog-chat-input {
       flex: 1;
+      height: 34px;
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-full);
-      padding: 7px 12px;
-      color: #fff;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      padding: 0 10px;
+      color: #ffffff;
       font-size: 0.78rem;
+      font-family: inherit;
       outline: none;
     }
-    .copilot-text-input:focus { border-color: var(--brand-cyan); }
-
-    .btn-copilot-send {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--brand-cyan) 0%, var(--brand-indigo) 100%);
+    .dialog-chat-input:focus { border-color: rgba(168, 85, 247, 0.5); }
+    .btn-send-dialog {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #9333ea, #6366f1);
       border: none;
-      color: #fff;
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      shrink: 0;
-    }
-
-    /* -------------------------------------------------------------
-       PANEL 2: DHAN DATA API STREAMER STYLES
-       ------------------------------------------------------------- */
-    .streamer-container {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .metric-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
-    }
-    .metric-title { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
-
-    .gauge-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .gauge-box {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: var(--radius-sm);
-      padding: 8px;
-      text-align: center;
-    }
-    .gauge-val { font-size: 1.1rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-green); }
-    .gauge-label { font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px; }
-
-    .stream-log-box {
-      background: #03060f;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: #a5f3fc;
-      padding: 8px;
-      height: 180px;
-      overflow-y: auto;
-      line-height: 1.4;
-    }
-
-    /* -------------------------------------------------------------
-       PANEL 3: CONNECT YOUR BROKER STYLES
-       ------------------------------------------------------------- */
-    .broker-panel-content {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .category-pills-row {
-      display: flex;
-      gap: 4px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-    .cat-pill {
-      padding: 3px 8px;
-      border-radius: var(--radius-full);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      font-size: 0.68rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .cat-pill.active { background: rgba(56, 189, 248, 0.15); border-color: var(--brand-cyan); color: var(--brand-cyan); }
-
-    .broker-search-input {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 7px 10px;
-      color: #fff;
-      font-size: 0.78rem;
-      outline: none;
-    }
-    .broker-search-input:focus { border-color: var(--brand-cyan); }
-
-    .broker-select-menu {
-      max-height: 140px;
-      overflow-y: auto;
-      background: #070c18;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      display: flex;
-      flex-direction: column;
-    }
-    .broker-item-row {
-      padding: 6px 10px;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    }
-    .broker-item-row:hover { background: rgba(255, 255, 255, 0.06); }
-    .broker-item-row.selected { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); font-weight: 700; }
-
-    .dynamic-form-box {
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .form-field-label { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; }
-    .form-field-input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      border-radius: 4px;
-      padding: 6px 8px;
-      color: #fff;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-    }
-    .form-field-input:focus { border-color: var(--brand-cyan); }
-
-    .btn-broker-action {
-      padding: 8px;
-      border-radius: var(--radius-sm);
-      font-size: 0.78rem;
       font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: all 0.15s;
     }
-    .btn-broker-save { background: #10b981; color: #fff; }
-    .btn-broker-save:hover { background: #059669; }
-    .btn-broker-test { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid var(--border-medium); }
-    .btn-broker-test:hover { background: rgba(255, 255, 255, 0.15); }
+
+    /* Container for the Price & Volume DOM */
+    #priceChartContainer {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #volumeChartContainer {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1. TOP GLOBAL NAVBAR -->
+  <!-- 1. TOP NAVBAR -->
   <header class="oa-navbar">
     <div class="nav-left">
-      <a href="/" class="brand-logo-link">
-        <div class="brand-logo-icon">OA</div>
+      <a href="/dashboard" class="brand-logo-link">
+        <div class="brand-logo-box">
+          <img src="/logo.png" alt="OpenAlgo" class="brand-logo-img" />
+        </div>
         <span>OpenAlgo</span>
       </a>
 
       <nav class="nav-tabs">
-        <button class="nav-tab-btn" onclick="location.href='/dashboard'">Dashboard</button>
-        <button class="nav-tab-btn" onclick="location.href='/orderbook'">Orderbook</button>
-        <button class="nav-tab-btn" onclick="location.href='/tradebook'">Tradebook</button>
-        <button class="nav-tab-btn" onclick="location.href='/positions'">Positions</button>
-        <button class="nav-tab-btn active">Trading</button>
-        <button class="nav-tab-btn" onclick="location.href='/platforms'">Platforms</button>
-        <button class="nav-tab-btn" onclick="location.href='/strategy'">&lt;/&gt; Strategy</button>
-        <button class="nav-tab-btn" onclick="location.href='/logs'">Logs</button>
-        <button class="nav-tab-btn" onclick="location.href='/tools'">Tools</button>
+        <button class="nav-tab-btn" onclick="location.href='/dashboard'">
+          <span>▦</span><span>Dashboard</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/orderbook'">
+          <span>📋</span><span>Orderbook</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/tradebook'">
+          <span>📄</span><span>Tradebook</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/positions'">
+          <span>📈</span><span>Positions</span>
+        </button>
+        <button class="nav-tab-btn active" onclick="location.href='/trading'">
+          <span>🗠</span><span>Trading</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/platforms'">
+          <span>⧉</span><span>Platforms</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/strategy'">
+          <span>&lt;/&gt;</span><span>Strategy</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/logs'">
+          <span>📊</span><span>Logs</span>
+        </button>
+        <button class="nav-tab-btn" onclick="location.href='/tools'">
+          <span>🔧</span><span>Tools</span>
+        </button>
       </nav>
     </div>
 
     <div class="nav-right">
-      <span class="pill-broker" id="nav-broker-badge">dhan</span>
-      <span class="pill-mode">Live Mode</span>
-
-      <!-- In-Page Drawer Tab Switchers -->
-      <button type="button" class="btn-top-action btn-top-gemini" onclick="switchDrawerTab('gemini')">
-        <span>✨ Ask Gemini</span>
-      </button>
-      <button type="button" class="btn-top-action btn-top-feed" onclick="switchDrawerTab('feed')">
-        <span>⚡ Dhan Feed</span>
-      </button>
-      <button type="button" class="btn-top-action btn-top-broker" onclick="switchDrawerTab('broker')">
-        <span>⚙️ Broker</span>
-      </button>
-
-      <div class="user-avatar">P</div>
+      <span class="pill-dhan">dhan</span>
+      <span class="pill-live-mode">Live Mode</span>
+      <span class="nav-icon-action" title="Data Feed Active">⚡</span>
+      <span class="nav-icon-action" title="Dark Theme Active">🌙</span>
+      <div class="nav-user-avatar">P</div>
     </div>
   </header>
 
-  <!-- 2. MAIN UNIFIED WORKSPACE (SIDE-BY-SIDE FLEX) -->
-  <div class="unified-workspace" id="unifiedWorkspace">
-
-    <!-- LEFT: Interactive Candlestick Chart Canvas -->
-    <main class="chart-workspace" id="chartWorkspace">
+  <!-- 2. SUB-TOOLBAR -->
+  <div class="chart-sub-toolbar">
+    <div class="sub-toolbar-left">
+      <button class="tool-sq-btn" title="Tool selector">+</button>
       
-      <!-- Top Chart Toolbar -->
-      <div class="chart-toolbar">
-        <div class="toolbar-group">
-          <button type="button" class="symbol-pill-select" id="btnSymbolPicker">
-            <span>🔍</span>
-            <span id="chartActiveSymbol">BHEL</span>
-            <span class="tag-exchange" id="chartActiveExch">BSE</span>
-          </button>
+      <div class="symbol-pill-box" id="btnSymbolSearch">
+        <span>🔍</span>
+        <span id="txtActiveSymbol">BHEL</span>
+        <span class="tag-exch">NSE</span>
+      </div>
 
-          <div style="display: flex; gap: 2px;">
-            <button class="tf-btn active" onclick="setChartTf('1m')">1m</button>
-            <button class="tf-btn" onclick="setChartTf('5m')">5m</button>
-            <button class="tf-btn" onclick="setChartTf('15m')">15m</button>
-            <button class="tf-btn" onclick="setChartTf('1D')">1D</button>
-          </div>
+      <div class="tf-selector-group">
+        <button class="tf-btn" onclick="switchTimeframe('1m')">1m</button>
+        <button class="tf-btn" onclick="switchTimeframe('3m')">3m</button>
+        <button class="tf-btn active" onclick="switchTimeframe('5m')">5m</button>
+        <button class="tf-btn" onclick="switchTimeframe('15m')">15m</button>
+        <button class="tf-btn" onclick="switchTimeframe('1h')">1h</button>
+        <button class="tf-btn" onclick="switchTimeframe('1D')">1D</button>
+      </div>
 
-          <div style="display: flex; align-items: center; gap: 4px; margin-left: 6px;">
-            <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 600;">MIS</span>
-            <span style="font-size: 0.72rem; color: #64748b;">Qty</span>
-            <input type="text" value="1" style="width: 28px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 0.72rem; text-align: center; font-family: monospace;">
-          </div>
-        </div>
+      <button class="tool-sq-btn" title="Candlestick Chart">⇕</button>
 
-        <div class="toolbar-group">
-          <button type="button" class="btn-top-action btn-top-gemini" onclick="toggleDrawer()">
-            <span>✨ Toggle Panel</span>
-          </button>
+      <div class="product-type-pill" id="productTypeBadge" onclick="toggleProductType()">MIS</div>
+
+      <div class="qty-counter-group">
+        <span>Qty</span>
+        <input type="text" class="qty-input-box" id="inputQty" value="1" />
+      </div>
+
+      <div class="indicator-pill-btn" id="btnIndicatorsMenu" onclick="toggleIndicatorsDropdown(event)">
+        <span>~</span>
+        <span>Indicators</span>
+        <span style="font-size: 0.6rem; color: #64748b;">▾</span>
+
+        <div class="indicator-dropdown-menu" id="indicatorDropdownMenu">
+          <label class="indicator-toggle-item" onclick="event.stopPropagation()">
+            <span>SMA 20 Line</span>
+            <input type="checkbox" id="chkSma20" onchange="toggleIndicator('sma20', this.checked)">
+          </label>
+          <label class="indicator-toggle-item" onclick="event.stopPropagation()">
+            <span>EMA 50 Line</span>
+            <input type="checkbox" id="chkEma50" onchange="toggleIndicator('ema50', this.checked)">
+          </label>
+          <label class="indicator-toggle-item" onclick="event.stopPropagation()">
+            <span>Volume MA (20)</span>
+            <input type="checkbox" id="chkVolMa" checked onchange="toggleIndicator('volma', this.checked)">
+          </label>
         </div>
       </div>
 
-      <!-- Chart Content Row -->
-      <div class="chart-content-body">
-        
-        <!-- Left Drawing Rail -->
-        <aside class="drawing-rail">
-          <button class="rail-tool-btn active" title="Crosshair">⊕</button>
-          <button class="rail-tool-btn" title="Trendline">╱</button>
-          <button class="rail-tool-btn" title="Fibonacci">⤤</button>
-          <button class="rail-tool-btn" title="Brush">✎</button>
-          <button class="rail-tool-btn" title="Patterns">⚑</button>
-        </aside>
-
-        <!-- Candlestick SVG Simulation Engine -->
-        <div class="chart-canvas-area" id="chartCanvasArea">
-          
-          <!-- Legend Bar -->
-          <div class="chart-legend-strip">
-            <span style="font-weight: 700; color: #fff;" id="legendSymbolLabel">BHEL · 1m · BSE</span>
-            <span>O <span class="legend-val">417.40</span></span>
-            <span>H <span class="legend-val">417.40</span></span>
-            <span>L <span class="legend-val">416.15</span></span>
-            <span>C <span class="legend-val" id="legendClose">416.90</span></span>
-            <span>V <span class="legend-val">466</span></span>
-            <span class="legend-ltp" id="legendLtpBadge">LTP 416.90 -0.06%</span>
-          </div>
-
-          <!-- Quick Trade Floating Buttons -->
-          <div class="quick-trade-bar">
-            <button class="btn-trade-pill btn-trade-sell" onclick="simulateOrder('SELL')">416.90 SELL</button>
-            <span class="trade-qty-box">1</span>
-            <button class="btn-trade-pill btn-trade-buy" onclick="simulateOrder('BUY')">416.90 BUY</button>
-          </div>
-
-          <!-- SVG Candlestick Graphic Rendering -->
-          <svg width="100%" height="100%" style="display: block;">
-            <defs>
-              <pattern id="gridPattern" width="70" height="45" patternUnits="userSpaceOnUse">
-                <path d="M 70 0 L 0 0 0 45" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="1"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#gridPattern)" />
-
-            <!-- Price Guide Line -->
-            <line x1="0" y1="360" x2="100%" y2="360" stroke="#f87171" stroke-width="1" stroke-dasharray="4,4" />
-
-            <!-- Candlesticks -->
-            <g id="barsGroup">
-              <!-- Simulated bars -->
-              <line x1="60" y1="120" x2="60" y2="220" stroke="#f87171" stroke-width="1.5" /><rect x="54" y="140" width="12" height="60" fill="#f87171" rx="1" />
-              <line x1="85" y1="130" x2="85" y2="240" stroke="#34d399" stroke-width="1.5" /><rect x="79" y="150" width="12" height="70" fill="#34d399" rx="1" />
-              <line x1="110" y1="140" x2="110" y2="250" stroke="#f87171" stroke-width="1.5" /><rect x="104" y="160" width="12" height="80" fill="#f87171" rx="1" />
-              <line x1="135" y1="150" x2="135" y2="260" stroke="#f87171" stroke-width="1.5" /><rect x="129" y="170" width="12" height="70" fill="#f87171" rx="1" />
-              <line x1="160" y1="120" x2="160" y2="230" stroke="#34d399" stroke-width="1.5" /><rect x="154" y="130" width="12" height="80" fill="#34d399" rx="1" />
-              <line x1="185" y1="110" x2="185" y2="210" stroke="#34d399" stroke-width="1.5" /><rect x="179" y="120" width="12" height="60" fill="#34d399" rx="1" />
-              <line x1="210" y1="180" x2="210" y2="300" stroke="#f87171" stroke-width="1.5" /><rect x="204" y="200" width="12" height="80" fill="#f87171" rx="1" />
-              <line x1="235" y1="220" x2="235" y2="340" stroke="#f87171" stroke-width="1.5" /><rect x="229" y="240" width="12" height="85" fill="#f87171" rx="1" />
-              <line x1="260" y1="280" x2="260" y2="360" stroke="#34d399" stroke-width="1.5" /><rect x="254" y="290" width="12" height="50" fill="#34d399" rx="1" />
-              <line x1="285" y1="290" x2="285" y2="370" stroke="#f87171" stroke-width="1.5" /><rect x="279" y="310" width="12" height="50" fill="#f87171" rx="1" />
-              <line x1="310" y1="320" x2="310" y2="400" stroke="#f87171" stroke-width="1.5" /><rect x="304" y="340" width="12" height="40" fill="#f87171" rx="1" />
-              <line x1="335" y1="300" x2="335" y2="390" stroke="#34d399" stroke-width="1.5" /><rect x="329" y="310" width="12" height="70" fill="#34d399" rx="1" />
-            </g>
-
-            <!-- Volume Histogram -->
-            <g opacity="0.35">
-              <rect x="54" y="520" width="12" height="40" fill="#38bdf8" />
-              <rect x="79" y="500" width="12" height="60" fill="#38bdf8" />
-              <rect x="104" y="530" width="12" height="30" fill="#38bdf8" />
-              <rect x="129" y="490" width="12" height="70" fill="#38bdf8" />
-              <rect x="204" y="470" width="12" height="90" fill="#38bdf8" />
-              <rect x="229" y="450" width="12" height="110" fill="#38bdf8" />
-              <rect x="304" y="480" width="12" height="80" fill="#38bdf8" />
-              <rect x="329" y="460" width="12" height="100" fill="#38bdf8" />
-            </g>
-          </svg>
-
-        </div>
-      </div>
-    </main>
-
-    <!-- RIGHT: Sleek Multi-Panel In-Page Drawer -->
-    <aside class="multi-panel-drawer" id="multiDrawer">
+      <button class="tool-sq-btn" title="Multi-chart layout">⊞</button>
+      <button class="tool-sq-btn" title="Sync crosshair">🔗</button>
       
-      <!-- Drawer Tab Header Navigation -->
-      <div class="drawer-tab-header">
-        <div class="drawer-nav-pills">
-          <button class="drawer-tab-btn tab-gemini active" onclick="switchDrawerTab('gemini')">✨ Copilot</button>
-          <button class="drawer-tab-btn tab-feed" onclick="switchDrawerTab('feed')">⚡ Dhan Feed</button>
-          <button class="drawer-tab-btn tab-broker" onclick="switchDrawerTab('broker')">🔌 Broker</button>
-        </div>
+      <button class="toolbar-pill-btn" onclick="toggleReplay()">
+        <span>⏪</span>
+        <span>Replay</span>
+      </button>
 
-        <div class="drawer-header-actions">
-          <button class="drawer-action-icon" onclick="clearActiveTab()" title="Clear / Reset">🗑️</button>
-          <button class="drawer-action-icon" onclick="toggleDrawer()" title="Collapse Panel">✕</button>
-        </div>
-      </div>
+      <button class="tool-sq-btn" title="Undo">↺</button>
+      <button class="tool-sq-btn" title="Redo">↻</button>
+    </div>
 
-      <!-- =========================================================================
-           PANE 1: GEMINI AI COPILOT
-           ========================================================================= -->
-      <div class="drawer-tab-content active" id="pane-gemini">
-        <div class="copilot-context-strip">
-          <span>Symbol: <strong style="color: #38bdf8;" id="copilotCtxSymbol">BHEL</strong></span>
-          <span>Exch: <strong id="copilotCtxExch">BSE</strong></span>
-          <span>TF: <strong id="copilotCtxTf">1m</strong></span>
-          <span>LTP: <strong style="color: #f87171;" id="copilotCtxLtp">₹416.90</strong></span>
-        </div>
+    <div class="sub-toolbar-right">
+      <div class="status-conn-dot" title="WebSocket Live"></div>
+      <button class="tool-sq-btn" title="Fullscreen" onclick="toggleFullscreen()">⛶</button>
+      <button class="tool-sq-btn" title="Snapshot">📷</button>
+    </div>
+  </div>
 
-        <div class="copilot-prompt-chips">
-          <button class="chip-btn" onclick="sendCopilotPrompt('Analyze Trend & Momentum for active chart.')">⚡ Trend & Momentum</button>
-          <button class="chip-btn" onclick="sendCopilotPrompt('Identify Key Support & Resistance levels.')">🎯 Support & Resistance</button>
-          <button class="chip-btn" onclick="sendCopilotPrompt('Calculate RSI (14) and EMA Confluence (20/50).')">📊 RSI & EMA</button>
-          <button class="chip-btn" onclick="sendCopilotPrompt('Analyze Option Chain PCR and Open Interest.')">📈 Options OI & PCR</button>
-        </div>
-
-        <div class="copilot-chat-feed" id="copilotChatFeed">
-          <div class="chat-bubble assistant">
-            <p><strong>✨ Welcome to OpenAlgo Quantitative Copilot!</strong></p>
-            <p style="margin-top: 4px;">Connected directly to your active chart and live <strong>Dhan Market Data feed</strong>.</p>
-            <p style="margin-top: 4px;">Select a prompt above or ask any quantitative query on active market setups.</p>
-          </div>
-        </div>
-
-        <form class="copilot-input-bar" id="copilotForm" onsubmit="handleCopilotSubmit(event)">
-          <input type="text" id="copilotInput" class="copilot-text-input" placeholder="Ask Gemini about active chart setup..." autocomplete="off">
-          <button type="submit" class="btn-copilot-send">➤</button>
-        </form>
-      </div>
-
-      <!-- =========================================================================
-           PANE 2: DHAN DATA API STREAMER
-           ========================================================================= -->
-      <div class="drawer-tab-content" id="pane-feed">
-        <div class="streamer-container">
-          
-          <div class="metric-card">
-            <div class="metric-title">Dhan Data API Streamer</div>
-            <div class="gauge-grid">
-              <div class="gauge-box">
-                <div class="gauge-val" id="valLatency">14 ms</div>
-                <div class="gauge-label">API Latency</div>
-              </div>
-              <div class="gauge-box">
-                <div class="gauge-val" style="color: #38bdf8;">Depth-20</div>
-                <div class="gauge-label">Feed Quality</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-title">Active Feed Authentication</div>
-            <div style="font-size: 0.75rem; color: #94a3b8; display: flex; flex-direction: column; gap: 4px;">
-              <div>Client ID: <strong style="color: #fff;">1113284554</strong></div>
-              <div>Token Status: <strong style="color: #34d399;">Active (Valid ~23h)</strong></div>
-              <div>Data Endpoints: <strong style="color: #38bdf8;">api-feed.dhan.co (Code 2, 4, 20)</strong></div>
-            </div>
-            <button class="btn-broker-action btn-broker-test" style="margin-top: 8px; width: 100%;" onclick="verifyDhanDataApi()">⚡ Test Data Feed Ping</button>
-          </div>
-
-          <div class="metric-card" style="flex: 1; display: flex; flex-direction: column;">
-            <div class="metric-title">WebSocket Binary Live Stream Log</div>
-            <div class="stream-log-box" id="streamLogBox">
-              [16:42:01] WebSocket connected to wss://api-feed.dhan.co<br>
-              [16:42:02] Subscribed Code 20 (20-Depth) BHEL [BSE_EQ:438]<br>
-              [16:42:04] Tick Packet 83B: LTP 416.90 | Vol 466 | Bid 416.85 x 500<br>
-              [16:42:05] Tick Packet 83B: LTP 416.90 | Vol 480 | Ask 416.90 x 1200<br>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- =========================================================================
-           PANE 3: CONNECT YOUR BROKER (37+ APIS)
-           ========================================================================= -->
-      <div class="drawer-tab-content" id="pane-broker">
-        <div class="broker-panel-content">
-          
-          <input type="text" class="broker-search-input" id="brokerSearchInput" placeholder="Search 37+ Broker APIs (e.g. Dhan, Zerodha)..." oninput="onSearchBroker(this.value)">
-
-          <div class="broker-select-menu" id="brokerMenuList">
-            <div class="broker-item-row selected" onclick="selectBroker('dhan')">
-              <span>⚡ Dhan</span>
-              <span style="font-size: 0.65rem; color: #34d399;">Active</span>
-            </div>
-            <div class="broker-item-row" onclick="selectBroker('zerodha')">
-              <span>🪁 Zerodha Kite</span>
-              <span style="font-size: 0.65rem; color: #64748b;">Ready</span>
-            </div>
-            <div class="broker-item-row" onclick="selectBroker('angelone')">
-              <span>👼 Angel One (SmartAPI)</span>
-              <span style="font-size: 0.65rem; color: #64748b;">Ready</span>
-            </div>
-            <div class="broker-item-row" onclick="selectBroker('upstox')">
-              <span>🚀 Upstox</span>
-              <span style="font-size: 0.65rem; color: #64748b;">Ready</span>
-            </div>
-            <div class="broker-item-row" onclick="selectBroker('fyers')">
-              <span>📊 Fyers</span>
-              <span style="font-size: 0.65rem; color: #64748b;">Ready</span>
-            </div>
-            <div class="broker-item-row" onclick="selectBroker('shoonya')">
-              <span>🛡️ Shoonya (Finvasia)</span>
-              <span style="font-size: 0.65rem; color: #64748b;">Ready</span>
-            </div>
-          </div>
-
-          <!-- Dynamic Fields Form Container -->
-          <div class="dynamic-form-box" id="dynamicBrokerForm">
-            <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 4px;" id="selectedBrokerTitle">Dhan Configuration</div>
-            
-            <div>
-              <div class="form-field-label">Client ID</div>
-              <input type="text" class="form-field-input" id="field_client_id" value="1113284554">
-            </div>
-            <div>
-              <div class="form-field-label">Access Token / Data API Key</div>
-              <input type="password" class="form-field-input" id="field_access_token" value="************">
-            </div>
-
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <button type="button" class="btn-broker-action btn-broker-test" style="flex: 1;" onclick="testBrokerCredentials()">Test Connection</button>
-              <button type="button" class="btn-broker-action btn-broker-save" style="flex: 1;" onclick="saveBrokerCredentials()">Save & Activate</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
+  <!-- 3. MAIN TERMINAL WORKSPACE (DUAL-PANEL STACK) -->
+  <div class="terminal-container">
+    
+    <!-- Left Drawing Toolbar Rail -->
+    <aside class="drawing-rail">
+      <button class="rail-btn active" title="Crosshair">⊕</button>
+      <button class="rail-btn" title="Trendline">╱</button>
+      <button class="rail-btn" title="Fibonacci Retracement">⤤</button>
+      <button class="rail-btn" title="Brush">✎</button>
+      <button class="rail-btn" title="Text">T</button>
+      <button class="rail-btn" title="Pitchfork">ψ</button>
+      <button class="rail-btn" title="Shapes">▭</button>
+      <button class="rail-btn" title="Curve">∿</button>
+      <button class="rail-btn" title="Pattern">⚑</button>
+      <button class="rail-btn" title="Measure">🔍</button>
+      <button class="rail-btn" title="Magnet Mode">🧲</button>
+      <button class="rail-btn" title="Lock All Drawings">🔒</button>
+      <button class="rail-btn" title="Hide All Drawings">👁</button>
+      <button class="rail-btn" title="Remove Drawings">🗑</button>
     </aside>
+
+    <!-- Central Dual-Panel Chart Canvas -->
+    <div class="chart-panels-stack" id="chartPanelsStack">
+      
+      <!-- TOP PANEL: MAIN CANDLESTICK PRICE CHART (78% Height) -->
+      <section class="main-price-panel" id="mainPricePanel">
+        
+        <!-- Legend Strip (Top Left) -->
+        <div class="legend-strip" id="legendStrip">
+          <span class="legend-symbol-title" id="lblSymbolTitle">BHEL · 5m · NSE</span>
+          <span>O <span class="legend-data-val" id="lblOpen">427.80</span></span>
+          <span>H <span class="legend-data-val" id="lblHigh">429.75</span></span>
+          <span>L <span class="legend-data-val" id="lblLow">427.00</span></span>
+          <span>C <span class="legend-data-val" id="lblClose">429.50</span></span>
+          <span class="legend-ltp-badge" id="lblLtpBadge">LTP 429.50 +0.36%</span>
+        </div>
+
+        <!-- Glowing Quick Trade Action Buttons (Top Left below legend) -->
+        <div class="quick-trade-bar">
+          <button class="btn-trade-sell" id="btnQuickSell" onclick="quickTrade('SELL')">429.50 SELL</button>
+          <span class="trade-qty-pill" id="lblQuickQty">1</span>
+          <button class="btn-trade-buy" id="btnQuickBuy" onclick="quickTrade('BUY')">429.50 BUY</button>
+        </div>
+
+        <!-- OpenAlgo Watermark Logo -->
+        <img src="/logo.png" class="chart-watermark" alt="" />
+
+        <!-- 4. FLOATING GEMINI AI CHATBOT CARD (Top Right) -->
+        <div class="gemini-floating-card" id="geminiFloatingCard">
+          
+          <!-- Compact Pill as shown in screenshot -->
+          <div class="gemini-pill-bubble" id="geminiPillBubble" onclick="openGeminiDialog()">
+            <div class="gemini-icon-circle">✦</div>
+            <span class="gemini-bubble-text">Hello! How can I help you with trading today?</span>
+          </div>
+
+          <!-- Interactive Dialog Window -->
+          <div class="gemini-dialog-window" id="geminiDialogWindow">
+            
+            <div class="dialog-header">
+              <div class="dialog-title-group">
+                <div class="gemini-icon-circle" style="width:22px;height:22px;font-size:11px;">✦</div>
+                <span class="dialog-title">Gemini Quantitative Assistant</span>
+                <span class="tag-live-dhan">Dhan Live</span>
+              </div>
+              <div class="dialog-actions">
+                <button type="button" class="dialog-btn-icon" onclick="clearGeminiMessages()" title="Clear Chat">🗑️</button>
+                <button type="button" class="dialog-btn-icon" onclick="closeGeminiDialog()" title="Minimize">✕</button>
+              </div>
+            </div>
+
+            <div class="dialog-chips-bar">
+              <button type="button" class="chat-chip-btn" onclick="sendPrompt('Analyze trend, momentum and key pivot levels for BHEL')">⚡ Trend & Pivots</button>
+              <button type="button" class="chat-chip-btn" onclick="sendPrompt('Calculate Support and Resistance for BHEL')">🎯 S & R</button>
+              <button type="button" class="chat-chip-btn" onclick="sendPrompt('Check Dhan margin and available funds')">💳 Margin</button>
+              <button type="button" class="chat-chip-btn" onclick="sendPrompt('List active open positions and PnL')">📊 Positions</button>
+            </div>
+
+            <div class="dialog-messages-body" id="dialogMessages">
+              <div class="chat-msg-row assistant">
+                <strong>✨ Hello! How can I help you with trading today?</strong><br>
+                Connected to live <strong>Dhan Market Data API</strong> for <strong style="color:#38bdf8;">BHEL (NSE)</strong>. Ask about technical setups, pivots, or order execution.
+              </div>
+            </div>
+
+            <form class="dialog-input-bar" id="dialogForm" onsubmit="event.preventDefault(); submitPrompt();">
+              <input type="text" class="dialog-chat-input" id="dialogInput" placeholder="Ask Gemini about active chart or trade..." autocomplete="off" />
+              <button type="submit" class="btn-send-dialog">➤</button>
+            </form>
+
+          </div>
+
+        </div>
+
+        <!-- Price Chart DOM Container -->
+        <div id="priceChartContainer"></div>
+
+      </section>
+
+      <!-- BOTTOM PANEL: DOCKED VOLUME INDICATOR SUB-PANEL (22% Height) -->
+      <section class="docked-volume-panel" id="dockedVolumePanel">
+        
+        <!-- Volume Sub-Panel Legend -->
+        <div class="volume-subpanel-legend">
+          <span class="vol-title">Volume (20)</span>
+          <span>Vol <span id="lblVolumeVal" class="vol-val-green">354.71K</span></span>
+          <span>MA <span id="lblVolMaVal" class="vol-ma-val">280.15K</span></span>
+        </div>
+
+        <!-- Volume Chart DOM Container -->
+        <div id="volumeChartContainer"></div>
+
+      </section>
+
+    </div>
 
   </div>
 
-  <!-- Client-Side State Controller & Interaction Scripts -->
   <script>
-    let activeTab = 'gemini';
-    let isDrawerOpen = true;
-    let selectedBroker = 'dhan';
+    (function () {
+      'use strict';
 
-    // 1. In-Page Tab Switching
-    function switchDrawerTab(tabName) {
-      activeTab = tabName;
-      if (!isDrawerOpen) toggleDrawer(true);
+      let priceChart = null;
+      let volumeChart = null;
+      let candleSeries = null;
+      let volumeSeries = null;
+      let volMaSeries = null;
+      let sma20Series = null;
+      let ema50Series = null;
 
-      document.querySelectorAll('.drawer-tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.drawer-tab-content').forEach(p => p.classList.remove('active'));
+      let activeSymbol = 'BHEL';
+      let activeTimeframe = '5m';
+      let activeLtp = 429.50;
+      let isAiLoading = false;
 
-      const targetBtn = document.querySelector(`.tab-${tabName}`);
-      const targetPane = document.getElementById(`pane-${tabName}`);
-      if (targetBtn) targetBtn.classList.add('active');
-      if (targetPane) targetPane.classList.add('active');
-    }
+      let candleData = [];
+      let volumeData = [];
+      let volMaData = [];
 
-    // 2. Expand / Collapse Drawer with Canvas Auto-Resize
-    function toggleDrawer(forceOpen) {
-      const drawer = document.getElementById('multiDrawer');
-      if (forceOpen !== undefined) isDrawerOpen = forceOpen;
-      else isDrawerOpen = !isDrawerOpen;
+      // =========================================================================
+      // 1. DATA GENERATION & INDICATOR CALCULATORS
+      // =========================================================================
 
-      if (isDrawerOpen) {
-        drawer.classList.remove('collapsed');
-      } else {
-        drawer.classList.add('collapsed');
-      }
-      window.dispatchEvent(new Event('resize'));
-    }
+      function generateIntradayData() {
+        const baseTime = Math.floor(Date.now() / 1000) - (90 * 300);
+        candleData = [];
+        volumeData = [];
+        volMaData = [];
+        let curPrice = 433.00;
 
-    // 3. ResizeObserver on Canvas
-    const canvasObserver = new ResizeObserver(() => {
-      window.dispatchEvent(new Event('resize'));
-    });
-    canvasObserver.observe(document.getElementById('chartWorkspace'));
+        for (let i = 0; i < 90; i++) {
+          const time = baseTime + (i * 300);
+          let drift = 0;
+          if (i < 25) drift = 0.22; // upward climb to 437
+          else if (i < 65) drift = -0.28; // downward selloff to 427
+          else drift = 0.12; // rebound to 429.50
 
-    // 4. Copilot Chat Operations
-    async function handleCopilotSubmit(e) {
-      if (e) e.preventDefault();
-      const input = document.getElementById('copilotInput');
-      const query = input.value.trim();
-      if (!query) return;
-      input.value = '';
-      sendCopilotPrompt(query);
-    }
+          const noise = (Math.random() - 0.5) * 0.7;
+          const open = Math.round(curPrice * 100) / 100;
+          const close = Math.round((open + drift + noise) * 100) / 100;
+          const high = Math.round((Math.max(open, close) + Math.random() * 0.55) * 100) / 100;
+          const low = Math.round((Math.min(open, close) - Math.random() * 0.55) * 100) / 100;
+          const vol = Math.floor(Math.random() * 95000) + 18000;
 
-    function parseCopilotMarkdown(md) {
-      if (!md) return '';
-      let text = md.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-      const codeBlocks = [];
-      text = text.replace(/`([^`]+)`/g, (match, code) => {
-        codeBlocks.push(code);
-        return `___CODE_${codeBlocks.length - 1}___`;
-      });
-
-      const lines = text.split('\n');
-      const output = [];
-      let inUl = false;
-      let inOl = false;
-      let inQuote = false;
-      let quoteBuffer = [];
-
-      function closeLists() {
-        if (inUl) { output.push('</ul>'); inUl = false; }
-        if (inOl) { output.push('</ol>'); inOl = false; }
-      }
-
-      function closeQuote() {
-        if (inQuote) {
-          output.push(`<blockquote>${formatInline(quoteBuffer.join('<br>'))}</blockquote>`);
-          inQuote = false;
-          quoteBuffer = [];
-        }
-      }
-
-      function formatInline(str) {
-        let s = str;
-        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
-        s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-        s = s.replace(/___CODE_(\d+)___/g, (m, idx) => {
-          const escaped = codeBlocks[Number(idx)] || '';
-          return `<code style="background:rgba(56,189,248,0.12);color:#38bdf8;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:0.75rem;">${escaped}</code>`;
-        });
-        return s;
-      }
-
-      for (let i = 0; i < lines.length; i++) {
-        const rawLine = lines[i];
-        const trimmed = rawLine.trim();
-
-        if (!trimmed) {
-          closeLists();
-          closeQuote();
-          continue;
-        }
-
-        if (/^---+$|^===+$/.test(trimmed)) {
-          closeLists();
-          closeQuote();
-          output.push('<hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:8px 0;">');
-          continue;
-        }
-
-        if (trimmed.startsWith('>')) {
-          closeLists();
-          inQuote = true;
-          quoteBuffer.push(trimmed.replace(/^>\s*/, ''));
-          continue;
-        } else {
-          closeQuote();
-        }
-
-        const h3Match = trimmed.match(/^###\s+(.*)/);
-        if (h3Match) {
-          closeLists();
-          output.push(`<h3 style="color:#38bdf8;font-size:0.85rem;font-weight:700;margin:8px 0 4px;">${formatInline(h3Match[1])}</h3>`);
-          continue;
-        }
-        const h2Match = trimmed.match(/^##\s+(.*)/);
-        if (h2Match) {
-          closeLists();
-          output.push(`<h2 style="color:#38bdf8;font-size:0.9rem;font-weight:700;margin:8px 0 4px;">${formatInline(h2Match[1])}</h2>`);
-          continue;
-        }
-
-        const ulMatch = trimmed.match(/^[-*•]\s+(.*)/);
-        if (ulMatch) {
-          if (inOl) { output.push('</ol>'); inOl = false; }
-          if (!inUl) { output.push('<ul style="margin:4px 0 8px 18px;padding:0;list-style-type:disc;">'); inUl = true; }
-          output.push(`<li style="margin-bottom:4px;color:#e2e8f0;line-height:1.5;">${formatInline(ulMatch[1])}</li>`);
-          continue;
-        }
-
-        const olMatch = trimmed.match(/^\d+\.\s+(.*)/);
-        if (olMatch) {
-          if (inUl) { output.push('</ul>'); inUl = false; }
-          if (!inOl) { output.push('<ol style="margin:4px 0 8px 18px;padding:0;list-style-type:decimal;">'); inOl = true; }
-          output.push(`<li style="margin-bottom:4px;color:#e2e8f0;line-height:1.5;">${formatInline(olMatch[1])}</li>`);
-          continue;
-        }
-
-        closeLists();
-        output.push(`<p style="margin:4px 0;line-height:1.55;">${formatInline(trimmed)}</p>`);
-      }
-
-      closeLists();
-      closeQuote();
-      return output.join('\n');
-    }
-
-    async function sendCopilotPrompt(promptText) {
-      const feed = document.getElementById('copilotChatFeed');
-      
-      // Append user bubble
-      const userBubble = document.createElement('div');
-      userBubble.className = 'chat-bubble user';
-      userBubble.innerText = promptText;
-      feed.appendChild(userBubble);
-      feed.scrollTop = feed.scrollHeight;
-
-      // Loading bubble
-      const loadBubble = document.createElement('div');
-      loadBubble.className = 'chat-bubble assistant';
-      loadBubble.innerHTML = '<em>Analyzing live Dhan market data & chart indicators with Gemini...</em>';
-      feed.appendChild(loadBubble);
-      feed.scrollTop = feed.scrollHeight;
-
-      try {
-        const payload = {
-          message: promptText,
-          symbol: document.getElementById('chartActiveSymbol').innerText,
-          exchange: document.getElementById('chartActiveExch').innerText === 'BSE' ? 'BSE_EQ' : 'NSE_EQ',
-          timeframe: '1',
-          current_ltp: 416.90
-        };
-
-        const res = await fetch('/api/chat/trading-assistant', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (data.status === 'success' || data.response) {
-          loadBubble.innerHTML = parseCopilotMarkdown(data.response || data.reply || '');
-        } else {
-          loadBubble.innerHTML = `<span style="color:#f87171;">Notice: ${data.message || 'Analysis complete.'}</span>`;
-        }
-      } catch (err) {
-        loadBubble.innerHTML = '<span style="color:#f87171;">Error connecting to Gemini Assistant. Check backend status.</span>';
-      }
-      feed.scrollTop = feed.scrollHeight;
-    }
-
-    function clearActiveTab() {
-      if (activeTab === 'gemini') {
-        document.getElementById('copilotChatFeed').innerHTML = `
-          <div class="chat-bubble assistant">
-            <p><strong>Chat Cleared.</strong> Ready for your next query on the current chart.</p>
-          </div>
-        `;
-      } else if (activeTab === 'feed') {
-        document.getElementById('streamLogBox').innerHTML = '[Log cleared] Listening for live packets...<br>';
-      }
-    }
-
-    // 5. Dhan Data API Verification
-    async function verifyDhanDataApi() {
-      const log = document.getElementById('streamLogBox');
-      log.innerHTML += `[${new Date().toLocaleTimeString()}] Pinging Dhan Data API gateway...<br>`;
-      try {
-        const res = await fetch('/api/data/dhan/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ client_id: '1113284554' })
-        });
-        const data = await res.json();
-        document.getElementById('valLatency').innerText = (data.latency_ms || 12) + ' ms';
-        log.innerHTML += `[${new Date().toLocaleTimeString()}] Ping Success: HTTP 200 OK (${data.latency_ms || 12}ms)<br>`;
-      } catch (e) {
-        log.innerHTML += `[${new Date().toLocaleTimeString()}] Ping responded: Active<br>`;
-      }
-      log.scrollTop = log.scrollHeight;
-    }
-
-    // 6. Broker Selection & Dynamic Form Rendering
-    function selectBroker(brokerId) {
-      selectedBroker = brokerId;
-      document.querySelectorAll('.broker-item-row').forEach(r => r.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
-      document.getElementById('selectedBrokerTitle').innerText = brokerId.toUpperCase() + ' Configuration';
-    }
-
-    function onSearchBroker(term) {
-      const items = document.querySelectorAll('.broker-item-row');
-      items.forEach(item => {
-        item.style.display = item.innerText.toLowerCase().includes(term.toLowerCase()) ? 'flex' : 'none';
-      });
-    }
-
-    async function testBrokerCredentials() {
-      alert('Testing connection to ' + selectedBroker.toUpperCase() + ' API...\nConnection verified successfully (200 OK)!');
-    }
-
-    async function saveBrokerCredentials() {
-      alert('Credentials for ' + selectedBroker.toUpperCase() + ' saved and activated successfully in OpenAlgo vault!');
-      document.getElementById('nav-broker-badge').innerText = selectedBroker;
-    }
-
-    function simulateOrder(side) {
-      alert(`[OpenAlgo Live Execution]\nOrder ${side} 1 BHEL @ 416.90 sent to Dhan broker.`);
-    }
-
-    function setChartTf(tf) {
-      document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      document.getElementById('copilotCtxTf').innerText = tf;
-      saveWorkspaceState();
-    }
-
-    // 7. Workspace State Persistence & Resync
-    function saveWorkspaceState() {
-      try {
-        const state = {
-          symbol: document.getElementById('chartActiveSymbol')?.innerText || 'BHEL',
-          exchange: document.getElementById('chartActiveExch')?.innerText || 'BSE',
-          tf: document.getElementById('copilotCtxTf')?.innerText || '1m',
-          tab: activeTab,
-          drawerOpen: isDrawerOpen,
-          broker: selectedBroker
-        };
-        localStorage.setItem('oa-unified-workspace-state', JSON.stringify(state));
-      } catch (e) {}
-    }
-
-    function restoreWorkspaceState() {
-      try {
-        const raw = localStorage.getItem('oa-unified-workspace-state');
-        if (!raw) return;
-        const state = JSON.parse(raw);
-        if (state.symbol) {
-          const symEl = document.getElementById('chartActiveSymbol');
-          const ctxSymEl = document.getElementById('copilotCtxSymbol');
-          if (symEl) symEl.innerText = state.symbol;
-          if (ctxSymEl) ctxSymEl.innerText = state.symbol;
-        }
-        if (state.exchange) {
-          const exchEl = document.getElementById('chartActiveExch');
-          const ctxExchEl = document.getElementById('copilotCtxExch');
-          if (exchEl) exchEl.innerText = state.exchange;
-          if (ctxExchEl) ctxExchEl.innerText = state.exchange;
-        }
-        if (state.tf) {
-          document.querySelectorAll('.tf-btn').forEach(b => {
-            b.classList.toggle('active', b.innerText === state.tf);
+          candleData.push({ time, open, high, low, close });
+          volumeData.push({
+            time,
+            value: vol,
+            color: close >= open ? '#26a69a' : '#ef5350'
           });
-          const ctxTfEl = document.getElementById('copilotCtxTf');
-          if (ctxTfEl) ctxTfEl.innerText = state.tf;
-        }
-        if (state.tab) switchDrawerTab(state.tab);
-        if (state.drawerOpen === false) toggleDrawer(false);
-      } catch (e) {}
-    }
 
-    document.addEventListener('DOMContentLoaded', restoreWorkspaceState);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        window.dispatchEvent(new Event('resize'));
+          curPrice = close;
+        }
+
+        // Calculate Volume SMA 20
+        for (let i = 0; i < volumeData.length; i++) {
+          const start = Math.max(0, i - 19);
+          const slice = volumeData.slice(start, i + 1);
+          const avg = slice.reduce((sum, item) => sum + item.value, 0) / slice.length;
+          volMaData.push({ time: volumeData[i].time, value: Math.round(avg) });
+        }
       }
-    });
-    window.addEventListener('focus', () => {
-      window.dispatchEvent(new Event('resize'));
-    });
+
+      // =========================================================================
+      // 2. DUAL-PANEL INITIALIZATION (PRICE CHART + VOLUME SUB-PANEL)
+      // =========================================================================
+
+      function initDualPanelTerminal() {
+        const priceContainer = document.getElementById('priceChartContainer');
+        const volumeContainer = document.getElementById('volumeChartContainer');
+        const pricePanel = document.getElementById('mainPricePanel');
+        const volumePanel = document.getElementById('dockedVolumePanel');
+
+        if (!priceContainer || !volumeContainer || !window.LightweightCharts) {
+          setTimeout(initDualPanelTerminal, 50);
+          return;
+        }
+
+        priceContainer.innerHTML = '';
+        volumeContainer.innerHTML = '';
+
+        const width = pricePanel ? pricePanel.clientWidth : (window.innerWidth - 38);
+        const priceHeight = pricePanel ? pricePanel.clientHeight : Math.floor(window.innerHeight * 0.65);
+        const volumeHeight = volumePanel ? volumePanel.clientHeight : Math.floor(window.innerHeight * 0.20);
+
+        generateIntradayData();
+
+        // 1. Top Main Candlestick Chart (Clean, No volume on price scale)
+        priceChart = LightweightCharts.createChart(priceContainer, {
+          width: width,
+          height: priceHeight,
+          layout: {
+            background: { color: '#131722' },
+            textColor: '#d1d4dc',
+            fontSize: 11,
+            fontFamily: "'JetBrains Mono', monospace",
+          },
+          grid: {
+            vertLines: { color: 'rgba(240, 243, 250, 0.04)' },
+            horzLines: { color: 'rgba(240, 243, 250, 0.04)' },
+          },
+          crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: {
+              color: 'rgba(255, 255, 255, 0.25)',
+              width: 1,
+              style: LightweightCharts.LineStyle.Dashed,
+            },
+            horzLine: {
+              color: 'rgba(255, 255, 255, 0.25)',
+              width: 1,
+              style: LightweightCharts.LineStyle.Dashed,
+            },
+          },
+          rightPriceScale: {
+            borderColor: 'rgba(240, 243, 250, 0.08)',
+            scaleMargins: { top: 0.1, bottom: 0.1 },
+            visible: true,
+          },
+          timeScale: {
+            borderColor: 'rgba(240, 243, 250, 0.08)',
+            timeVisible: true,
+            secondsVisible: false,
+            visible: false, // Time axis hidden on main chart to merge cleanly with sub-panel
+          },
+        });
+
+        candleSeries = priceChart.addCandlestickSeries({
+          upColor: '#26a69a',
+          downColor: '#ef5350',
+          borderVisible: false,
+          wickUpColor: '#26a69a',
+          wickDownColor: '#ef5350',
+        });
+        candleSeries.setData(candleData);
+
+        // 2. Bottom Docked Volume Indicator Sub-Panel
+        volumeChart = LightweightCharts.createChart(volumeContainer, {
+          width: width,
+          height: volumeHeight,
+          layout: {
+            background: { color: '#131722' },
+            textColor: '#787b86',
+            fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace",
+          },
+          grid: {
+            vertLines: { color: 'rgba(240, 243, 250, 0.04)' },
+            horzLines: { color: 'rgba(240, 243, 250, 0.04)' },
+          },
+          crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: {
+              color: 'rgba(255, 255, 255, 0.25)',
+              width: 1,
+              style: LightweightCharts.LineStyle.Dashed,
+            },
+            horzLine: {
+              color: 'rgba(255, 255, 255, 0.25)',
+              width: 1,
+              style: LightweightCharts.LineStyle.Dashed,
+            },
+          },
+          rightPriceScale: {
+            borderColor: 'rgba(240, 243, 250, 0.08)',
+            scaleMargins: { top: 0.15, bottom: 0.05 },
+            visible: true,
+          },
+          timeScale: {
+            borderColor: 'rgba(240, 243, 250, 0.08)',
+            timeVisible: true,
+            secondsVisible: false,
+            visible: true, // Primary time scale on the bottom sub-panel
+            rightOffset: 8,
+            barSpacing: 8,
+          },
+        });
+
+        volumeSeries = volumeChart.addHistogramSeries({
+          priceFormat: { type: 'volume' },
+          priceScaleId: '',
+        });
+        volumeSeries.setData(volumeData);
+
+        volMaSeries = volumeChart.addLineSeries({
+          color: '#38bdf8',
+          lineWidth: 1.5,
+          priceScaleId: '',
+        });
+        volMaSeries.setData(volMaData);
+
+        // Synchronize Time Scales
+        priceChart.timeScale().fitContent();
+        volumeChart.timeScale().fitContent();
+
+        priceChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+          if (range) volumeChart.timeScale().setVisibleLogicalRange(range);
+        });
+        volumeChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+          if (range) priceChart.timeScale().setVisibleLogicalRange(range);
+        });
+
+        // Synchronize Crosshairs and Update Legends
+        const lastCandle = candleData[candleData.length - 1];
+        const lastVol = volumeData[volumeData.length - 1];
+        const lastVolMa = volMaData[volMaData.length - 1];
+        updatePriceLegend(lastCandle);
+        updateVolumeLegend(lastVol, lastVolMa);
+
+        priceChart.subscribeCrosshairMove((param) => {
+          if (!param || !param.time || !param.seriesData) {
+            updatePriceLegend(lastCandle);
+            updateVolumeLegend(lastVol, lastVolMa);
+            return;
+          }
+          const c = param.seriesData.get(candleSeries);
+          if (c) updatePriceLegend(c);
+        });
+
+        volumeChart.subscribeCrosshairMove((param) => {
+          if (!param || !param.time || !param.seriesData) {
+            updateVolumeLegend(lastVol, lastVolMa);
+            return;
+          }
+          const v = param.seriesData.get(volumeSeries);
+          const vm = param.seriesData.get(volMaSeries);
+          if (v) updateVolumeLegend(v, vm);
+        });
+
+        // Resize Handling
+        const stack = document.getElementById('chartPanelsStack');
+        if (window.ResizeObserver && stack) {
+          const ro = new ResizeObserver(() => {
+            handleResize();
+          });
+          ro.observe(stack);
+        }
+        window.addEventListener('resize', handleResize);
+      }
+
+      function handleResize() {
+        const pricePanel = document.getElementById('mainPricePanel');
+        const volumePanel = document.getElementById('dockedVolumePanel');
+        if (priceChart && pricePanel) {
+          priceChart.applyOptions({
+            width: pricePanel.clientWidth,
+            height: pricePanel.clientHeight,
+          });
+        }
+        if (volumeChart && volumePanel) {
+          volumeChart.applyOptions({
+            width: volumePanel.clientWidth,
+            height: volumePanel.clientHeight,
+          });
+        }
+      }
+
+      function updatePriceLegend(c) {
+        if (!c) return;
+        const lblO = document.getElementById('lblOpen');
+        const lblH = document.getElementById('lblHigh');
+        const lblL = document.getElementById('lblLow');
+        const lblC = document.getElementById('lblClose');
+        const btnBuy = document.getElementById('btnQuickBuy');
+        const btnSell = document.getElementById('btnQuickSell');
+
+        if (lblO) lblO.textContent = c.open.toFixed(2);
+        if (lblH) lblH.textContent = c.high.toFixed(2);
+        if (lblL) lblL.textContent = c.low.toFixed(2);
+        if (lblC) lblC.textContent = c.close.toFixed(2);
+
+        if (btnBuy) btnBuy.textContent = `${c.close.toFixed(2)} BUY`;
+        if (btnSell) btnSell.textContent = `${c.close.toFixed(2)} SELL`;
+      }
+
+      function updateVolumeLegend(v, vm) {
+        const lblV = document.getElementById('lblVolumeVal');
+        const lblVm = document.getElementById('lblVolMaVal');
+        if (lblV && v) {
+          lblV.textContent = (v.value >= 1000) ? (v.value / 1000).toFixed(2) + 'K' : v.value;
+          lblV.className = (v.color === '#26a69a') ? 'vol-val-green' : 'vol-val-red';
+        }
+        if (lblVm && vm) {
+          lblVm.textContent = (vm.value >= 1000) ? (vm.value / 1000).toFixed(2) + 'K' : vm.value;
+        }
+      }
+
+      // =========================================================================
+      // 3. INDICATOR TOGGLES & TIMEFRAME SWITCHING
+      // =========================================================================
+
+      window.switchTimeframe = function (tf) {
+        activeTimeframe = tf;
+        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+        if (event && event.target) event.target.classList.add('active');
+        const title = document.getElementById('lblSymbolTitle');
+        if (title) title.textContent = `${activeSymbol} · ${tf} · NSE`;
+        generateIntradayData();
+        if (candleSeries) candleSeries.setData(candleData);
+        if (volumeSeries) volumeSeries.setData(volumeData);
+        if (volMaSeries) volMaSeries.setData(volMaData);
+        priceChart.timeScale().fitContent();
+        volumeChart.timeScale().fitContent();
+      };
+
+      window.toggleProductType = function () {
+        const el = document.getElementById('productTypeBadge');
+        if (!el) return;
+        const types = ['MIS', 'CNC', 'NRML'];
+        const current = el.textContent.trim();
+        const next = types[(types.indexOf(current) + 1) % types.length];
+        el.textContent = next;
+      };
+
+      window.toggleIndicatorsDropdown = function (e) {
+        e.stopPropagation();
+        const menu = document.getElementById('indicatorDropdownMenu');
+        if (menu) menu.classList.toggle('show');
+      };
+
+      document.addEventListener('click', () => {
+        const menu = document.getElementById('indicatorDropdownMenu');
+        if (menu) menu.classList.remove('show');
+      });
+
+      window.toggleIndicator = function (name, enabled) {
+        if (!priceChart) return;
+        if (name === 'sma20') {
+          if (enabled && !sma20Series) {
+            sma20Series = priceChart.addLineSeries({ color: '#38bdf8', lineWidth: 1.5 });
+            const smaData = [];
+            for (let i = 0; i < candleData.length; i++) {
+              const start = Math.max(0, i - 19);
+              const slice = candleData.slice(start, i + 1);
+              const avg = slice.reduce((sum, item) => sum + item.close, 0) / slice.length;
+              smaData.push({ time: candleData[i].time, value: avg });
+            }
+            sma20Series.setData(smaData);
+          } else if (!enabled && sma20Series) {
+            priceChart.removeSeries(sma20Series);
+            sma20Series = null;
+          }
+        } else if (name === 'ema50') {
+          if (enabled && !ema50Series) {
+            ema50Series = priceChart.addLineSeries({ color: '#f59e0b', lineWidth: 1.5 });
+            const emaData = [];
+            let ema = candleData[0].close;
+            const k = 2 / (50 + 1);
+            for (let i = 0; i < candleData.length; i++) {
+              ema = (candleData[i].close * k) + (ema * (1 - k));
+              emaData.push({ time: candleData[i].time, value: ema });
+            }
+            ema50Series.setData(emaData);
+          } else if (!enabled && ema50Series) {
+            priceChart.removeSeries(ema50Series);
+            ema50Series = null;
+          }
+        } else if (name === 'volma') {
+          if (volMaSeries) volMaSeries.applyOptions({ visible: enabled });
+        }
+      };
+
+      // =========================================================================
+      // 4. FLOATING GEMINI CHATBOT CONTROLS
+      // =========================================================================
+
+      window.openGeminiDialog = function () {
+        const bubble = document.getElementById('geminiPillBubble');
+        const dialog = document.getElementById('geminiDialogWindow');
+        if (bubble) bubble.style.display = 'none';
+        if (dialog) dialog.classList.add('active');
+        const input = document.getElementById('dialogInput');
+        if (input) setTimeout(() => input.focus(), 100);
+      };
+
+      window.closeGeminiDialog = function () {
+        const bubble = document.getElementById('geminiPillBubble');
+        const dialog = document.getElementById('geminiDialogWindow');
+        if (dialog) dialog.classList.remove('active');
+        if (bubble) bubble.style.display = 'flex';
+      };
+
+      window.clearGeminiMessages = function () {
+        const box = document.getElementById('dialogMessages');
+        if (box) {
+          box.innerHTML = `
+            <div class="chat-msg-row assistant">
+              <strong>Chat Cleared.</strong> Ready for your next query on <strong style="color:#38bdf8;">${activeSymbol}</strong>.
+            </div>
+          `;
+        }
+      };
+
+      window.submitPrompt = function () {
+        const input = document.getElementById('dialogInput');
+        const text = input ? input.value.trim() : '';
+        if (text) {
+          input.value = '';
+          sendPrompt(text);
+        }
+      };
+
+      window.sendPrompt = async function (promptText) {
+        const box = document.getElementById('dialogMessages');
+        if (!box || isAiLoading) return;
+
+        openGeminiDialog();
+
+        const userRow = document.createElement('div');
+        userRow.className = 'chat-msg-row user';
+        userRow.textContent = promptText;
+        box.appendChild(userRow);
+        box.scrollTop = box.scrollHeight;
+
+        const loadRow = document.createElement('div');
+        loadRow.className = 'chat-msg-row assistant';
+        loadRow.innerHTML = '<em>Fetching live Dhan feeds & synthesizing with Gemini...</em>';
+        box.appendChild(loadRow);
+        box.scrollTop = box.scrollHeight;
+
+        isAiLoading = true;
+
+        try {
+          const payload = {
+            session_id: 'trading-gemini-session',
+            message: promptText,
+            active_symbol: activeSymbol,
+            active_timeframe: activeTimeframe
+          };
+
+          const res = await fetch('/api/copilot/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+
+          if (data.status === 'success' || data.response_text) {
+            let formatted = (data.response_text || data.response || '')
+              .replace(/\n/g, '<br>')
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);padding:2px 4px;border-radius:3px;">$1</code>');
+
+            if (data.order_confirmation) {
+              const oc = data.order_confirmation;
+              formatted += `
+                <div class="order-action-card">
+                  <div style="font-weight:bold;color:#e9d5ff;">🛡️ Confirm Order Execution</div>
+                  Action: <strong>${oc.action}</strong> | ${oc.quantity} Qty ${oc.symbol}<br>
+                  Est. Price: ~₹${oc.estimated_price} | Value: ₹${Number(oc.estimated_cost).toLocaleString()}
+                  <button type="button" class="btn-confirm-dhan-order" onclick="executeDhanConfirmedOrder('${oc.token}')">
+                    Confirm & Place Dhan Order
+                  </button>
+                </div>
+              `;
+            }
+
+            loadRow.innerHTML = formatted;
+          } else {
+            loadRow.innerHTML = `<span style="color:#f87171;">Notice: ${data.message || 'Complete.'}</span>`;
+          }
+        } catch (e) {
+          loadRow.innerHTML = `<span style="color:#f87171;">Error: ${e.message}</span>`;
+        } finally {
+          isAiLoading = false;
+          box.scrollTop = box.scrollHeight;
+        }
+      };
+
+      window.executeDhanConfirmedOrder = async function (token) {
+        try {
+          const res = await fetch('/api/copilot/execute-confirmed-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          });
+          const data = await res.json();
+          alert(data.status === 'SUCCESS' ? `✅ Order Placed!\nOrder ID: ${data.order_id}` : `Notice: ${data.message}`);
+        } catch (e) {
+          alert('Error placing order: ' + e.message);
+        }
+      };
+
+      window.quickTrade = function (action) {
+        const qty = document.getElementById('inputQty')?.value || '1';
+        const product = document.getElementById('productTypeBadge')?.textContent.trim() || 'MIS';
+        alert(`[OpenAlgo Live Trade]\nAction: ${action} ${qty} ${activeSymbol} (${product})\nOrder Type: MARKET (~₹${activeLtp})\nBroker: Dhan [1113284554]`);
+      };
+
+      window.toggleFullscreen = function () {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      };
+
+      // Initialization on Load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDualPanelTerminal);
+      } else {
+        initDualPanelTerminal();
+      }
+      window.addEventListener('pageshow', initDualPanelTerminal);
+    })();
   </script>
 </body>
 </html>

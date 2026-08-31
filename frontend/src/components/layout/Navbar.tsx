@@ -216,8 +216,15 @@ export function Navbar() {
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           {/* Ask Gemini Quick Access */}
           <a
-            href="/"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition-all"
+            href="/trading"
+            onClick={() => {
+              try {
+                localStorage.setItem('oa-trading-sidebar-open', 'true')
+                localStorage.setItem('oa-trading-sidebar-tab', 'copilot')
+                localStorage.setItem('oa-trading-drawer-state', JSON.stringify({ drawerOpen: true, activeTab: 'gemini' }))
+              } catch {}
+            }}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer"
             title="Open Gemini AI Copilot Workspace"
           >
             <span>✨</span>

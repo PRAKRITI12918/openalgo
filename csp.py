@@ -25,12 +25,12 @@ def get_csp_config():
         csp_config["default-src"] = default_src
 
     # Script source directive
-    script_src = os.getenv("CSP_SCRIPT_SRC", "'self' https://cdn.socket.io")
+    script_src = os.getenv("CSP_SCRIPT_SRC", "'self' 'unsafe-inline' https://cdn.socket.io https://unpkg.com")
     if script_src:
         csp_config["script-src"] = script_src
 
     # Style source directive
-    style_src = os.getenv("CSP_STYLE_SRC", "'self' 'unsafe-inline'")
+    style_src = os.getenv("CSP_STYLE_SRC", "'self' 'unsafe-inline' https://fonts.googleapis.com")
     if style_src:
         csp_config["style-src"] = style_src
 
@@ -40,12 +40,12 @@ def get_csp_config():
         csp_config["img-src"] = img_src
 
     # Connect source directive (for WebSockets, etc.)
-    connect_src = os.getenv("CSP_CONNECT_SRC", "'self' wss: ws:")
+    connect_src = os.getenv("CSP_CONNECT_SRC", "'self' wss: ws: https://api.dhan.co https://auth.dhan.co https://generativelanguage.googleapis.com")
     if connect_src:
         csp_config["connect-src"] = connect_src
 
     # Font source directive
-    font_src = os.getenv("CSP_FONT_SRC", "'self'")
+    font_src = os.getenv("CSP_FONT_SRC", "'self' https://fonts.gstatic.com data:")
     if font_src:
         csp_config["font-src"] = font_src
 

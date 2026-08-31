@@ -1,9 +1,11 @@
 /**
- * gemini_copilot.js - In-Page Gemini Copilot AI Controller with Responsive Chart Resize
+ * gemini_copilot.js - In-Page Gemini Copilot AI Controller with Responsive Chart Resize & State Persistence
  */
 
 (function () {
   'use strict';
+
+  const STORAGE_KEY = 'oa-trading-copilot-collapsed';
 
   const state = {
     isCollapsed: false,
@@ -35,9 +37,24 @@
   };
 
   function init() {
+    restorePersistedState();
     setupContextDetection();
     setupEventListeners();
     setupResizeObserver();
+  }
+
+  function restorePersistedState() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved !== null) {
+        state.isCollapsed = (saved === 'true');
+      }
+      if (state.isCollapsed) {
+        collapseCopilot(false);
+      } else {
+        expandCopilot(false);
+      }
+    } catch (e) {}
   }
 
   /**
@@ -85,7 +102,6 @@
     state.resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        // Dispatch window resize event for TradingView / Lightweight-Charts canvas
         window.dispatchEvent(new Event('resize'));
         if (window.activeTradingChart && typeof window.activeTradingChart.resize === 'function') {
           window.activeTradingChart.resize(width, height);
@@ -104,7 +120,7 @@
 
     // Close Button inside Copilot Header
     if (elements.closeBtn) {
-      elements.closeBtn.addEventListener('click', collapseCopilot);
+      elements.closeBtn.addEventListener('click', () => collapseCopilot(true));
     }
 
     // Clear Conversation Button
@@ -136,58 +152,77 @@
 
     // Timeframe Pill Switching
     document.querySelectorAll('.timeframe-pill-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         document.querySelectorAll('.timeframe-pill-btn').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         state.timeframe = btn.textContent.replace('m', '').trim();
         updateMetadataDisplay();
       });
     });
+
+    // Lifecycle events
+    window.addEventListener('pageshow', () => {
+      restorePersistedState();
+      triggerChartResize();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) triggerChartResize();
+    });
   }
 
   function toggleCopilot() {
     if (state.isCollapsed) {
-      expandCopilot();
+      expandCopilot(true);
     } else {
-      collapseCopilot();
+      collapseCopilot(true);
     }
   }
 
-  function expandCopilot() {
+  function expandCopilot(save = true) {
     state.isCollapsed = false;
-    elements.panel.classList.remove('collapsed');
+    if (elements.panel) elements.panel.classList.remove('collapsed');
     if (elements.toggleBtn) elements.toggleBtn.classList.add('active');
+    if (save) {
+      try { localStorage.setItem(STORAGE_KEY, 'false'); } catch (e) {}
+    }
     setupContextDetection();
     triggerChartResize();
     setTimeout(() => elements.input && elements.input.focus(), 200);
   }
 
-  function collapseCopilot() {
+  function collapseCopilot(save = true) {
     state.isCollapsed = true;
-    elements.panel.classList.add('collapsed');
+    if (elements.panel) elements.panel.classList.add('collapsed');
     if (elements.toggleBtn) elements.toggleBtn.classList.remove('active');
+    if (save) {
+      try { localStorage.setItem(STORAGE_KEY, 'true'); } catch (e) {}
+    }
     triggerChartResize();
   }
 
   function triggerChartResize() {
+    window.dispatchEvent(new Event('resize'));
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
-    }, 150);
+    }, 220);
   }
 
   function clearConversation() {
     state.history = [];
-    elements.messagesBox.innerHTML = `
-      <div class="copilot-msg assistant">
-        <div class="msg-avatar">✨</div>
-        <div class="msg-bubble-wrap">
-          <div class="msg-bubble">
-            <p><strong>Conversation reset.</strong></p>
-            <p>Ready to analyze <strong class="text-cyan">${state.symbol}</strong> using live Dhan Data API feeds.</p>
+    if (elements.messagesBox) {
+      elements.messagesBox.innerHTML = `
+        <div class="copilot-msg assistant">
+          <div class="msg-avatar">✨</div>
+          <div class="msg-bubble-wrap">
+            <div class="msg-bubble">
+              <p><strong>Conversation reset.</strong></p>
+              <p>Ready to analyze <strong class="text-cyan">${state.symbol}</strong> using live Dhan Data API feeds.</p>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   }
 
   /**
@@ -196,14 +231,13 @@
   async function submitQuery(queryText) {
     if (state.isAnalyzing) return;
 
-    // Ensure panel is open
-    if (state.isCollapsed) expandCopilot();
+    if (state.isCollapsed) expandCopilot(true);
 
     appendUserMsg(queryText);
-    state.history.push({ role: 'user', content: queryText });
 
-    const typingId = showTypingIndicator();
+    const loadingId = appendLoadingMsg();
     state.isAnalyzing = true;
+    if (elements.sendBtn) elements.sendBtn.disabled = true;
 
     try {
       const payload = {
@@ -212,244 +246,121 @@
         exchange: state.exchange === 'BSE' ? 'BSE_EQ' : 'NSE_EQ',
         timeframe: state.timeframe,
         current_ltp: parseFloat(state.ltp) || 416.90,
-        history: state.history.slice(-6)
       };
 
-      const res = await fetch('/api/chat/trading-assistant', {
+      const response = await fetch('/api/chat/trading-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      removeTypingIndicator(typingId);
+      const data = await response.json();
+      removeLoadingMsg(loadingId);
 
-      if (res.ok && data.status === 'success') {
-        if (data.metrics && data.metrics.ltp) {
-          state.ltp = data.metrics.ltp;
-          updateMetadataDisplay();
-        }
-        appendAssistantMsg(data.response);
-        state.history.push({ role: 'assistant', content: data.response });
+      if (data.status === 'success' || data.response) {
+        const reply = data.response || data.reply || '';
+        appendAssistantMsg(reply);
+        state.history.push({ role: 'user', text: queryText });
+        state.history.push({ role: 'assistant', text: reply });
       } else {
-        appendAssistantMsg(`⚠️ **Notice**: ${data.message || 'Unable to compute market analysis.'}`);
+        appendAssistantMsg(`⚠️ ${data.message || 'Analysis complete with status notice.'}`);
       }
-
     } catch (err) {
-      removeTypingIndicator(typingId);
+      removeLoadingMsg(loadingId);
       appendAssistantMsg('⚠️ **Connection Error**: Could not connect to Gemini AI Assistant endpoint.');
     } finally {
       state.isAnalyzing = false;
+      if (elements.sendBtn) elements.sendBtn.disabled = false;
+      scrollToBottom();
     }
   }
 
   function appendUserMsg(text) {
-    const div = document.createElement('div');
-    div.className = 'copilot-msg user';
-    div.innerHTML = `
-      <div class="msg-avatar">👤</div>
+    if (!elements.messagesBox) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'copilot-msg user';
+    wrap.innerHTML = `
       <div class="msg-bubble-wrap">
-        <div class="msg-bubble"><p>${escapeHtml(text)}</p></div>
+        <div class="msg-bubble">
+          <p>${escapeHtml(text)}</p>
+        </div>
       </div>
+      <div class="msg-avatar user-avatar">U</div>
     `;
-    elements.messagesBox.appendChild(div);
-    scrollBottom();
+    elements.messagesBox.appendChild(wrap);
+    scrollToBottom();
   }
 
-  function appendAssistantMsg(mdText) {
-    const div = document.createElement('div');
-    div.className = 'copilot-msg assistant';
-    div.innerHTML = `
-      <div class="msg-avatar">✨</div>
-      <div class="msg-bubble-wrap">
-        <div class="msg-bubble">${parseMarkdown(mdText)}</div>
-      </div>
-    `;
-    elements.messagesBox.appendChild(div);
-    scrollBottom();
-  }
-
-  function showTypingIndicator() {
-    const id = `pip-${Date.now()}`;
-    const div = document.createElement('div');
-    div.id = id;
-    div.className = 'copilot-msg assistant';
-    div.innerHTML = `
+  function appendAssistantMsg(rawMarkdown) {
+    if (!elements.messagesBox) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'copilot-msg assistant';
+    wrap.innerHTML = `
       <div class="msg-avatar">✨</div>
       <div class="msg-bubble-wrap">
         <div class="msg-bubble">
-          <div class="copilot-typing">
-            <span class="typing-pip"></span>
-            <span class="typing-pip"></span>
-            <span class="typing-pip"></span>
+          ${renderMarkdown(rawMarkdown)}
+        </div>
+      </div>
+    `;
+    elements.messagesBox.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  function appendLoadingMsg() {
+    if (!elements.messagesBox) return '';
+    const id = `loading-${Date.now()}`;
+    const wrap = document.createElement('div');
+    wrap.id = id;
+    wrap.className = 'copilot-msg assistant';
+    wrap.innerHTML = `
+      <div class="msg-avatar">✨</div>
+      <div class="msg-bubble-wrap">
+        <div class="msg-bubble">
+          <div class="loading-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
         </div>
       </div>
     `;
-    elements.messagesBox.appendChild(div);
-    scrollBottom();
+    elements.messagesBox.appendChild(wrap);
+    scrollToBottom();
     return id;
   }
 
-  function removeTypingIndicator(id) {
-    const elem = document.getElementById(id);
-    if (elem) elem.remove();
+  function removeLoadingMsg(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
   }
 
-  function scrollBottom() {
-    elements.messagesBox.scrollTop = elements.messagesBox.scrollHeight;
-  }
-
-  function parseMarkdown(md) {
-    if (!md) return '';
-    // Normalize line endings
-    let text = md.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-
-    // Protect backtick code spans
-    const codeBlocks = [];
-    text = text.replace(/`([^`]+)`/g, (match, code) => {
-      codeBlocks.push(code);
-      return `___CODE_${codeBlocks.length - 1}___`;
-    });
-
-    const lines = text.split('\n');
-    const output = [];
-    let inUl = false;
-    let inOl = false;
-    let inQuote = false;
-    let quoteBuffer = [];
-
-    function closeLists() {
-      if (inUl) {
-        output.push('</ul>');
-        inUl = false;
-      }
-      if (inOl) {
-        output.push('</ol>');
-        inOl = false;
-      }
+  function scrollToBottom() {
+    if (elements.messagesBox) {
+      elements.messagesBox.scrollTop = elements.messagesBox.scrollHeight;
     }
-
-    function closeQuote() {
-      if (inQuote) {
-        output.push(`<blockquote>${formatInline(quoteBuffer.join('<br>'))}</blockquote>`);
-        inQuote = false;
-        quoteBuffer = [];
-      }
-    }
-
-    function formatInline(str) {
-      let s = str;
-      // Bold
-      s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
-      // Italic
-      s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-      // Restore code spans
-      s = s.replace(/___CODE_(\d+)___/g, (m, idx) => {
-        const escaped = escapeHtml(codeBlocks[Number(idx)] || '');
-        return `<code class="copilot-code">${escaped}</code>`;
-      });
-      return s;
-    }
-
-    for (let i = 0; i < lines.length; i++) {
-      const rawLine = lines[i];
-      const trimmed = rawLine.trim();
-
-      if (!trimmed) {
-        closeLists();
-        closeQuote();
-        continue;
-      }
-
-      // Horizontal Divider
-      if (/^---+$|^===+$/.test(trimmed)) {
-        closeLists();
-        closeQuote();
-        output.push('<hr class="copilot-hr">');
-        continue;
-      }
-
-      // Blockquotes
-      if (trimmed.startsWith('>')) {
-        closeLists();
-        inQuote = true;
-        quoteBuffer.push(trimmed.replace(/^>\s*/, ''));
-        continue;
-      } else {
-        closeQuote();
-      }
-
-      // Headings
-      const h3Match = trimmed.match(/^###\s+(.*)/);
-      if (h3Match) {
-        closeLists();
-        output.push(`<h3>${formatInline(h3Match[1])}</h3>`);
-        continue;
-      }
-      const h2Match = trimmed.match(/^##\s+(.*)/);
-      if (h2Match) {
-        closeLists();
-        output.push(`<h2>${formatInline(h2Match[1])}</h2>`);
-        continue;
-      }
-      const h1Match = trimmed.match(/^#\s+(.*)/);
-      if (h1Match) {
-        closeLists();
-        output.push(`<h1>${formatInline(h1Match[1])}</h1>`);
-        continue;
-      }
-
-      // Unordered Lists (- item, * item, • item)
-      const ulMatch = trimmed.match(/^[-*•]\s+(.*)/);
-      if (ulMatch) {
-        if (inOl) {
-          output.push('</ol>');
-          inOl = false;
-        }
-        if (!inUl) {
-          output.push('<ul class="copilot-list">');
-          inUl = true;
-        }
-        output.push(`<li>${formatInline(ulMatch[1])}</li>`);
-        continue;
-      }
-
-      // Ordered Lists (1. item, 2. item)
-      const olMatch = trimmed.match(/^\d+\.\s+(.*)/);
-      if (olMatch) {
-        if (inUl) {
-          output.push('</ul>');
-          inUl = false;
-        }
-        if (!inOl) {
-          output.push('<ol class="copilot-olist">');
-          inOl = true;
-        }
-        output.push(`<li>${formatInline(olMatch[1])}</li>`);
-        continue;
-      }
-
-      // Regular Paragraph Line
-      closeLists();
-      output.push(`<p>${formatInline(trimmed)}</p>`);
-    }
-
-    closeLists();
-    closeQuote();
-
-    return output.join('\n');
   }
 
   function escapeHtml(str) {
-    return str.replace(/[&<>"']/g, (m) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    })[m]);
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function renderMarkdown(md) {
+    if (!md) return '';
+    let html = escapeHtml(md);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/`([^`]+)`/g, '<code class="code-pill">$1</code>');
+    html = html.replace(/^### (.*$)/gim, '<h4 class="md-heading">$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="md-heading">$1</h3>');
+    html = html.replace(/^- (.*$)/gim, '<div class="md-bullet">• $1</div>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
   }
 
   if (document.readyState === 'loading') {
@@ -457,5 +368,4 @@
   } else {
     init();
   }
-
 })();

@@ -106,19 +106,40 @@ class DhanDataFeed:
     # =========================================================================
 
     def _resolve_client_id(self) -> str:
-        """Resolve Dhan Client ID from environment."""
+        """Resolve Dhan Client ID from environment or DB."""
         broker_api_key = os.getenv("BROKER_API_KEY", "")
         if ":::" in broker_api_key:
             return broker_api_key.split(":::")[0].strip()
-        return os.getenv("DHAN_CLIENT_ID", broker_api_key.strip())
+        env_client = os.getenv("DHAN_CLIENT_ID", broker_api_key.strip())
+        if env_client:
+            return env_client
+        try:
+            from database.auth_db import Auth
+            auth_obj = Auth.query.filter_by(broker="dhan", is_revoked=False).first()
+            if auth_obj and auth_obj.user_id:
+                return auth_obj.user_id
+        except Exception:
+            pass
+        return ""
 
     def _resolve_access_token(self) -> str:
         """Resolve Dhan access token from database or environment."""
         try:
-            from database.auth_db import get_auth_token
+            from database.auth_db import Auth, decrypt_token, get_auth_token
             db_token = get_auth_token(self.client_id or "default")
             if db_token:
                 return db_token
+
+            auth_obj = None
+            if self.client_id:
+                auth_obj = Auth.query.filter_by(user_id=self.client_id, is_revoked=False).first()
+            if not auth_obj:
+                auth_obj = Auth.query.filter_by(broker="dhan", is_revoked=False).first()
+
+            if auth_obj and auth_obj.auth:
+                decrypted = decrypt_token(auth_obj.auth)
+                if decrypted:
+                    return decrypted
         except Exception:
             pass
         return os.getenv("DHAN_ACCESS_TOKEN", os.getenv("BROKER_API_SECRET", ""))

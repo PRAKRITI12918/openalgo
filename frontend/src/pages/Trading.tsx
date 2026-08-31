@@ -93,6 +93,7 @@ const LAYOUTS: LayoutPreset[] = [
 
 const LAYOUT_KEY = 'oa-trading-layout'
 const SYNC_KEY = 'oa-trading-sync'
+const SIDEBAR_OPEN_KEY = 'oa-trading-sidebar-open'
 
 /**
  * What a linked grid agrees on. The engine keeps the three independent, so the
@@ -153,6 +154,30 @@ export default function Trading() {
     return LAYOUTS.some((l) => l.id === saved) ? (saved as string) : 'single'
   })
   const [sync, setSync] = useState<SyncState>(readSync)
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_OPEN_KEY)
+      return saved !== 'false'
+    } catch {
+      return true
+    }
+  })
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(SIDEBAR_OPEN_KEY, String(next))
+      } catch {}
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'))
+      }, 50)
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'))
+      }, 230)
+      return next
+    })
+  }, [])
   /**
    * One group for the whole workspace, created once and kept for the life of
    * the page. Panes join it as their charts are built and re-join after every
@@ -410,7 +435,6 @@ export default function Trading() {
                   onDrawStats={setStats}
                   onToggleRail={() => setShowRail((v) => !v)}
                   railVisible={showRail}
-                  linkGroup={linkRef.current}
                   layoutPicker={
                     i === 0 ? (
                       <>

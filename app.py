@@ -65,6 +65,8 @@ from blueprints.flow import flow_bp  # Import the flow blueprint
 from blueprints.gamma_density import gamma_density_bp  # Import the Gamma Density blueprint
 from blueprints.gc_json import gc_json_bp
 from blueprints.gemini_chat_bp import gemini_chat_bp  # Import the Gemini AI Analyst blueprint
+from backend.copilot.routes import copilot_bp  # Import Quantitative Copilot blueprint
+from backend.news.routes import news_bp  # Import Market News blueprint
 from blueprints.gex import gex_bp  # Import the GEX blueprint
 from blueprints.health import health_bp  # Import the health monitoring blueprint
 from blueprints.historify import historify_bp  # Import the historify blueprint
@@ -342,6 +344,8 @@ def create_app():
     app.register_blueprint(postback_bp)  # Register broker postback (order-update webhook) blueprint
     app.register_blueprint(market_data_bp)  # Register Market Data Feed blueprint
     app.register_blueprint(gemini_chat_bp)  # Register Gemini AI Chat blueprint
+    app.register_blueprint(copilot_bp)  # Register Quantitative Copilot blueprint
+    app.register_blueprint(news_bp)  # Register Market News blueprint
 
     # Remote MCP (HTTP + OAuth) — opt-in via MCP_HTTP_ENABLED. Off by default.
     # Pre-flight refusal: must NEVER coexist with FLASK_DEBUG=True (debug-mode
@@ -440,6 +444,8 @@ def create_app():
 
         # Exempt broker callback endpoints from CSRF protection (OAuth callbacks from external providers)
         csrf.exempt(app.view_functions["brlogin.broker_callback"])
+        if "brlogin.dhan_generate_token" in app.view_functions:
+            csrf.exempt(app.view_functions["brlogin.dhan_generate_token"])
 
         # Exempt broker API save and test connection endpoints
         if "broker_credentials_bp.save_broker_credentials_schema" in app.view_functions:
@@ -450,6 +456,12 @@ def create_app():
             csrf.exempt(app.view_functions["market_data_bp.verify_dhan_data_api"])
         if "gemini_chat_bp.trading_assistant_chat" in app.view_functions:
             csrf.exempt(app.view_functions["gemini_chat_bp.trading_assistant_chat"])
+        if "copilot_bp.copilot_chat" in app.view_functions:
+            csrf.exempt(app.view_functions["copilot_bp.copilot_chat"])
+        if "copilot_bp.execute_confirmed_order" in app.view_functions:
+            csrf.exempt(app.view_functions["copilot_bp.execute_confirmed_order"])
+        if "news_bp.generate_ai_summary" in app.view_functions:
+            csrf.exempt(app.view_functions["news_bp.generate_ai_summary"])
 
         # auth.logout is deliberately NOT exempt. It is not "safe" in the CSRF
         # sense: it revokes the broker token, publishes CACHE_INVALIDATE_ALL

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connect Your Broker | OpenAlgo</title>
-  <meta name="description" content="Connect and switch seamlessly between 32+ brokerage APIs on OpenAlgo.">
+  <title>Connect Dhan Account | OpenAlgo</title>
+  <meta name="description" content="Connect your Dhan trading account seamlessly with OpenAlgo.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -21,24 +21,22 @@
           <div class="brand-badge">OpenAlgo Engine</div>
         </div>
 
-        <h1 class="main-title">Connect Your <span class="highlight-text">Broker</span></h1>
+        <h1 class="main-title">Connect Your <span class="highlight-text">Dhan</span> Account</h1>
         
         <p class="subtitle">
-          Link your trading account to start executing trades through OpenAlgo's algorithmic trading platform.
+          Link your Dhan trading account to start executing algorithmic trades seamlessly through OpenAlgo.
         </p>
 
         <div class="help-card">
           <div class="help-card-header">
             <div class="help-icon-wrapper">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-                <path d="M6 6h10"></path>
-                <path d="M6 10h10"></path>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>
             <div class="help-card-text">
-              <h3 class="help-title">Need Help?</h3>
-              <p class="help-desc">Check our documentation for broker setup guides and API key generation.</p>
+              <h3 class="help-title">Direct Authentication</h3>
+              <p class="help-desc">No complicated developer app setup. Authenticate directly with your Client ID, PIN, and TOTP.</p>
             </div>
           </div>
 
@@ -61,66 +59,104 @@
         </div>
       </aside>
 
-      <!-- RIGHT COLUMN: Anti-Gravity Floating Dropdown & Dynamic Form -->
+      <!-- RIGHT COLUMN: Direct Dhan Authentication Form -->
       <main class="right-panel">
         <div class="broker-card">
           
-          <!-- Dropdown Control Section -->
-          <div class="dropdown-control-section">
-            <label class="section-label" for="broker-dropdown-trigger">Select Broker</label>
-            
-            <div class="custom-select-wrapper" id="custom-select-container">
-              <button type="button" class="select-trigger" id="broker-dropdown-trigger" aria-haspopup="listbox" aria-expanded="false">
-                <div class="selected-broker-info">
-                  <span class="broker-avatar" id="trigger-broker-icon">Z</span>
-                  <div class="broker-title-group">
-                    <span class="trigger-broker-name" id="trigger-broker-name">Zerodha Kite</span>
-                    <span class="trigger-broker-category" id="trigger-broker-category">Discount Broker</span>
-                  </div>
-                </div>
-                <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-
-              <!-- Anti-Gravity Floating Popover -->
-              <div class="floating-popover" id="broker-popover" role="listbox" aria-label="Broker Selection List">
-                
-                <!-- Instant Search Bar -->
-                <div class="popover-search-container">
-                  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                  <input type="text" id="broker-search-input" class="search-input" placeholder="Search 35+ brokers..." autocomplete="off">
-                  <button type="button" id="clear-search-btn" class="clear-search-btn" title="Clear search">✕</button>
-                </div>
-
-                <!-- Scrollable Broker List -->
-                <div class="broker-list-scroll-shadow top-shadow"></div>
-                <div class="broker-list-wrapper" id="broker-list-container">
-                  <!-- Populated dynamically via broker.js -->
-                </div>
-                <div class="broker-list-scroll-shadow bottom-shadow"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dynamic Form Container -->
-          <form id="broker-credentials-form" class="credentials-form" onsubmit="return false;">
+          <form id="dhan-auth-form" class="credentials-form" onsubmit="return false;">
             
             <div class="form-header">
-              <h2 class="form-title" id="form-broker-title">ZERODHA Credentials</h2>
-              <span class="active-badge" id="form-broker-type-badge">OAuth 2.0</span>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #4f46e5); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 20px; box-shadow: 0 4px 10px rgba(37,99,235,0.3);">
+                  D
+                </div>
+                <div>
+                  <h2 class="form-title" style="margin: 0;">Dhan Authentication</h2>
+                  <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Enter your Dhan account credentials to connect</p>
+                </div>
+              </div>
             </div>
 
-            <!-- Dynamic Fields Rendered by JS -->
-            <div id="dynamic-fields-container" class="fields-container">
-              <!-- Field templates rendered here -->
+            <div class="fields-container">
+              
+              <!-- 1. Client ID Field -->
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label class="field-label" for="dhanClientId">
+                    Client ID <span class="required-indicator">*</span>
+                  </label>
+                </div>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    id="dhanClientId" 
+                    name="dhanClientId" 
+                    class="form-input" 
+                    placeholder="Enter Dhan Client ID (e.g. 1113284554)" 
+                    autocomplete="username" 
+                    required 
+                  />
+                </div>
+                <span class="field-description">Your 10-digit Dhan Client ID.</span>
+              </div>
+
+              <!-- 2. PIN Field -->
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label class="field-label" for="pin">
+                    Dhan PIN <span class="required-indicator">*</span>
+                  </label>
+                </div>
+                <div class="input-wrapper">
+                  <input 
+                    type="password" 
+                    id="pin" 
+                    name="pin" 
+                    class="form-input" 
+                    placeholder="Enter 6-digit Dhan PIN" 
+                    autocomplete="current-password" 
+                    maxlength="6" 
+                    required 
+                    style="letter-spacing: 2px;"
+                  />
+                  <button type="button" class="btn-toggle-visibility" id="btn-toggle-pin" title="Toggle PIN Visibility">
+                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+                <span class="field-description">Your confidential 6-digit account PIN.</span>
+              </div>
+
+              <!-- 3. TOTP Field -->
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label class="field-label" for="totp">
+                    Authenticator TOTP <span class="required-indicator">*</span>
+                  </label>
+                </div>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    id="totp" 
+                    name="totp" 
+                    class="form-input" 
+                    placeholder="Enter 6-digit TOTP code" 
+                    autocomplete="one-time-code" 
+                    inputmode="numeric" 
+                    maxlength="6" 
+                    required 
+                    style="letter-spacing: 2px;"
+                  />
+                </div>
+                <span class="field-description">6-digit code from Google Authenticator, Authy, or your 2FA app.</span>
+              </div>
+
             </div>
 
-            <!-- Broker Alert Notice Box -->
-            <div class="alert-notice-box" id="broker-alert-box">
+            <!-- Notice Box -->
+            <div class="alert-notice-box" style="margin-top: 14px;">
               <div class="alert-icon-wrapper">
                 <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -128,8 +164,8 @@
                   <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
               </div>
-              <p class="alert-notice-text" id="broker-alert-text">
-                Zerodha requires an active Kite Connect data subscription for market data access.
+              <p class="alert-notice-text">
+                Direct authentication generates an encrypted session token and automatically activates live trading feeds.
               </p>
             </div>
 
@@ -138,18 +174,11 @@
               <span class="status-message" id="status-banner-text"></span>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="action-buttons-group">
-              <button type="button" id="btn-test-connection" class="btn-secondary">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                </svg>
-                <span>Test Connection</span>
-              </button>
-
-              <button type="submit" id="btn-save-connect" class="btn-primary">
+            <!-- Action Button -->
+            <div class="action-buttons-group" style="margin-top: 20px;">
+              <button type="submit" id="btn-save-connect" class="btn-primary" style="width: 100%; justify-content: center;">
                 <span class="btn-spinner hidden" id="save-spinner"></span>
-                <span id="save-btn-text">Save & Connect Account</span>
+                <span id="save-btn-text">Connect Account</span>
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>
