@@ -93,6 +93,10 @@ class DhanOrderUpdateAdapter(BaseOrderUpdateAdapter):
         return None  # auth is sent as a message, not a header
 
     def on_open_extra(self, ws) -> None:
+        fresh_token = get_auth_token(self.user_id, bypass_cache=True)
+        if fresh_token:
+            self.access_token = fresh_token
+
         login_msg = {
             "LoginReq": {
                 "MsgCode": 42,

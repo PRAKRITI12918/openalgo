@@ -55,5 +55,12 @@ def create_db_engine(database_url=None):
             connect_args={"check_same_thread": False},
         )
 
-    # Non-SQLite backends (e.g. PostgreSQL): use a real connection pool.
-    return create_engine(database_url, pool_size=50, max_overflow=100, pool_timeout=10)
+    # Non-SQLite backends (e.g. PostgreSQL): use a real connection pool with pre-ping and recycling.
+    return create_engine(
+        database_url,
+        pool_size=50,
+        max_overflow=100,
+        pool_timeout=10,
+        pool_recycle=1800,
+        pool_pre_ping=True,
+    )

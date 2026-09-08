@@ -203,6 +203,15 @@ class BaseOrderUpdateAdapter(ABC):
                     "next broker login."
                 )
                 break
+            if attempt >= 10:
+                with self._lock:
+                    self._running = False
+                self.logger.info(
+                    f"Order-update adapter reached maximum reconnect attempts (10) for "
+                    f"{self.broker_name}/{self.user_id}. Pausing reconnection until next user login or token refresh."
+                )
+                break
+
             delay = _RECONNECT_BACKOFFS[min(attempt, len(_RECONNECT_BACKOFFS) - 1)]
             attempt += 1
             self.logger.info(

@@ -16,8 +16,11 @@ DOWNLOAD_TIMEOUT_MINUTES = 5
 # Get the database path from environment variable or use default
 DB_PATH = os.getenv("DATABASE_URL", "sqlite:///db/openalgo.db")
 
-# Ensure the directory exists
-os.makedirs(os.path.dirname(DB_PATH.replace("sqlite:///", "")), exist_ok=True)
+# Ensure the directory exists (SQLite only)
+if DB_PATH.startswith("sqlite:///"):
+    db_dir = os.path.dirname(DB_PATH.replace("sqlite:///", "", 1))
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
 
 # Create the engine and session
 # Conditionally create engine based on DB type
@@ -31,7 +34,15 @@ if DB_PATH and "sqlite" in DB_PATH:
     )
 else:
     # For other databases like PostgreSQL, use connection pooling
-    engine = create_engine(DB_PATH, echo=False, pool_size=50, max_overflow=100, pool_timeout=10)
+    engine = create_engine(
+        DB_PATH,
+        echo=False,
+        pool_size=50,
+        max_overflow=100,
+        pool_timeout=10,
+        pool_recycle=1800,
+        pool_pre_ping=True,
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
