@@ -50,6 +50,8 @@ db/strategy_encryption.key
 
 # DB backup files (created by upgrade/rotate_pepper.py and other migrations)
 db/backups/
+db/*.backup*
+*.backup*
 
 # CSV Files (except specific data files)
 *.csv

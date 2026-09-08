@@ -5,9 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OpenAlgo | Trading Terminal</title>
-  <meta http-equiv="refresh" content="0; url=/trading">
+  <script>
+    const targetUrl = window.location.origin.startsWith('http') ? '/trading' : 'http://127.0.0.1:5000/trading';
+    window.location.replace(targetUrl);
+  </script>
+  <meta http-equiv="refresh" content="0; url=http://127.0.0.1:5000/trading">
 </head>
-<body style="background:#060a14;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-  <p>Loading OpenAlgo Trading Terminal...</p>
+<body style="background:#060a14;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;gap:12px;">
+  <p style="font-size:16px;">Redirecting to OpenAlgo Trading Terminal...</p>
+  <a href="http://127.0.0.1:5000/trading" style="color:#38bdf8;padding:8px 16px;border:1px solid #38bdf8;border-radius:6px;text-decoration:none;font-weight:bold;">Click here to open Trading Terminal</a>
 </body>
 </html>

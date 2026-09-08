@@ -555,6 +555,21 @@
       // Initialize history from localStorage
       renderStoredMessages();
 
+      // Ensure default chart symbol (SENSEX / BSE_INDEX) is initialized if empty
+      try {
+        const symbolKeys = [
+          'oa-trading-0-symbol',
+          'oa-trading-pane-0-symbol',
+          'oa-trading-symbol',
+          '-symbol'
+        ];
+        symbolKeys.forEach(k => {
+          if (!localStorage.getItem(k)) {
+            localStorage.setItem(k, JSON.stringify({ symbol: 'SENSEX', exchange: 'BSE_INDEX' }));
+          }
+        });
+      } catch (e) { }
+
       // Route Tracking for /trading
       function checkRoute() {
         const isTrading = window.location.pathname.startsWith('/trading');
@@ -761,41 +776,49 @@
       };
 
       /* =========================================================================
-         MARKET NEWS FEATURE INTEGRATION (Main Navigation & Real-Time Cards)
+         MARKET NEWS & TOP NAVBAR STABILIZATION (Flicker-Free & Anchored)
          ========================================================================= */
 
-      // 1. Inject "News" in Top Navigation Bar & Handle Tab Highlighting
-      function ensureNewsNavLink() {
-        const navLinks = document.querySelectorAll('header nav a, nav a');
-        let tradingLink = null;
-        let platformsLink = null;
-        let newsLink = document.getElementById('oa-nav-news-link');
+      // 1. One-time idempotent injection of News item into React Top Navbar
+      function syncNewsNav() {
+        const isNews = window.location.pathname === '/news' || window.location.pathname === '/news/';
+        if (isNews) return; // News page already has its dedicated stabilized header!
 
-        navLinks.forEach(link => {
-          const href = link.getAttribute('href') || '';
-          const txt = link.textContent.trim().toLowerCase();
-          if (href === '/trading' || txt.includes('trading')) tradingLink = link;
-          if (href === '/platforms' || txt.includes('platforms')) platformsLink = link;
-          if (link.id === 'oa-nav-news-link') newsLink = link;
-
-          if (!link.dataset.hasNewsNavListener && link.id !== 'oa-nav-news-link') {
-            link.dataset.hasNewsNavListener = 'true';
-            link.addEventListener('click', () => {
-              setTimeout(handleRouteNews, 50);
-            });
+        // Locate visible React navbar outside of #oa-news-page-container
+        const allNavs = document.querySelectorAll('body > #root nav, body > #root header nav, nav.sticky');
+        let activeNav = null;
+        for (const nav of allNavs) {
+          if (nav.closest('#oa-news-page-container')) continue;
+          if (nav.querySelector('a[href*="/trading"], a[href*="/dashboard"]') || nav.textContent.includes('Trading')) {
+            activeNav = nav;
+            break;
           }
-        });
+        }
+
+        if (!activeNav) return;
+
+        let tradingLink = activeNav.querySelector('a[href*="/trading"]') || null;
+        let existingNews = activeNav.querySelectorAll('a[data-news-nav="true"], a[href="/news"]');
+
+        // Deduplicate
+        if (existingNews.length > 1) {
+          for (let i = 1; i < existingNews.length; i++) existingNews[i].remove();
+        }
+
+        let newsLink = existingNews[0] || null;
 
         if (!newsLink && tradingLink && tradingLink.parentElement) {
           newsLink = document.createElement('a');
-          newsLink.id = 'oa-nav-news-link';
+          newsLink.setAttribute('data-news-nav', 'true');
           newsLink.href = '/news';
+          newsLink.title = 'News';
+          newsLink.className = 'oa-nav-news-item';
           newsLink.innerHTML = `
-            <svg style="width:15px;height:15px;margin-right:6px;display:inline-block;vertical-align:text-bottom;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg style="width:16px;height:16px;margin-right:6px;display:inline-block;vertical-align:text-bottom;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path>
               <path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path>
             </svg>
-            <span>News</span>
+            <span class="hidden xl:inline">News</span>
           `;
           newsLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -805,91 +828,137 @@
           });
           tradingLink.parentElement.insertBefore(newsLink, tradingLink.nextSibling);
         }
-
-        // Apply active/inactive styles correctly based on current URL path
-        if (newsLink) {
-          const isNews = window.location.pathname === '/news' || window.location.pathname === '/news/';
-          const isTrading = window.location.pathname.startsWith('/trading');
-
-          if (isNews) {
-            // Set News active (white background pill like active tab)
-            newsLink.style.cssText = 'display:inline-flex;align-items:center;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;background:#ffffff;color:#000000;box-shadow:0 1px 3px rgba(0,0,0,0.2);cursor:pointer;';
-            if (tradingLink) {
-              tradingLink.style.background = 'transparent';
-              tradingLink.style.color = '#94a3b8';
-              tradingLink.style.boxShadow = 'none';
-            }
-          } else {
-            // Set News inactive (transparent background with muted text)
-            newsLink.style.cssText = 'display:inline-flex;align-items:center;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;background:transparent;color:#94a3b8;cursor:pointer;';
-            if (isTrading && tradingLink) {
-              tradingLink.style.background = '';
-              tradingLink.style.color = '';
-              tradingLink.style.boxShadow = '';
-            }
-          }
-        }
       }
 
-      setInterval(ensureNewsNavLink, 400);
-      ensureNewsNavLink();
+      // Observer to catch React route mounts without periodic timer thrashing
+      const navObserver = new MutationObserver(() => {
+        syncNewsNav();
+      });
+      navObserver.observe(document.body, { childList: true, subtree: true });
+      syncNewsNav();
 
-      // 2. Real-Time Market News Page
+      // 2. Dedicated Real-Time Market News Page Container (CSS-Stabilized & Neutral Dark Unified)
       const newsOverlaysHtml = `
         <style>
-          /* Full News Page Container */
+          /* ── Main Navigation Bar Stabilization & Neutral Dark Match ── */
+          nav.sticky, header.sticky, header {
+            position: sticky !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 56px !important;
+            min-height: 56px !important;
+            max-height: 56px !important;
+            z-index: 100 !important;
+            background: #09090b !important;
+            border-bottom: 1px solid #27272a !important;
+            box-sizing: border-box !important;
+            contain: layout style paint;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+          }
+
+          .oa-nav-news-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            color: #a1a1aa;
+            transition: color 0.15s ease, background 0.15s ease;
+            cursor: pointer;
+          }
+          .oa-nav-news-item:hover {
+            color: #f4f4f5;
+            background: #27272a;
+          }
+          .oa-nav-news-item.active {
+            background: #f4f4f5 !important;
+            color: #09090b !important;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+          }
+
+          /* Full News Page Overlay */
           #oa-news-page-container {
             display: none;
             position: fixed;
-            top: 56px;
+            top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             overflow-y: auto;
-            z-index: 45;
-            background: #030712;
-            color: #f8fafc;
-            padding: 24px 28px 60px 28px;
+            z-index: 9999;
+            background: #09090b;
+            color: #f4f4f5;
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            transform: translateZ(0);
           }
           #oa-news-page-container.active { display: block; }
+
+          .oa-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            color: #a1a1aa;
+            transition: all 0.15s;
+          }
+          .oa-nav-btn:hover {
+            color: #f4f4f5;
+            background: #27272a;
+          }
+          .oa-nav-btn.active {
+            background: #f4f4f5 !important;
+            color: #09090b !important;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          }
 
           .oa-news-tab-btn {
             padding: 6px 14px;
             border-radius: 6px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.03);
-            color: #94a3b8;
+            border: 1px solid #27272a;
+            background: #121215;
+            color: #a1a1aa;
             transition: all 0.15s;
             white-space: nowrap;
           }
           .oa-news-tab-btn:hover {
             color: #ffffff;
-            background: rgba(255,255,255,0.08);
+            background: #18181b;
+            border-color: #3f3f46;
           }
           .oa-news-tab-btn.active {
-            background: #2563eb;
-            color: #ffffff;
-            border-color: #3b82f6;
+            background: #f4f4f5;
+            color: #09090b;
+            border-color: #f4f4f5;
+            font-weight: 600;
           }
           .oa-news-card {
-            background: #0b1120;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
+            background: #121215;
+            border: 1px solid #27272a;
+            border-radius: 8px;
             padding: 16px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
           }
           .oa-news-card:hover {
-            border-color: rgba(56, 189, 248, 0.5);
-            background: #0f172a;
+            border-color: #3f3f46;
+            background: #18181b;
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
           }
           .oa-impact-badge {
             font-size: 10px;
@@ -899,32 +968,119 @@
             text-transform: uppercase;
             letter-spacing: 0.03em;
           }
-          .oa-impact-high { background: rgba(225, 29, 72, 0.2); color: #fb7185; border: 1px solid rgba(225, 29, 72, 0.4); }
-          .oa-impact-medium { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
-          .oa-impact-low { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.3); }
+          .oa-impact-high { background: rgba(225, 29, 72, 0.15); color: #fb7185; border: 1px solid rgba(225, 29, 72, 0.3); }
+          .oa-impact-medium { background: rgba(217, 119, 6, 0.15); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.3); }
+          .oa-impact-low { background: rgba(161, 161, 170, 0.12); color: #a1a1aa; border: 1px solid rgba(161, 161, 170, 0.25); }
         </style>
 
         <div id="oa-news-page-container">
-          <div style="max-width:1240px;margin:0 auto;">
+          <!-- Stabilized Static Top Navigation Header (Exact Pixel-Match with /trading) -->
+          <header style="position:sticky;top:0;left:0;right:0;height:56px;background:#09090b;border-bottom:1px solid #27272a;display:flex;align-items:center;padding:0 16px;z-index:100;backdrop-filter:blur(8px);box-sizing:border-box;">
+            <!-- Logo -->
+            <a href="/dashboard" style="display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:24px;">
+              <img src="/logo.png" alt="OpenAlgo" style="height:32px;width:32px;" />
+              <span style="font-weight:600;font-size:14px;color:#f4f4f5;letter-spacing:-0.01em;">OpenAlgo</span>
+            </a>
+
+            <!-- Main Navigation Links -->
+            <nav style="display:flex;align-items:center;gap:4px;overflow-x:auto;">
+              <a href="/dashboard" class="oa-nav-btn" title="Dashboard">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+              </a>
+              <a href="/orderbook" class="oa-nav-btn" title="Orderbook">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                <span>Orderbook</span>
+              </a>
+              <a href="/tradebook" class="oa-nav-btn" title="Tradebook">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                <span>Tradebook</span>
+              </a>
+              <a href="/positions" class="oa-nav-btn" title="Positions">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                <span>Positions</span>
+              </a>
+              <a href="/trading" class="oa-nav-btn" title="Trading">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v4"/><rect width="4" height="6" x="7" y="9" rx="1"/><path d="M9 15v4"/><path d="M17 3v2"/><rect width="4" height="8" x="15" y="5" rx="1"/><path d="M17 13v8"/></svg>
+                <span>Trading</span>
+              </a>
+              <a href="/news" class="oa-nav-btn active" title="News">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+                <span>News</span>
+              </a>
+              <a href="/platforms" class="oa-nav-btn" title="Platforms">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 17.5"/></svg>
+                <span>Platforms</span>
+              </a>
+              <a href="/strategy" class="oa-nav-btn" title="Strategy">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                <span>Strategy</span>
+              </a>
+              <a href="/logs" class="oa-nav-btn" title="Logs">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 18v-1"/><path d="M12 18v-6"/><path d="M16 18v-3"/></svg>
+                <span>Logs</span>
+              </a>
+              <a href="/tools" class="oa-nav-btn" title="Tools">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span>Tools</span>
+              </a>
+            </nav>
+
+            <!-- Exact Right Controls from /trading -->
+            <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+              <!-- Ask Gemini pill -->
+              <a href="/trading" class="oa-gemini-pill" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:600;color:#ffffff;background:#090d18;border:1.5px solid #a855f7;text-decoration:none;box-shadow:0 0 10px rgba(168,85,247,0.35);">
+                <span>✨</span><span>Ask me</span>
+              </a>
+
+              <!-- dhan broker badge -->
+              <span style="font-size:12px;font-weight:500;color:#f4f4f5;border:1px solid #27272a;background:transparent;padding:2px 8px;border-radius:9999px;">
+                dhan
+              </span>
+
+              <!-- Live Mode pill -->
+              <span style="font-size:12px;font-weight:600;background:#f4f4f5;color:#09090b;padding:2px 10px;border-radius:9999px;">
+                Live Mode
+              </span>
+
+              <!-- Zap Button -->
+              <button type="button" style="width:32px;height:32px;border-radius:6px;background:transparent;border:none;color:#a1a1aa;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </button>
+
+              <!-- Moon Button -->
+              <button type="button" style="width:32px;height:32px;border-radius:6px;background:transparent;border:none;color:#a1a1aa;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              </button>
+
+              <!-- User Avatar P -->
+              <div style="width:32px;height:32px;border-radius:50%;background:#f4f4f5;color:#09090b;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;">
+                P
+              </div>
+            </div>
+          </header>
+
+          <!-- News Dashboard Body -->
+          <div style="max-width:1240px;margin:24px auto 60px auto;padding:0 24px;">
             <!-- Header -->
-            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:16px;gap:12px;">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;border-bottom:1px solid #27272a;padding-bottom:16px;gap:12px;">
               <div>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <h1 style="font-size:22px;font-weight:800;margin:0;">Market News</h1>
-                  <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;">
+                  <h1 style="font-size:22px;font-weight:800;margin:0;color:#f4f4f5;">Market News</h1>
+                  <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;">
                     <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;"></span> Live Feed
                   </span>
                 </div>
-                <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Real-time market intelligence, multi-source event clusters, and algorithmic trending ranking</div>
+                <div style="font-size:12px;color:#a1a1aa;margin-top:4px;">Real-time market intelligence, multi-source event clusters, and algorithmic trending ranking</div>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
-                <input type="text" id="oa-news-search-input" placeholder="Search news, stocks, RBI, Fed..." style="background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;color:#ffffff;font-size:12px;width:240px;" />
-                <button type="button" id="oa-news-refresh-btn" style="background:#1e293b;border:1px solid rgba(255,255,255,0.15);color:#ffffff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">Refresh</button>
+                <input type="text" id="oa-news-search-input" placeholder="Search news, stocks, RBI, Fed..." style="background:#121215;border:1px solid #27272a;border-radius:6px;padding:6px 12px;color:#f4f4f5;font-size:12px;width:240px;outline:none;" />
+                <button type="button" id="oa-news-refresh-btn" style="background:#18181b;border:1px solid #27272a;color:#f4f4f5;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Refresh</button>
               </div>
             </div>
 
             <!-- Tabs Bar -->
-            <div style="display:flex;overflow-x:auto;gap:6px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);" id="oa-news-tabs-bar">
+            <div style="display:flex;overflow-x:auto;gap:6px;padding:12px 0;border-bottom:1px solid #27272a;" id="oa-news-tabs-bar">
               <button class="oa-news-tab-btn active" data-tab="All">All</button>
               <button class="oa-news-tab-btn" data-tab="Trending">Trending</button>
               <button class="oa-news-tab-btn" data-tab="Breaking">Breaking</button>
@@ -941,23 +1097,23 @@
             <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;margin-top:18px;" id="oa-news-grid">
               <!-- Left Feed -->
               <div id="oa-news-feed-col">
-                <div style="text-align:center;padding:40px;color:#94a3b8;">Loading latest market intelligence...</div>
+                <div style="text-align:center;padding:40px;color:#a1a1aa;">Loading latest market intelligence...</div>
               </div>
 
               <!-- Right Sidebar -->
               <div id="oa-news-sidebar-col" style="display:flex;flex-direction:column;gap:16px;">
-                <div style="background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;">
-                  <div style="font-size:12px;font-weight:700;color:#f8fafc;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                <div style="background:#121215;border:1px solid #27272a;border-radius:8px;padding:16px;">
+                  <div style="font-size:12px;font-weight:700;color:#f4f4f5;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
                     🔥 Trending Market Movers
                   </div>
                   <div id="oa-trending-list" style="display:flex;flex-direction:column;gap:10px;font-size:12px;"></div>
                 </div>
 
-                <div style="background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;">
-                  <div style="font-size:12px;font-weight:700;color:#f8fafc;text-transform:uppercase;margin-bottom:8px;">
+                <div style="background:#121215;border:1px solid #27272a;border-radius:8px;padding:16px;">
+                  <div style="font-size:12px;font-weight:700;color:#f4f4f5;text-transform:uppercase;margin-bottom:8px;">
                     📈 My Market Watchlist
                   </div>
-                  <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">Filter catalysts for core heavyweights:</div>
+                  <div style="font-size:11px;color:#a1a1aa;margin-bottom:10px;">Filter catalysts for core heavyweights:</div>
                   <div style="display:flex;flex-wrap:wrap;gap:6px;" id="oa-watchlist-chips">
                     <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('NIFTY')">NIFTY</button>
                     <button class="oa-news-tab-btn" onclick="filterByWatchlistSymbol('BANKNIFTY')">BANKNIFTY</button>
@@ -994,7 +1150,7 @@
       }
 
       window.addEventListener('popstate', handleRouteNews);
-      setInterval(handleRouteNews, 400);
+      setInterval(handleRouteNews, 300);
       handleRouteNews();
 
       // Load News Feed Data for /news Page
@@ -1016,7 +1172,7 @@
 
           if (feedCol) {
             if (arts.length === 0) {
-              feedCol.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No market news found for this selection.</div>';
+              feedCol.innerHTML = '<div style="text-align:center;padding:40px;color:#a1a1aa;">No market news found for this selection.</div>';
             } else {
               feedCol.innerHTML = arts.map(art => renderNewsCardHTML(art)).join('');
             }
@@ -1024,39 +1180,39 @@
 
           if (trendingList && trending.length > 0) {
             trendingList.innerHTML = trending.slice(0, 5).map((t, idx) => `
-              <div style="border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:8px;">
-                <div style="color:#38bdf8;font-size:10px;font-weight:700;">#${idx+1} ${t.source}</div>
-                <a href="${t.source_url || t.url || '#'}" target="_blank" rel="noopener noreferrer" style="font-weight:600;color:#f1f5f9;margin-top:2px;display:block;text-decoration:none;line-height:1.3;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#f1f5f9'">${t.title}</a>
+              <div style="border-bottom:1px solid #27272a;padding-bottom:8px;">
+                <div style="color:#a1a1aa;font-size:10px;font-weight:700;text-transform:uppercase;">#${idx+1} ${t.source}</div>
+                <a href="${t.source_url || t.url || '#'}" target="_blank" rel="noopener noreferrer" style="font-weight:600;color:#f4f4f5;margin-top:2px;display:block;text-decoration:none;line-height:1.3;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#f4f4f5'">${t.title}</a>
                 <div style="margin-top:4px;"><span class="oa-impact-badge oa-impact-medium">Score ${t.trending_score}</span></div>
               </div>
             `).join('');
           }
         } catch (e) {
-          if (feedCol) feedCol.innerHTML = `<div style="color:#f43f5e;padding:20px;">News temporarily unavailable. Retrying... (${e.message})</div>`;
+          if (feedCol) feedCol.innerHTML = `<div style="color:#fb7185;padding:20px;">News temporarily unavailable. Retrying... (${e.message})</div>`;
         }
       }
 
       function renderNewsCardHTML(art) {
         const impactClass = art.market_impact === 'HIGH' ? 'oa-impact-high' : (art.market_impact === 'MEDIUM' ? 'oa-impact-medium' : 'oa-impact-low');
-        const sourcesText = art.sources_count > 1 ? `<span style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:10px;margin-left:6px;">👥 ${art.sources_count} sources</span>` : '';
-        const symbolsTags = (art.symbols || []).map(s => `<span style="background:rgba(56,189,248,0.15);color:#38bdf8;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:4px;font-weight:bold;">${s}</span>`).join('');
+        const sourcesText = art.sources_count > 1 ? `<span style="background:#18181b;border:1px solid #27272a;padding:2px 6px;border-radius:4px;font-size:10px;margin-left:6px;color:#a1a1aa;">👥 ${art.sources_count} sources</span>` : '';
+        const symbolsTags = (art.symbols || []).map(s => `<span style="background:#18181b;color:#a1a1aa;border:1px solid #27272a;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:4px;font-weight:600;">${s}</span>`).join('');
         const articleUrl = art.source_url || art.url || '#';
 
         return `
           <div class="oa-news-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:8px;">
-              <div><strong>${art.source}</strong>${sourcesText}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#a1a1aa;margin-bottom:8px;">
+              <div><strong style="color:#f4f4f5;">${art.source}</strong>${sourcesText}</div>
               <div><span class="oa-impact-badge ${impactClass}">${art.market_impact_label || 'Potential Market Impact: '+art.market_impact}</span></div>
             </div>
-            <a href="${articleUrl}" target="_blank" rel="noopener noreferrer" style="font-size:15px;font-weight:700;color:#f8fafc;line-height:1.35;margin-bottom:8px;display:block;text-decoration:none;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#f8fafc'">
+            <a href="${articleUrl}" target="_blank" rel="noopener noreferrer" style="font-size:15px;font-weight:700;color:#f4f4f5;line-height:1.35;margin-bottom:8px;display:block;text-decoration:none;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#f4f4f5'">
               ${art.title}
             </a>
-            <div style="font-size:12px;color:#94a3b8;line-height:1.45;margin-bottom:10px;">
+            <div style="font-size:12px;color:#a1a1aa;line-height:1.45;margin-bottom:10px;">
               ${art.summary || ''}
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;border-top:1px solid #27272a;padding-top:8px;">
               <div>${symbolsTags}</div>
-              <a href="${articleUrl}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;font-weight:600;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+              <a href="${articleUrl}" target="_blank" rel="noopener noreferrer" style="color:#a1a1aa;font-weight:600;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#a1a1aa'">
                 Read Full Story ↗
               </a>
             </div>
