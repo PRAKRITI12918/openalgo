@@ -47,6 +47,7 @@ mimetypes.add_type("application/font-woff2", ".woff2")
 from flask import Flask, session
 from flask_wtf.csrf import CSRFProtect  # Import CSRF protection
 
+from blueprints.accounts import accounts_bp  # Import multi-broker accounts blueprint
 from blueprints.admin import admin_bp  # Import the admin blueprint
 from blueprints.analyzer import analyzer_bp  # Import the analyzer blueprint
 from blueprints.apikey import api_key_bp
@@ -285,6 +286,7 @@ def create_app():
 
     # Exempt API endpoints from CSRF protection (they use API key authentication)
     csrf.exempt(api_v1_bp)
+    csrf.exempt(accounts_bp)
 
     # Initialize security middleware before traffic logging
     init_security_middleware(app)
@@ -294,6 +296,7 @@ def create_app():
 
     # Register other blueprints
     app.register_blueprint(auth_bp)
+    app.register_blueprint(accounts_bp)  # Multi-broker accounts API
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(orders_bp)
     app.register_blueprint(search_bp)

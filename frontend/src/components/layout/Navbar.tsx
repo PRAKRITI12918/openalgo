@@ -231,12 +231,16 @@ export function Navbar() {
             <span>Ask Gemini</span>
           </a>
 
-          {/* Broker Badge — hidden below lg to keep the bar within narrow
-              (portrait/small-laptop) widths */}
+          {/* Broker Badge / Switcher Trigger */}
           {user?.broker && (
-            <Badge variant="outline" className="hidden lg:flex text-xs">
-              {user.broker}
-            </Badge>
+            <a
+              href="/broker"
+              className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-0.5 text-xs font-semibold text-foreground hover:bg-muted/80 transition-colors"
+              title="Click to view connected accounts or switch brokers"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span>{user.broker.toUpperCase()}</span>
+            </a>
           )}
 
           {/* Mode Badge */}

@@ -779,16 +779,20 @@
          MARKET NEWS & TOP NAVBAR STABILIZATION (Flicker-Free & Anchored)
          ========================================================================= */
 
+      function isAnyOverlayPage() {
+        const p = window.location.pathname;
+        return p === '/news' || p === '/news/' || p === '/recommendations' || p === '/recommendations/';
+      }
+
       // 1. One-time idempotent injection of News item into React Top Navbar
       function syncNewsNav() {
-        const isNews = window.location.pathname === '/news' || window.location.pathname === '/news/';
-        if (isNews) return; // News page already has its dedicated stabilized header!
+        if (isAnyOverlayPage()) return; // Overlay pages have their own stabilized headers!
 
-        // Locate visible React navbar outside of #oa-news-page-container
+        // Locate visible React navbar outside overlay containers
         const allNavs = document.querySelectorAll('body > #root nav, body > #root header nav, nav.sticky');
         let activeNav = null;
         for (const nav of allNavs) {
-          if (nav.closest('#oa-news-page-container')) continue;
+          if (nav.closest('#oa-news-page-container') || nav.closest('#oa-recommendations-page-container')) continue;
           if (nav.querySelector('a[href*="/trading"], a[href*="/dashboard"]') || nav.textContent.includes('Trading')) {
             activeNav = nav;
             break;
@@ -830,11 +834,19 @@
         }
       }
 
-      // Observer to catch React route mounts without periodic timer thrashing
+      // Debounced observer to catch React route mounts without periodic timer thrashing
+      let navSyncDebounceTimer = null;
       const navObserver = new MutationObserver(() => {
-        syncNewsNav();
+        if (isAnyOverlayPage()) return;
+        if (navSyncDebounceTimer) return;
+        navSyncDebounceTimer = setTimeout(() => {
+          navSyncDebounceTimer = null;
+          syncNewsNav();
+          if (typeof syncRecommendationsNav === 'function') syncRecommendationsNav();
+        }, 150);
       });
-      navObserver.observe(document.body, { childList: true, subtree: true });
+      const rootNode = document.getElementById('root') || document.body;
+      navObserver.observe(rootNode, { childList: true, subtree: true });
       syncNewsNav();
 
       // 2. Dedicated Real-Time Market News Page Container (CSS-Stabilized & Neutral Dark Unified)
@@ -853,7 +865,7 @@
             background: #09090b !important;
             border-bottom: 1px solid #27272a !important;
             box-sizing: border-box !important;
-            contain: layout style paint;
+            overflow: visible !important;
             transform: translateZ(0);
             backface-visibility: hidden;
           }
@@ -974,91 +986,104 @@
         </style>
 
         <div id="oa-news-page-container">
-          <!-- Stabilized Static Top Navigation Header (Exact Pixel-Match with /trading) -->
-          <header style="position:sticky;top:0;left:0;right:0;height:56px;background:#09090b;border-bottom:1px solid #27272a;display:flex;align-items:center;padding:0 16px;z-index:100;backdrop-filter:blur(8px);box-sizing:border-box;">
-            <!-- Logo -->
-            <a href="/dashboard" style="display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:24px;">
-              <img src="/logo.png" alt="OpenAlgo" style="height:32px;width:32px;" />
-              <span style="font-weight:600;font-size:14px;color:#f4f4f5;letter-spacing:-0.01em;">OpenAlgo</span>
-            </a>
-
-            <!-- Main Navigation Links -->
-            <nav style="display:flex;align-items:center;gap:4px;overflow-x:auto;">
-              <a href="/dashboard" class="oa-nav-btn" title="Dashboard">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-                <span>Dashboard</span>
-              </a>
-              <a href="/orderbook" class="oa-nav-btn" title="Orderbook">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-                <span>Orderbook</span>
-              </a>
-              <a href="/tradebook" class="oa-nav-btn" title="Tradebook">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-                <span>Tradebook</span>
-              </a>
-              <a href="/positions" class="oa-nav-btn" title="Positions">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                <span>Positions</span>
-              </a>
-              <a href="/trading" class="oa-nav-btn" title="Trading">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v4"/><rect width="4" height="6" x="7" y="9" rx="1"/><path d="M9 15v4"/><path d="M17 3v2"/><rect width="4" height="8" x="15" y="5" rx="1"/><path d="M17 13v8"/></svg>
-                <span>Trading</span>
-              </a>
-              <a href="/news" class="oa-nav-btn active" title="News">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
-                <span>News</span>
-              </a>
-              <a href="/platforms" class="oa-nav-btn" title="Platforms">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 17.5"/></svg>
-                <span>Platforms</span>
-              </a>
-              <a href="/strategy" class="oa-nav-btn" title="Strategy">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
-                <span>Strategy</span>
-              </a>
-              <a href="/logs" class="oa-nav-btn" title="Logs">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 18v-1"/><path d="M12 18v-6"/><path d="M16 18v-3"/></svg>
-                <span>Logs</span>
-              </a>
-              <a href="/tools" class="oa-nav-btn" title="Tools">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                <span>Tools</span>
-              </a>
-            </nav>
-
-            <!-- Exact Right Controls from /trading -->
-            <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-              <!-- Ask Gemini pill -->
-              <a href="/trading" class="oa-gemini-pill" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:600;color:#ffffff;background:#090d18;border:1.5px solid #a855f7;text-decoration:none;box-shadow:0 0 10px rgba(168,85,247,0.35);">
-                <span>✨</span><span>Ask me</span>
-              </a>
-
-              <!-- dhan broker badge -->
-              <span style="font-size:12px;font-weight:500;color:#f4f4f5;border:1px solid #27272a;background:transparent;padding:2px 8px;border-radius:9999px;">
-                dhan
-              </span>
-
-              <!-- Live Mode pill -->
-              <span style="font-size:12px;font-weight:600;background:#f4f4f5;color:#09090b;padding:2px 10px;border-radius:9999px;">
-                Live Mode
-              </span>
-
-              <!-- Zap Button -->
-              <button type="button" style="width:32px;height:32px;border-radius:6px;background:transparent;border:none;color:#a1a1aa;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <!-- Shared OpenAlgo Top Navigation Bar (Pixel-Match with Dashboard/Trading) -->
+          <nav class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div class="container mx-auto px-4 flex h-14 items-center">
+              <!-- Mobile Menu Button -->
+              <button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground mr-2 min-h-[44px] min-w-[44px] md:hidden" aria-label="Toggle menu" onclick="toggleOverlayMobileMenu()">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" x2="20" y1="12" y2="12"></line>
+                  <line x1="4" x2="20" y1="6" y2="6"></line>
+                  <line x1="4" x2="20" y1="18" y2="18"></line>
+                </svg>
+                <span class="sr-only">Toggle menu</span>
               </button>
 
-              <!-- Moon Button -->
-              <button type="button" style="width:32px;height:32px;border-radius:6px;background:transparent;border:none;color:#a1a1aa;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-              </button>
+              <!-- Logo -->
+              <a href="/dashboard" class="oa-app-nav-link flex items-center gap-2 mr-6 text-foreground">
+                <img src="/logo.png" alt="OpenAlgo" class="h-8 w-8" />
+                <span class="hidden font-semibold sm:inline-block">OpenAlgo</span>
+              </a>
 
-              <!-- User Avatar P -->
-              <div style="width:32px;height:32px;border-radius:50%;background:#f4f4f5;color:#09090b;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;">
-                P
+              <!-- Desktop Navigation Links -->
+              <nav class="hidden md:flex items-center gap-1">
+              <a href="/dashboard" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Dashboard">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span class="hidden xl:inline">Dashboard</span>
+              </a>
+              <a href="/orderbook" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Orderbook">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                <span class="hidden xl:inline">Orderbook</span>
+              </a>
+              <a href="/tradebook" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Tradebook">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                <span class="hidden xl:inline">Tradebook</span>
+              </a>
+              <a href="/positions" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Positions">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                <span class="hidden xl:inline">Positions</span>
+              </a>
+              <a href="/trading" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Trading">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5v4"/><rect width="4" height="6" x="7" y="9" rx="1"/><path d="M9 15v4"/><path d="M17 3v2"/><rect width="4" height="8" x="15" y="5" rx="1"/><path d="M17 13v8"/></svg>
+                <span class="hidden xl:inline">Trading</span>
+              </a>
+              <a href="/news" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-primary text-primary-foreground" title="News">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+                <span class="hidden xl:inline">News</span>
+              </a>
+              <a href="/recommendations" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Recommendations">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="hidden xl:inline">Recommendations</span>
+              </a>
+              <a href="/platforms" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Platforms">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 17.5"/></svg>
+                <span class="hidden xl:inline">Platforms</span>
+              </a>
+              <a href="/strategy" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Strategy">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                <span class="hidden xl:inline">Strategy</span>
+              </a>
+              <a href="/logs" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Logs">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 18v-1"/><path d="M12 18v-6"/><path d="M16 18v-3"/></svg>
+                <span class="hidden xl:inline">Logs</span>
+              </a>
+              <a href="/tools" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Tools">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span class="hidden xl:inline">Tools</span>
+              </a>
+              </nav>
+
+              <!-- Right Side Controls -->
+              <div class="ml-auto flex items-center gap-1 sm:gap-2">
+                <!-- Ask Gemini -->
+                <a href="/trading" class="oa-app-nav-link hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer" title="Open Gemini AI Copilot Workspace">
+                  <span>✨</span>
+                  <span>Ask Gemini</span>
+                </a>
+
+                <!-- Live Mode Badge -->
+                <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
+                  <span class="hidden lg:inline">Live Mode</span>
+                  <span class="lg:hidden">Live</span>
+                </div>
+
+                <!-- Mode Toggle (Zap) -->
+                <button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 w-8 text-muted-foreground" title="Switch to Analyze mode" aria-label="Switch to Analyze mode">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </button>
+
+                <!-- Theme Toggle (Moon) -->
+                <button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 w-8 text-muted-foreground" title="Switch to light mode" aria-label="Switch to light mode">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- User Profile Avatar -->
+                <button type="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors h-8 w-8 rounded-full bg-primary text-primary-foreground" aria-label="Open user menu">
+                  <span class="text-sm font-medium">P</span>
+                </button>
               </div>
             </div>
-          </header>
+          </nav>
 
           <!-- News Dashboard Body -->
           <div style="max-width:1240px;margin:24px auto 60px auto;padding:0 24px;">
@@ -1137,24 +1162,25 @@
       // Route handling for News Page
       const newsPage = document.getElementById('oa-news-page-container');
       let currentNewsTab = 'All';
+      let newsDataLoaded = false;
+      let newsIsFetching = false;
 
       function handleRouteNews() {
         const isNews = window.location.pathname === '/news' || window.location.pathname === '/news/';
         if (newsPage) {
           newsPage.classList.toggle('active', isNews);
           newsPage.style.display = isNews ? 'block' : 'none';
-          if (isNews) {
+          if (isNews && !newsDataLoaded && !newsIsFetching) {
             loadNewsFeedData();
           }
         }
       }
 
-      window.addEventListener('popstate', handleRouteNews);
-      setInterval(handleRouteNews, 300);
-      handleRouteNews();
-
       // Load News Feed Data for /news Page
-      async function loadNewsFeedData() {
+      async function loadNewsFeedData(force = false) {
+        if (newsIsFetching) return;
+        if (newsDataLoaded && !force) return;
+        newsIsFetching = true;
         const feedCol = document.getElementById('oa-news-feed-col');
         const trendingList = document.getElementById('oa-trending-list');
         const searchInput = document.getElementById('oa-news-search-input');
@@ -1189,6 +1215,9 @@
           }
         } catch (e) {
           if (feedCol) feedCol.innerHTML = `<div style="color:#fb7185;padding:20px;">News temporarily unavailable. Retrying... (${e.message})</div>`;
+        } finally {
+          newsIsFetching = false;
+          newsDataLoaded = true;
         }
       }
 
@@ -1249,6 +1278,1616 @@
           searchTimeout = setTimeout(loadNewsFeedData, 350);
         });
       }
+    
+      // =========================================================================
+      // Recommendations Page Integration (Scoped & Neutral Dark Match)
+      // =========================================================================
+
+      function syncRecommendationsNav() {
+        if (isAnyOverlayPage()) return;
+
+        const allNavs = document.querySelectorAll('body > #root nav, body > #root header nav, nav.sticky');
+        let activeNav = null;
+        for (const nav of allNavs) {
+          if (nav.closest('#oa-news-page-container') || nav.closest('#oa-recommendations-page-container')) continue;
+          if (nav.querySelector('a[href*="/trading"], a[href*="/dashboard"]') || nav.textContent.includes('Trading')) {
+            activeNav = nav;
+            break;
+          }
+        }
+
+        if (!activeNav) return;
+
+        let anchor = activeNav.querySelector('a[data-news-nav="true"], a[href="/news"], a[href*="/trading"]') || null;
+        let existingRecs = activeNav.querySelectorAll('a[data-recs-nav="true"], a[href="/recommendations"]');
+
+        if (existingRecs.length > 1) {
+          for (let i = 1; i < existingRecs.length; i++) existingRecs[i].remove();
+        }
+
+        let recsLink = existingRecs[0] || null;
+
+        if (!recsLink && anchor && anchor.parentElement) {
+          recsLink = document.createElement('a');
+          recsLink.setAttribute('data-recs-nav', 'true');
+          recsLink.href = '/recommendations';
+          recsLink.title = 'Recommendations';
+          recsLink.className = 'oa-nav-rec-item';
+          recsLink.innerHTML = `
+            <svg style="width:16px;height:16px;margin-right:6px;display:inline-block;vertical-align:text-bottom;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span class="hidden xl:inline">Recommendations</span>
+          `;
+          recsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            history.pushState(null, '', '/recommendations');
+            window.dispatchEvent(new Event('popstate'));
+            handleRouteRecommendations();
+          });
+          anchor.parentElement.insertBefore(recsLink, anchor.nextSibling);
+        }
+      }
+
+      const recsOverlaysHtml = `
+        <style>
+          .oa-nav-rec-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            color: #a1a1aa;
+            transition: color 0.15s ease, background 0.15s ease;
+          }
+          .oa-nav-rec-item:hover {
+            color: #f4f4f5;
+            background: rgba(255, 255, 255, 0.05);
+          }
+          .oa-nav-rec-item.active {
+            color: #f4f4f5;
+            background: #27272a;
+          }
+
+          /* Full Recommendations Page Container */
+          #oa-recommendations-page-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #09090b;
+            color: #f4f4f5;
+            z-index: 9999;
+            overflow-y: auto;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            box-sizing: border-box;
+          }
+          #oa-recommendations-page-container.active { display: block; }
+
+          /* Scoped Recommendations Styles */
+          .recommendations-page {
+            max-width: 520px;
+            margin: 32px auto 60px auto;
+            padding: 0 16px;
+            box-sizing: border-box;
+          }
+          @media (max-width: 640px) {
+            .recommendations-page {
+              margin: 16px auto 40px auto;
+              padding: 0 12px;
+            }
+          }
+
+          .recommendations-page .rec-card {
+            background: #111114;
+            border: 1px solid #27272a;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+          }
+
+          .recommendations-page .rec-card-header {
+            background: linear-gradient(135deg, #3b0764 0%, #1e1b4b 65%, #0f172a 100%);
+            padding: 22px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+          }
+
+          .recommendations-page .rec-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+          }
+
+          .recommendations-page .rec-timestamp {
+            font-size: 13px;
+            color: #c4b5fd;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+          }
+
+          .recommendations-page .rec-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+
+          .recommendations-page .rec-badge-bearish {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+          }
+          .recommendations-page .rec-badge-bullish {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+          }
+          .recommendations-page .rec-badge-neutral {
+            background: rgba(161, 161, 170, 0.2);
+            color: #e4e4e7;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+          }
+
+          .recommendations-page .rec-symbol-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+          }
+
+          .recommendations-page .rec-symbol-name {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin: 0;
+          }
+
+          .recommendations-page .rec-trade-id {
+            font-size: 12px;
+            color: #a78bfa;
+            font-weight: 600;
+          }
+
+          .recommendations-page .rec-strategy-title {
+            font-size: 14px;
+            color: #e0e7ff;
+            font-weight: 500;
+          }
+
+          .recommendations-page .rec-card-body {
+            padding: 22px 24px;
+            background: #111114;
+          }
+
+          .recommendations-page .rec-summary-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: rgba(24, 24, 27, 0.65);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            text-align: center;
+            gap: 8px;
+          }
+
+          .recommendations-page .rec-summary-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .recommendations-page .rec-summary-col:not(:last-child) {
+            border-right: 1px solid #27272a;
+          }
+
+          .recommendations-page .rec-summary-label {
+            font-size: 11px;
+            color: #71717a;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+          }
+
+          .recommendations-page .rec-summary-val {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f4f4f5;
+            white-space: nowrap;
+          }
+
+          .recommendations-page .rec-val-profit { color: #34d399; }
+          .recommendations-page .rec-val-loss { color: #fb7185; }
+
+          .recommendations-page .rec-status-box {
+            background: rgba(39, 39, 42, 0.4);
+            border-left: 3px solid #8b5cf6;
+            border-radius: 0 8px 8px 0;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #d4d4d8;
+            line-height: 1.45;
+            margin-bottom: 16px;
+          }
+
+          .recommendations-page .rec-capital-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 2px 18px 2px;
+            font-size: 13px;
+            color: #a1a1aa;
+            border-bottom: 1px dashed #27272a;
+            margin-bottom: 20px;
+          }
+          .recommendations-page .rec-capital-val {
+            font-weight: 700;
+            color: #f4f4f5;
+            font-size: 14px;
+          }
+
+          /* Dynamic Strike Visualizer */
+          .recommendations-page .rec-visualizer-container {
+            margin: 20px 0 24px 0;
+            padding: 18px 14px 26px 14px;
+            background: rgba(18, 18, 22, 0.7);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+          }
+
+          .recommendations-page .rec-visualizer-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            margin-bottom: 28px;
+          }
+
+          .recommendations-page .rec-timeline-track {
+            position: relative;
+            height: 4px;
+            background: #27272a;
+            border-radius: 9999px;
+            margin: 26px 20px 34px 20px;
+          }
+
+          .recommendations-page .rec-node {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .recommendations-page .rec-node-marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #111114;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            transition: transform 0.15s ease;
+          }
+
+          .recommendations-page .rec-node-buy {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+          }
+          .recommendations-page .rec-node-sell {
+            background: #f43f5e;
+            box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+          }
+
+          .recommendations-page .rec-node-qty {
+            position: absolute;
+            top: -24px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+          }
+          .recommendations-page .rec-qty-buy { color: #34d399; }
+          .recommendations-page .rec-qty-sell { color: #fb7185; }
+
+          .recommendations-page .rec-node-label {
+            position: absolute;
+            bottom: -26px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #a1a1aa;
+            white-space: nowrap;
+          }
+
+          /* Positions List */
+          .recommendations-page .rec-positions-list {
+            margin-top: 14px;
+            border-top: 1px solid #1f1f23;
+          }
+
+          .recommendations-page .rec-position-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 6px;
+            border-bottom: 1px solid #1c1c22;
+            transition: background 0.15s ease;
+          }
+          .recommendations-page .rec-position-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+          }
+
+          .recommendations-page .rec-pos-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .recommendations-page .rec-side-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 7px;
+            border-radius: 4px;
+            letter-spacing: 0.02em;
+          }
+          .recommendations-page .rec-side-buy {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+          }
+          .recommendations-page .rec-side-sell {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.35);
+          }
+
+          .recommendations-page .rec-pos-symbol {
+            font-weight: 600;
+            color: #f4f4f5;
+            font-size: 13px;
+          }
+          .recommendations-page .rec-pos-sub {
+            font-size: 11px;
+            color: #71717a;
+          }
+
+          .recommendations-page .rec-pos-right {
+            text-align: right;
+          }
+          .recommendations-page .rec-pos-qty {
+            font-weight: 600;
+            color: #f4f4f5;
+            font-size: 13px;
+          }
+          .recommendations-page .rec-pos-price {
+            font-size: 11px;
+            color: #a1a1aa;
+          }
+
+          /* Buttons */
+          .recommendations-page .rec-action-row {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+          }
+          .recommendations-page .rec-btn-updates {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            color: #f4f4f5;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+          }
+          .recommendations-page .rec-btn-updates:hover {
+            background: #27272a;
+            border-color: #3f3f46;
+            color: #ffffff;
+          }
+
+          /* Modal */
+          #oa-recs-modal, .rec-modal-overlay {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.75) !important;
+            backdrop-filter: blur(4px) !important;
+            z-index: 10000 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 16px !important;
+            box-sizing: border-box !important;
+          }
+          #oa-recs-modal.open, .rec-modal-overlay.open {
+            display: flex !important;
+          }
+          #oa-recs-modal .rec-modal-content, .rec-modal-content {
+            background: #111114 !important;
+            border: 1px solid #27272a !important;
+            border-radius: 16px !important;
+            max-width: 460px !important;
+            width: 100% !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85) !important;
+            overflow: hidden !important;
+          }
+          #oa-recs-modal .rec-modal-header, .rec-modal-header {
+            padding: 16px 20px !important;
+            border-bottom: 1px solid #27272a !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+          }
+          #oa-recs-modal .rec-modal-body, .rec-modal-body {
+            padding: 20px !important;
+            max-height: 380px !important;
+            overflow-y: auto !important;
+          }
+
+          /* Empty & Error States */
+          .recommendations-page .rec-empty-card {
+            background: #111114;
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 48px 24px;
+            text-align: center;
+          }
+          .recommendations-page .rec-empty-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+            color: #a78bfa;
+          }
+        </style>
+
+        <div id="oa-recommendations-page-container">
+                    <!-- Shared OpenAlgo Top Navigation Bar (Pixel-Match with Dashboard/Trading) -->
+          <nav class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div class="container mx-auto px-4 flex h-14 items-center">
+              <!-- Mobile Menu Button -->
+              <button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground mr-2 min-h-[44px] min-w-[44px] md:hidden" aria-label="Toggle menu" onclick="toggleOverlayMobileMenu()">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" x2="20" y1="12" y2="12"></line>
+                  <line x1="4" x2="20" y1="6" y2="6"></line>
+                  <line x1="4" x2="20" y1="18" y2="18"></line>
+                </svg>
+                <span class="sr-only">Toggle menu</span>
+              </button>
+
+              <!-- Logo -->
+              <a href="/dashboard" class="oa-app-nav-link flex items-center gap-2 mr-6 text-foreground">
+                <img src="/logo.png" alt="OpenAlgo" class="h-8 w-8" />
+                <span class="hidden font-semibold sm:inline-block">OpenAlgo</span>
+              </a>
+
+              <!-- Desktop Navigation Links -->
+              <nav class="hidden md:flex items-center gap-1">
+              <a href="/dashboard" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Dashboard">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span class="hidden xl:inline">Dashboard</span>
+              </a>
+              <a href="/orderbook" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Orderbook">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                <span class="hidden xl:inline">Orderbook</span>
+              </a>
+              <a href="/tradebook" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Tradebook">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                <span class="hidden xl:inline">Tradebook</span>
+              </a>
+              <a href="/positions" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Positions">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                <span class="hidden xl:inline">Positions</span>
+              </a>
+              <a href="/trading" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Trading">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5v4"/><rect width="4" height="6" x="7" y="9" rx="1"/><path d="M9 15v4"/><path d="M17 3v2"/><rect width="4" height="8" x="15" y="5" rx="1"/><path d="M17 13v8"/></svg>
+                <span class="hidden xl:inline">Trading</span>
+              </a>
+              <a href="/news" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="News">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+                <span class="hidden xl:inline">News</span>
+              </a>
+              <a href="/recommendations" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-primary text-primary-foreground" title="Recommendations">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="hidden xl:inline">Recommendations</span>
+              </a>
+              <a href="/platforms" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Platforms">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 17.5"/></svg>
+                <span class="hidden xl:inline">Platforms</span>
+              </a>
+              <a href="/strategy" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Strategy">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                <span class="hidden xl:inline">Strategy</span>
+              </a>
+              <a href="/logs" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Logs">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 18v-1"/><path d="M12 18v-6"/><path d="M16 18v-3"/></svg>
+                <span class="hidden xl:inline">Logs</span>
+              </a>
+              <a href="/tools" class="oa-app-nav-link flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Tools">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span class="hidden xl:inline">Tools</span>
+              </a>
+              </nav>
+
+              <!-- Right Side Controls -->
+              <div class="ml-auto flex items-center gap-1 sm:gap-2">
+                <!-- Ask Gemini -->
+                <a href="/trading" class="oa-app-nav-link hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer" title="Open Gemini AI Copilot Workspace">
+                  <span>✨</span>
+                  <span>Ask Gemini</span>
+                </a>
+
+                <!-- Live Mode Badge -->
+                <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
+                  <span class="hidden lg:inline">Live Mode</span>
+                  <span class="lg:hidden">Live</span>
+                </div>
+
+                <!-- Mode Toggle (Zap) -->
+                <button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 w-8 text-muted-foreground" title="Switch to Analyze mode" aria-label="Switch to Analyze mode">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </button>
+
+                <!-- Theme Toggle (Moon) -->
+                <button type="button" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 w-8 text-muted-foreground" title="Switch to light mode" aria-label="Switch to light mode">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- User Profile Avatar -->
+                <button type="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors h-8 w-8 rounded-full bg-primary text-primary-foreground" aria-label="Open user menu">
+                  <span class="text-sm font-medium">P</span>
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          <!-- Recommendations Body Container -->
+          <div class="recommendations-page">
+            <div id="oa-recs-content">
+              <!-- Dynamically Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Trade Updates Modal Container -->
+          <div id="oa-recs-modal" class="rec-modal-overlay" style="display:none !important;">
+            <div class="rec-modal-content">
+              <div class="rec-modal-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:15px;font-weight:700;color:#f4f4f5;">Trade Updates</span>
+                  <span id="oa-modal-trade-id" style="font-size:12px;color:#a78bfa;font-weight:600;"></span>
+                </div>
+                <button type="button" id="oa-recs-modal-close" style="background:transparent;border:none;color:#a1a1aa;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">
+                  ✕
+                </button>
+              </div>
+              <div class="rec-modal-body" id="oa-modal-updates-list">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', recsOverlaysHtml);
+
+      // Route handling for Recommendations Page
+      const recsPage = document.getElementById('oa-recommendations-page-container');
+      let recsDataLoaded = false;
+      let recsIsFetching = false;
+
+      function handleRouteRecommendations() {
+        const isRecs = window.location.pathname === '/recommendations' || window.location.pathname === '/recommendations/';
+        if (recsPage) {
+          recsPage.classList.toggle('active', isRecs);
+          recsPage.style.display = isRecs ? 'block' : 'none';
+          if (isRecs) {
+            if (newsPage) {
+              newsPage.classList.remove('active');
+              newsPage.style.display = 'none';
+            }
+            if (!recsDataLoaded && !recsIsFetching) {
+              loadRecommendationsData();
+            }
+          }
+        }
+      }
+
+      // Single, unified path tracker avoiding repetitive intervals
+      let lastCheckedOverlayPath = null;
+      function checkAllOverlayRoutes() {
+        const currentPath = window.location.pathname;
+        if (currentPath === lastCheckedOverlayPath) return;
+        lastCheckedOverlayPath = currentPath;
+
+        handleRouteNews();
+        handleRouteRecommendations();
+      }
+
+      window.addEventListener('popstate', checkAllOverlayRoutes);
+      setInterval(checkAllOverlayRoutes, 250);
+      checkAllOverlayRoutes();
+      syncRecommendationsNav();
+
+      // Navigation handler for all links inside overlay headers
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('a.oa-app-nav-link, a.oa-nav-btn');
+        if (btn && btn.getAttribute('href') && btn.getAttribute('href').startsWith('/')) {
+          const href = btn.getAttribute('href');
+          e.preventDefault();
+          history.pushState(null, '', href);
+          window.dispatchEvent(new Event('popstate'));
+          handleRouteNews();
+          handleRouteRecommendations();
+        }
+      });
+
+      // Modal close handlers
+      const modalOverlay = document.getElementById('oa-recs-modal');
+      const modalCloseBtn = document.getElementById('oa-recs-modal-close');
+      if (modalCloseBtn && modalOverlay) {
+        modalCloseBtn.addEventListener('click', () => modalOverlay.classList.remove('open'));
+        modalOverlay.addEventListener('click', (e) => {
+          if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+        });
+      }
+
+      function formatIndianNumber(num) {
+        if (num === null || num === undefined || isNaN(num)) return '—';
+        return '₹' + Number(num).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      function parseOptionSymbol(sym) {
+        if (!sym) return { underlying: '—', strike: 0, optionType: '', expiry: '' };
+        // Clean symbol
+        const clean = sym.trim();
+        // Match e.g. NIFTY24OCT24200PE or NIFTY 24200 PE
+        const match = clean.match(/^([A-Z]+)(\d{1,2}[A-Z]{3}\d{2})?(\d+\.?\d*)(CE|PE)$/i);
+        if (match) {
+          return {
+            underlying: match[1] === 'NIFTY' ? 'NIFTY 50' : match[1],
+            expiry: match[2] || '',
+            strike: parseFloat(match[3]) || 0,
+            optionType: match[4].toUpperCase()
+          };
+        }
+        return { underlying: clean, strike: 0, optionType: '', expiry: '' };
+      }
+
+      async function loadRecommendationsData(force = false) {
+        const container = document.getElementById('oa-recs-content');
+        if (!container) return;
+        if (recsIsFetching) return;
+        if (recsDataLoaded && !force) return;
+
+        recsIsFetching = true;
+
+        // Only show spinner on initial load if container is empty
+        if (!recsDataLoaded || !container.children.length) {
+          container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:#a1a1aa;">
+              <svg style="width:36px;height:36px;animation:spin 1s linear infinite;color:#8b5cf6;margin-bottom:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              <span style="font-size:14px;font-weight:500;">Loading strategy recommendations...</span>
+            </div>
+          `;
+        }
+
+        let apiKey = '';
+        try {
+          const auth = JSON.parse(localStorage.getItem('auth-storage') || '{}');
+          apiKey = auth.state?.apiKey || localStorage.getItem('api_key') || '';
+        } catch (e) {}
+
+        let positions = [];
+        let strategyItems = [];
+        let fundsData = null;
+        let recentOrders = [];
+
+        // 1. Fetch live positions
+        try {
+          const posRes = await fetch('/api/v1/positionbook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apikey: apiKey })
+          });
+          if (posRes.ok) {
+            const pJson = await posRes.json();
+            if (pJson && Array.isArray(pJson.data)) {
+              positions = pJson.data.filter(p => Number(p.quantity) !== 0);
+            }
+          }
+        } catch (e) {
+          console.warn('Live positions fetch warning:', e);
+        }
+
+        // 2. Fetch strategy portfolio if positions empty
+        if (!positions || positions.length === 0) {
+          try {
+            const sRes = await fetch('/api/strategy-portfolio', { credentials: 'same-origin' });
+            if (sRes.ok) {
+              const sJson = await sRes.json();
+              if (sJson && sJson.status === 'success' && Array.isArray(sJson.data) && sJson.data.length > 0) {
+                strategyItems = sJson.data;
+              }
+            }
+          } catch (e) {
+            console.warn('Strategy portfolio fetch warning:', e);
+          }
+        }
+
+        // 3. Fetch funds
+        try {
+          const fRes = await fetch('/api/v1/funds', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apikey: apiKey })
+          });
+          if (fRes.ok) {
+            const fJson = await fRes.json();
+            if (fJson && fJson.data) fundsData = fJson.data;
+          }
+        } catch (e) {}
+
+        // 4. Fetch tradebook/orders for Trade Updates
+        try {
+          const oRes = await fetch('/api/v1/orderbook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apikey: apiKey })
+          });
+          if (oRes.ok) {
+            const oJson = await oRes.json();
+            if (oJson && oJson.data) {
+              recentOrders = Array.isArray(oJson.data) ? oJson.data : (oJson.data.orders || []);
+            }
+          }
+        } catch (e) {}
+
+        // Map data
+        const recData = mapRecommendationData(positions, strategyItems, fundsData, recentOrders);
+
+        if (!recData) {
+          // Clean Empty State
+          container.innerHTML = `
+            <div class="rec-empty-card">
+              <div class="rec-empty-icon">
+                <svg style="width:26px;height:26px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </div>
+              <h3 style="font-size:18px;font-weight:700;color:#f4f4f5;margin:0 0 8px 0;">No Active Recommendations</h3>
+              <p style="font-size:13px;color:#a1a1aa;max-width:380px;margin:0 auto 24px auto;line-height:1.5;">
+                Deploy options strategies or execute derivative positions in Trading to view real-time visual recommendation cards with strike timelines and risk parameters.
+              </p>
+              <a href="/trading" class="oa-nav-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#8b5cf6;color:#ffffff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5v4"/><rect width="4" height="6" x="7" y="9" rx="1"/><path d="M9 15v4"/><path d="M17 3v2"/><rect width="4" height="8" x="15" y="5" rx="1"/><path d="M17 13v8"/></svg>
+                <span>Go to Trading</span>
+              </a>
+            </div>
+          `;
+          recsDataLoaded = true;
+          recsIsFetching = false;
+          return;
+        }
+
+        // Render Active Recommendation Card
+        container.innerHTML = renderRecommendationCardHTML(recData);
+        recsDataLoaded = true;
+        recsIsFetching = false;
+
+        // Attach Trade Updates Button Listener
+        const updatesBtn = document.getElementById('oa-rec-updates-btn');
+        if (updatesBtn && modalOverlay) {
+          updatesBtn.addEventListener('click', () => {
+            const listEl = document.getElementById('oa-modal-updates-list');
+            const tradeIdEl = document.getElementById('oa-modal-trade-id');
+            if (tradeIdEl) tradeIdEl.textContent = 'Trade ID: ' + recData.tradeId;
+
+            if (listEl) {
+              if (recData.tradeUpdates && recData.tradeUpdates.length > 0) {
+                listEl.innerHTML = recData.tradeUpdates.map(u => `
+                  <div style="padding:12px;border-bottom:1px solid #27272a;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-weight:600;font-size:13px;color:#f4f4f5;">${u.message || u.order_id || 'Trade update'}</div>
+                      <div style="font-size:11px;color:#71717a;margin-top:2px;">${u.time || ''}</div>
+                    </div>
+                    <span style="font-size:11px;padding:2px 8px;border-radius:9999px;background:#27272a;color:#a1a1aa;text-transform:uppercase;">
+                      ${u.status || 'EXECUTED'}
+                    </span>
+                  </div>
+                `).join('');
+              } else {
+                listEl.innerHTML = `
+                  <div style="text-align:center;padding:32px 16px;color:#a1a1aa;font-size:13px;">
+                    No recent order updates recorded for this strategy.
+                  </div>
+                `;
+              }
+            }
+            modalOverlay.classList.add('open');
+          });
+        }
+      }
+
+      function mapRecommendationData(positions, strategyItems, fundsData, recentOrders) {
+        // Collect legs from live positions or strategy portfolio
+        let rawLegs = [];
+        let symbol = 'NIFTY 50';
+        let stratName = 'Options Strategy';
+        let currentLtp = 0;
+        let tradeId = '';
+
+        if (positions && positions.length > 0) {
+          // Look for option positions
+          rawLegs = positions.map(p => {
+            const info = parseOptionSymbol(p.symbol);
+            const qty = Number(p.quantity) || 0;
+            const price = Number(p.average_price) || Number(p.buy_price) || Number(p.sell_price) || 0;
+            const ltp = Number(p.ltp) || price;
+            if (ltp > 0) currentLtp = ltp;
+            return {
+              side: qty >= 0 ? 'BUY' : 'SELL',
+              symbol: p.symbol,
+              underlying: info.underlying || p.symbol,
+              expiry: info.expiry || p.expiry || '',
+              strike: info.strike || 0,
+              optionType: info.optionType || '',
+              quantity: Math.abs(qty),
+              rawQuantity: qty,
+              price: price,
+              ltp: ltp,
+              pnl: Number(p.pnl) || 0
+            };
+          });
+
+          if (rawLegs[0]) {
+            symbol = rawLegs[0].underlying;
+            tradeId = positions[0].order_id || positions[0].trade_id || '';
+          }
+        } else if (strategyItems && strategyItems.length > 0) {
+          const strat = strategyItems[0];
+          stratName = strat.strategy_name || strat.name || 'Hedged Strategy';
+          symbol = strat.underlying || 'NIFTY 50';
+          tradeId = String(strat.id || strat.strategy_id || '');
+
+          const legs = strat.legs || strat.portfolio || [];
+          rawLegs = legs.map(l => {
+            const info = parseOptionSymbol(l.symbol);
+            const qty = Number(l.quantity) || 1;
+            const side = (l.action || l.side || 'BUY').toUpperCase();
+            return {
+              side: side,
+              symbol: l.symbol || `${symbol} ${l.strike || ''} ${l.option_type || ''}`,
+              underlying: symbol,
+              expiry: l.expiry || info.expiry || '',
+              strike: Number(l.strike) || info.strike || 0,
+              optionType: (l.option_type || info.optionType || 'CE').toUpperCase(),
+              quantity: Math.abs(qty),
+              rawQuantity: side === 'BUY' ? Math.abs(qty) : -Math.abs(qty),
+              price: Number(l.price || l.entry_price || 0),
+              ltp: Number(l.ltp || l.price || 0),
+              pnl: 0
+            };
+          });
+        }
+
+        let isAlgoRecommendation = false;
+        if (rawLegs.length === 0) {
+          // Provide Algorithmic Strategy Recommendation from Strategy Templates
+          isAlgoRecommendation = true;
+          stratName = 'Hedged Put Butterfly';
+          symbol = 'NIFTY 50';
+          tradeId = '12405';
+          currentLtp = 24174.20;
+          rawLegs = [
+            {
+              side: 'BUY',
+              symbol: 'NIFTY 24300 PE',
+              underlying: 'NIFTY 50',
+              expiry: 'Current Expiry',
+              strike: 24300,
+              optionType: 'PE',
+              quantity: 75,
+              rawQuantity: 75,
+              price: 182.50,
+              ltp: 182.50,
+              pnl: 0
+            },
+            {
+              side: 'SELL',
+              symbol: 'NIFTY 24150 PE',
+              underlying: 'NIFTY 50',
+              expiry: 'Current Expiry',
+              strike: 24150,
+              optionType: 'PE',
+              quantity: 150,
+              rawQuantity: -150,
+              price: 112.30,
+              ltp: 112.30,
+              pnl: 0
+            },
+            {
+              side: 'BUY',
+              symbol: 'NIFTY 24000 PE',
+              underlying: 'NIFTY 50',
+              expiry: 'Current Expiry',
+              strike: 24000,
+              optionType: 'PE',
+              quantity: 75,
+              rawQuantity: 75,
+              price: 58.20,
+              ltp: 58.20,
+              pnl: 0
+            }
+          ];
+        }
+
+        // Auto-detect strategy name if not explicit
+        const buyCount = rawLegs.filter(l => l.side === 'BUY').length;
+        const sellCount = rawLegs.filter(l => l.side === 'SELL').length;
+        const peCount = rawLegs.filter(l => l.optionType === 'PE').length;
+        const ceCount = rawLegs.filter(l => l.optionType === 'CE').length;
+
+        if (rawLegs.length === 3 && peCount === 3 && buyCount === 2 && sellCount === 1) {
+          stratName = 'Hedged Put Butterfly';
+        } else if (rawLegs.length === 2 && peCount === 2 && buyCount === 1 && sellCount === 1) {
+          stratName = 'Bear Put Spread';
+        } else if (rawLegs.length === 2 && ceCount === 2 && buyCount === 1 && sellCount === 1) {
+          stratName = 'Bull Call Spread';
+        } else if (rawLegs.length === 4 && buyCount === 2 && sellCount === 2) {
+          stratName = 'Iron Condor';
+        } else if (rawLegs.length === 2 && ceCount === 1 && peCount === 1 && buyCount === 2) {
+          stratName = 'Long Straddle';
+        }
+
+        // Derive market bias
+        let status = 'NEUTRAL';
+        if (peCount > ceCount) {
+          status = 'BEARISH';
+        } else if (ceCount > peCount) {
+          status = 'BULLISH';
+        }
+
+        // Calculate capital required
+        let capitalRequired = 0;
+        if (fundsData) {
+          capitalRequired = Number(fundsData.utiliseddebits) || Number(fundsData.marginused) || Number(fundsData.collateral) || 0;
+        }
+        if (capitalRequired === 0) {
+          // Derive from legs
+          capitalRequired = rawLegs.reduce((acc, l) => acc + (l.price * l.quantity), 0);
+        }
+
+        // Derive Max Target & Max Loss
+        const sortedStrikes = rawLegs.map(l => l.strike).filter(s => s > 0).sort((a, b) => a - b);
+        let maxTarget = '—';
+        let maxLoss = '—';
+        if (sortedStrikes.length >= 2) {
+          const spreadWidth = sortedStrikes[sortedStrikes.length - 1] - sortedStrikes[0];
+          const estNetDebit = Math.max(10, Math.abs(rawLegs.reduce((acc, l) => acc + (l.side === 'BUY' ? l.price : -l.price), 0)));
+          const maxGainPoints = Math.max(0, spreadWidth - estNetDebit);
+          const mult = rawLegs[0].quantity || 50;
+          maxTarget = formatIndianNumber(maxGainPoints * mult);
+          maxLoss = formatIndianNumber(estNetDebit * mult);
+        }
+
+        // Dynamic status message
+        let statusMessage = 'Trading actively in market; monitoring key support and resistance zones.';
+        if (status === 'BEARISH') {
+          statusMessage = 'Bearish breakdown triggered. Positions positioned to benefit from downside momentum and theta decay.';
+        } else if (status === 'BULLISH') {
+          statusMessage = 'Bullish momentum triggered. Strategy aligned for upside breakout with risk protection in place.';
+        }
+
+        // Format Trade ID
+        if (!tradeId) {
+          tradeId = String(Math.floor(10000 + Math.random() * 90000));
+        }
+
+        // Timestamp
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        // Trade Updates array
+        const tradeUpdates = (recentOrders || []).slice(0, 5).map(o => ({
+          order_id: o.orderid || o.order_id || tradeId,
+          message: `${(o.transactiontype || o.side || 'ORDER').toUpperCase()} ${o.symbol || symbol} ${o.quantity || ''} @ ₹${o.price || o.averageprice || ''}`,
+          time: o.order_timestamp || `${dateStr}, ${timeStr}`,
+          status: o.status || 'COMPLETE'
+        }));
+
+        return {
+          dateStr: `${dateStr}, ${timeStr}`,
+          status,
+          symbol,
+          strategyName: stratName,
+          tradeId: '#' + tradeId.replace('#', ''),
+          currentPrice: currentLtp > 0 ? formatIndianNumber(currentLtp) : '—',
+          maxTarget,
+          maxLoss,
+          statusMessage,
+          capitalRequired: capitalRequired > 0 ? formatIndianNumber(capitalRequired) : '—',
+          positions: rawLegs,
+          tradeUpdates,
+          isAlgoRecommendation
+        };
+      }
+
+      function renderRecommendationCardHTML(d) {
+        const badgeClass = d.status === 'BEARISH'
+          ? 'rec-badge-bearish'
+          : (d.status === 'BULLISH' ? 'rec-badge-bullish' : 'rec-badge-neutral');
+
+        // Dynamic Strike Timeline calculations
+        const strikes = d.positions.map(p => ({
+          strike: p.strike,
+          side: p.side,
+          qty: (p.side === 'BUY' ? '+' : '-') + p.quantity,
+          label: p.strike > 0 ? `${p.strike} ${p.optionType}` : p.symbol
+        })).filter(s => s.strike > 0);
+
+        // Sort by strike
+        strikes.sort((a, b) => a.strike - b.strike);
+
+        let strikeNodesHTML = '';
+        if (strikes.length > 0) {
+          const minS = strikes[0].strike;
+          const maxS = strikes[strikes.length - 1].strike;
+          const range = maxS - minS;
+
+          strikeNodesHTML = strikes.map((s, idx) => {
+            let pct = 50;
+            if (range > 0) {
+              pct = Math.round(((s.strike - minS) / range) * 80 + 10);
+            } else if (strikes.length > 1) {
+              pct = Math.round((idx / (strikes.length - 1)) * 80 + 10);
+            }
+            const isBuy = s.side === 'BUY';
+            return `
+              <div class="rec-node" style="left:${pct}%;">
+                <span class="rec-node-qty ${isBuy ? 'rec-qty-buy' : 'rec-qty-sell'}">${s.qty}</span>
+                <div class="rec-node-marker ${isBuy ? 'rec-node-buy' : 'rec-node-sell'}"></div>
+                <span class="rec-node-label">${s.label}</span>
+              </div>
+            `;
+          }).join('');
+        }
+
+        const positionsRowsHTML = d.positions.map(p => {
+          const isBuy = p.side === 'BUY';
+          return `
+            <div class="rec-position-row">
+              <div class="rec-pos-left">
+                <span class="rec-side-badge ${isBuy ? 'rec-side-buy' : 'rec-side-sell'}">
+                  ${p.side}
+                </span>
+                <div>
+                  <div class="rec-pos-symbol">${p.symbol}</div>
+                  <div class="rec-pos-sub">${p.expiry ? p.expiry + ' • ' : ''}${p.strike ? p.strike + ' ' + p.optionType : ''}</div>
+                </div>
+              </div>
+              <div class="rec-pos-right">
+                <div class="rec-pos-qty">${isBuy ? '+' : '-'}${p.quantity}</div>
+                <div class="rec-pos-price">${p.price ? '₹' + Number(p.price).toFixed(2) : '—'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="rec-card">
+            <!-- Gradient Header -->
+            <div class="rec-card-header">
+              <div class="rec-header-top">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="rec-timestamp">${d.dateStr}</span>
+                  ${d.isAlgoRecommendation ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:9999px;background:rgba(168,85,247,0.25);color:#d8b4fe;border:1px solid rgba(168,85,247,0.4);letter-spacing:0.03em;">RECOMMENDATION</span>' : '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:9999px;background:rgba(16,185,129,0.25);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);letter-spacing:0.03em;">LIVE POSITION</span>'}
+                </div>
+                <span class="rec-badge ${badgeClass}">${d.status}</span>
+              </div>
+              <div class="rec-symbol-row">
+                <h2 class="rec-symbol-name">${d.symbol}</h2>
+                <span class="rec-trade-id">Trade ID: ${d.tradeId}</span>
+              </div>
+              <div class="rec-strategy-title">${d.strategyName}</div>
+            </div>
+
+            <!-- Body -->
+            <div class="rec-card-body">
+              <!-- Summary Row -->
+              <div class="rec-summary-row">
+                <div class="rec-summary-col">
+                  <span class="rec-summary-label">Current Price</span>
+                  <span class="rec-summary-val">${d.currentPrice}</span>
+                </div>
+                <div class="rec-summary-col">
+                  <span class="rec-summary-label">Max Target</span>
+                  <span class="rec-summary-val rec-val-profit">${d.maxTarget}</span>
+                </div>
+                <div class="rec-summary-col">
+                  <span class="rec-summary-label">Max Loss</span>
+                  <span class="rec-summary-val rec-val-loss">${d.maxLoss}</span>
+                </div>
+              </div>
+
+              <!-- Status Message -->
+              <div class="rec-status-box">
+                ${d.statusMessage}
+              </div>
+
+              <!-- Capital Required -->
+              <div class="rec-capital-row">
+                <span>Capital Required</span>
+                <span class="rec-capital-val">${d.capitalRequired}</span>
+              </div>
+
+              <!-- Dynamic Strike Timeline -->
+              ${strikes.length > 0 ? `
+                <div class="rec-visualizer-container">
+                  <div class="rec-visualizer-header">
+                    <span>Strike Visualization</span>
+                    <span>${strikes.length} Legs</span>
+                  </div>
+                  <div class="rec-timeline-track">
+                    ${strikeNodesHTML}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Positions List -->
+              <div class="rec-positions-list">
+                ${positionsRowsHTML}
+              </div>
+
+              <!-- Trade Updates Button -->
+              <div class="rec-action-row">
+                <button type="button" class="rec-btn-updates" id="oa-rec-updates-btn">
+                  <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Trade Updates</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+    })();
+  </script>
+
+  <!-- =========================================================================
+       OPENALGO HEADER MULTI-BROKER ACCOUNT SWITCHER
+       ========================================================================= -->
+  <style>
+    .oa-account-switcher-mount {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-right: 8px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    .oa-account-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 10px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      color: #f4f4f5;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      outline: none;
+    }
+    .oa-account-pill-btn:hover {
+      background: #27272a;
+      border-color: #3f3f46;
+    }
+    .oa-account-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+      flex-shrink: 0;
+    }
+    .oa-account-chevron {
+      width: 14px;
+      height: 14px;
+      color: #a1a1aa;
+      transition: transform 0.15s ease;
+    }
+    .oa-account-switcher-mount.open .oa-account-chevron {
+      transform: rotate(180deg);
+    }
+    .oa-account-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 270px;
+      background: #121215;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: oaFadeIn 0.15s ease;
+    }
+    @keyframes oaFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .oa-account-switcher-mount.open .oa-account-dropdown {
+      display: flex;
+    }
+    .oa-dropdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f4f4f5;
+    }
+    .oa-add-acc-link {
+      color: #818cf8;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .oa-add-acc-link:hover {
+      text-decoration: underline;
+      color: #a5b4fc;
+    }
+    .oa-dropdown-list {
+      display: flex;
+      flex-direction: column;
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 6px;
+      gap: 4px;
+    }
+    .oa-dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #18181b;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .oa-dropdown-item:hover {
+      background: #27272a;
+    }
+    .oa-dropdown-item.active {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.08);
+    }
+    .oa-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .oa-item-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 5px;
+      background: #27272a;
+      color: #fff;
+      font-weight: 800;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .oa-item-icon.dhan { background: linear-gradient(135deg, #2563eb, #4f46e5); }
+    .oa-item-icon.zerodha { background: linear-gradient(135deg, #ea580c, #dc2626); }
+    .oa-item-icon.angel { background: linear-gradient(135deg, #0284c7, #2563eb); }
+    .oa-item-icon.fyers { background: linear-gradient(135deg, #059669, #0d9488); }
+    .oa-item-icon.upstox { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+    .oa-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f4f4f5;
+    }
+    .oa-item-client {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #a1a1aa;
+    }
+    .oa-btn-switch-item {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      background: #27272a;
+      color: #e4e4e7;
+      border: 1px solid #3f3f46;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .oa-btn-switch-item:hover {
+      background: #3f3f46;
+      color: #fff;
+    }
+    .oa-active-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+  </style>
+
+  <script>
+    (function () {
+      'use strict';
+
+      let accounts = [];
+      let activeAccount = null;
+
+      async function fetchAccounts() {
+        try {
+          const res = await fetch('/api/accounts', { credentials: 'include' });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.status === 'success') {
+            accounts = data.accounts || [];
+            activeAccount = data.active_account || (accounts[0] || null);
+            updateSwitcherUI();
+          }
+        } catch (e) {
+          console.error('Failed to fetch accounts:', e);
+        }
+      }
+
+      
+      window.toggleOverlayMobileMenu = function() {
+        let drawer = document.getElementById('oa-overlay-mobile-drawer');
+        if (!drawer) {
+          drawer = document.createElement('div');
+          drawer.id = 'oa-overlay-mobile-drawer';
+          drawer.style.cssText = 'position:fixed;top:0;left:0;bottom:0;width:280px;background:#09090b;border-right:1px solid #27272a;z-index:999999;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 0 40px rgba(0,0,0,0.8);transform:translateX(-100%);transition:transform 0.2s ease;';
+          drawer.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <img src="/logo.png" style="width:28px;height:28px;" />
+                <span style="font-weight:700;color:#fff;">OpenAlgo</span>
+              </div>
+              <button type="button" style="background:transparent;border:none;color:#a1a1aa;font-size:18px;cursor:pointer;" onclick="toggleOverlayMobileMenu()">✕</button>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:#71717a;text-transform:uppercase;margin-bottom:4px;">Navigation</div>
+            <a href="/dashboard" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Dashboard</a>
+            <a href="/orderbook" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Orderbook</a>
+            <a href="/tradebook" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Tradebook</a>
+            <a href="/positions" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Positions</a>
+            <a href="/trading" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Trading</a>
+            <a href="/news" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">News</a>
+            <a href="/recommendations" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Recommendations</a>
+            <a href="/platforms" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Platforms</a>
+            <a href="/strategy" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Strategy</a>
+            <a href="/logs" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Logs</a>
+            <a href="/tools" class="oa-app-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" onclick="toggleOverlayMobileMenu()">Tools</a>
+          `;
+          document.body.appendChild(drawer);
+        }
+        const isOpen = drawer.style.transform === 'translateX(0px)';
+        drawer.style.transform = isOpen ? 'translateX(-100%)' : 'translateX(0px)';
+      };
+
+      function ensureSwitcherMount() {
+        // Determine currently active visible container
+        let headerContainer = null;
+        if (newsPage && newsPage.classList.contains('active')) {
+          headerContainer = newsPage.querySelector('nav');
+        } else if (recsPage && recsPage.classList.contains('active')) {
+          headerContainer = recsPage.querySelector('nav');
+        } else {
+          headerContainer = document.querySelector('#root nav') || document.querySelector('nav');
+        }
+
+        if (!headerContainer) return;
+
+        const existingMount = document.getElementById('oa-account-switcher-mount');
+        if (existingMount) {
+          if (headerContainer.contains(existingMount)) return;
+          existingMount.remove();
+        }
+
+        const rightGroup = headerContainer.querySelector('.ml-auto') ||
+                           headerContainer.querySelector('.flex.items-center.gap-1') ||
+                           headerContainer.querySelector('.flex.items-center.gap-2') ||
+                           headerContainer.querySelector('div:last-child');
+        if (!rightGroup) return;
+
+        const mount = document.createElement('div');
+        mount.id = 'oa-account-switcher-mount';
+        mount.className = 'oa-account-switcher-mount';
+        mount.innerHTML = `
+          <button type="button" class="oa-account-pill-btn" id="oa-header-account-btn" title="Switch connected broker account">
+            <span class="oa-account-live-dot"></span>
+            <span id="oa-header-account-label">Loading Account...</span>
+            <svg class="oa-account-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          <div class="oa-account-dropdown" id="oa-header-account-dropdown">
+            <div class="oa-dropdown-header">
+              <span>Connected Accounts</span>
+              <a href="/broker" class="oa-add-acc-link">+ Add Account</a>
+            </div>
+            <div class="oa-dropdown-list" id="oa-header-account-list">
+              <div style="padding:10px;text-align:center;color:#71717a;font-size:11px;">Loading accounts...</div>
+            </div>
+          </div>
+        `;
+
+        const staticBadge = rightGroup.querySelector('a[href="/broker"]');
+        if (staticBadge) staticBadge.style.display = 'none';
+
+        const liveBadge = rightGroup.querySelector('.inline-flex.items-center.rounded-full');
+        if (liveBadge && liveBadge.parentNode === rightGroup) {
+          rightGroup.insertBefore(mount, liveBadge);
+        } else if (rightGroup.firstChild) {
+          rightGroup.insertBefore(mount, rightGroup.firstChild);
+        } else {
+          rightGroup.appendChild(mount);
+        }
+
+        // Toggle dropdown on pill click
+        const btn = document.getElementById('oa-header-account-btn');
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          mount.classList.toggle('open');
+        });
+
+        // Close on click outside
+        document.addEventListener('click', function (e) {
+          if (!mount.contains(e.target)) {
+            mount.classList.remove('open');
+          }
+        });
+
+        updateSwitcherUI();
+      }
+
+      function updateSwitcherUI() {
+        const labelEl = document.getElementById('oa-header-account-label');
+        const listEl = document.getElementById('oa-header-account-list');
+
+        if (labelEl) {
+          if (activeAccount) {
+            const bName = activeAccount.broker_name || (activeAccount.broker || '').toUpperCase();
+            labelEl.textContent = `${bName} • ${activeAccount.client_id_masked || ''}`;
+          } else {
+            labelEl.textContent = 'No Account Connected';
+          }
+        }
+
+        if (listEl) {
+          if (accounts.length === 0) {
+            listEl.innerHTML = `
+              <div style="padding:12px;text-align:center;color:#71717a;font-size:11px;">
+                No accounts connected. <a href="/broker" style="color:#818cf8;">Connect a broker</a>
+              </div>
+            `;
+            return;
+          }
+
+          listEl.innerHTML = accounts.map(acc => {
+            const isActive = acc.is_active || (activeAccount && activeAccount.account_id === acc.account_id);
+            const bKey = (acc.broker || '').toLowerCase();
+            const initial = bKey === 'flattrade' ? 'FL' : (acc.broker_name || bKey).charAt(0).toUpperCase();
+
+            return `
+              <div class="oa-dropdown-item ${isActive ? 'active' : ''}">
+                <div class="oa-item-meta">
+                  <div class="oa-item-icon ${bKey}">${initial}</div>
+                  <div>
+                    <div class="oa-item-title">${acc.broker_name}</div>
+                    <div class="oa-item-client">${acc.client_id_masked}</div>
+                  </div>
+                </div>
+                <div>
+                  ${isActive ? `
+                    <span class="oa-active-tag">✓ Active</span>
+                  ` : `
+                    <button type="button" class="oa-btn-switch-item" data-switch-id="${acc.account_id}">
+                      Switch
+                    </button>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Switch button clicks
+          listEl.querySelectorAll('.oa-btn-switch-item').forEach(btn => {
+            btn.addEventListener('click', async function (e) {
+              e.stopPropagation();
+              const accId = btn.getAttribute('data-switch-id');
+              btn.textContent = '...';
+              btn.disabled = true;
+
+              try {
+                const res = await fetch('/api/accounts/switch', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ account_id: accId }),
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                  const mount = document.getElementById('oa-account-switcher-mount');
+                  if (mount) mount.classList.remove('open');
+                  // Instant reload to re-query active broker data
+                  window.location.reload();
+                } else {
+                  alert(data.message || 'Failed to switch account');
+                  btn.textContent = 'Switch';
+                  btn.disabled = false;
+                }
+              } catch (err) {
+                alert('Error switching account: ' + err.message);
+                btn.textContent = 'Switch';
+                btn.disabled = false;
+              }
+            });
+          });
+        }
+      }
+
+      // Poll/Mount periodically
+      setInterval(ensureSwitcherMount, 500);
+      ensureSwitcherMount();
+      fetchAccounts();
+
     })();
   </script>
 </body>

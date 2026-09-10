@@ -248,6 +248,12 @@ def react_news():
     return serve_react_app()
 
 
+# Recommendations
+@react_bp.route("/recommendations", strict_slashes=False)
+def react_recommendations():
+    return serve_react_app()
+
+
 # Trading pages
 @react_bp.route("/positions")
 def react_positions():

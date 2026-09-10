@@ -1,0 +1,825 @@
+/**
+ * Scoped Styles for the Recommendations Page
+ * Strictly namespaced under .recommendations-page
+ * Never write bare selectors (button, card, table, etc.)
+ */
+
+/* =========================================================================
+   1. PAGE CONTAINER & DESKTOP CENTERING
+   ========================================================================= */
+.recommendations-page {
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 12px 64px 12px;
+  font-family: inherit;
+  color: #f4f4f5;
+  box-sizing: border-box;
+}
+
+.recommendations-page .recommendation-card-wrapper {
+  width: 100%;
+  max-width: 480px; /* Centered card, matching mobile/reference visual hierarchy */
+  margin: 0 auto;
+}
+
+.recommendations-page .page-header-strip {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.recommendations-page .page-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.recommendations-page .btn-refresh-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #a1a1aa;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.recommendations-page .btn-refresh-pill:hover {
+  background: #27272a;
+  color: #ffffff;
+}
+
+/* =========================================================================
+   2. RECOMMENDATIONS CARD (Dark rounded card)
+   ========================================================================= */
+.recommendations-page .recommendation-card {
+  background: #0d0e12;
+  border: 1px solid #22232a;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(147, 51, 234, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2A. Header Section with Purple/Blue Gradient */
+.recommendations-page .card-header-gradient {
+  background: linear-gradient(135deg, #3b1d6b 0%, #1e1b4b 60%, #172554 100%);
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.recommendations-page .header-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.recommendations-page .timestamp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.recommendations-page .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.recommendations-page .status-bearish {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.recommendations-page .status-bullish {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.recommendations-page .status-neutral {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.recommendations-page .header-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recommendations-page .underlying-symbol {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.recommendations-page .strategy-subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recommendations-page .strategy-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.recommendations-page .trade-id-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* 2B. Summary Metrics Row */
+.recommendations-page .card-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #111218;
+  border-bottom: 1px solid #1e2029;
+}
+
+.recommendations-page .summary-metric-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.recommendations-page .summary-metric-col:first-child {
+  text-align: left;
+}
+
+.recommendations-page .summary-metric-col:nth-child(3) {
+  text-align: center;
+}
+
+.recommendations-page .summary-metric-col:last-child {
+  text-align: right;
+}
+
+.recommendations-page .metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recommendations-page .metric-value {
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.recommendations-page .metric-value.current-price {
+  color: #f4f4f5;
+}
+
+.recommendations-page .metric-value.max-target {
+  color: #4ade80; /* Green */
+}
+
+.recommendations-page .metric-value.max-loss {
+  color: #f87171; /* Red */
+}
+
+.recommendations-page .summary-divider {
+  width: 1px;
+  height: 28px;
+  background: #27272a;
+  margin: 0 8px;
+}
+
+/* 2C. Status Message Banner */
+.recommendations-page .status-message-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 20px 0 20px;
+  padding: 10px 12px;
+  background: #141620;
+  border: 1px solid #232738;
+  border-radius: 8px;
+}
+
+.recommendations-page .status-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+/* 2D. Capital Required Row */
+.recommendations-page .capital-required-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  margin: 0 20px;
+  border-bottom: 1px solid #1e2029;
+}
+
+.recommendations-page .capital-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recommendations-page .capital-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a1a1aa;
+}
+
+.recommendations-page .capital-amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f4f4f5;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   3. STRIKE VISUALIZATION
+   ========================================================================= */
+.recommendations-page .strike-visualization-section {
+  padding: 24px 20px 20px 20px;
+  background: #0d0e12;
+}
+
+.recommendations-page .recommendation-strike-visualizer {
+  width: 100%;
+  padding: 10px 0;
+}
+
+.recommendations-page .strike-track-container {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.recommendations-page .strike-axis-line {
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.4) 0%, rgba(59, 130, 246, 0.6) 50%, rgba(168, 85, 247, 0.4) 100%);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.recommendations-page .spot-indicator-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+
+.recommendations-page .spot-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.recommendations-page .spot-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+.recommendations-page .strike-nodes-row {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.recommendations-page .strike-node {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.recommendations-page .strike-qty-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  line-height: 1.1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.recommendations-page .strike-qty-badge.buy-tone {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.recommendations-page .strike-qty-badge.sell-tone {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.recommendations-page .strike-circle-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0e12;
+  transition: transform 0.15s ease;
+}
+
+.recommendations-page .strike-circle-marker.marker-buy {
+  border: 2px solid #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.recommendations-page .strike-circle-marker.marker-buy .inner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.recommendations-page .strike-circle-marker.marker-sell {
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.recommendations-page .strike-circle-marker.marker-sell .inner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.recommendations-page .strike-label-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   4. POSITIONS LIST / TABLE
+   ========================================================================= */
+.recommendations-page .positions-list-section {
+  padding: 10px 20px 16px 20px;
+  border-top: 1px solid #1e2029;
+}
+
+.recommendations-page .positions-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.recommendations-page .legs-count {
+  font-size: 10px;
+  background: #18181b;
+  color: #a1a1aa;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.recommendations-page .positions-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recommendations-page .position-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #12141c;
+  border: 1px solid #1e212c;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.recommendations-page .position-row:hover {
+  background: #171924;
+}
+
+.recommendations-page .pos-left-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.recommendations-page .side-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recommendations-page .side-tag.tag-buy {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.recommendations-page .side-tag.tag-sell {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.recommendations-page .pos-desc-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.recommendations-page .pos-instrument-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f4f4f5;
+}
+
+.recommendations-page .pos-expiry {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.recommendations-page .pos-instrument-type {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.recommendations-page .pos-right-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.recommendations-page .pos-qty {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+  font-variant-numeric: tabular-nums;
+}
+
+.recommendations-page .pos-price {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   5. TRADE UPDATES BUTTON (Bottom action)
+   ========================================================================= */
+.recommendations-page .card-footer-action {
+  padding: 16px 20px 20px 20px;
+  border-top: 1px solid #1e2029;
+}
+
+.recommendations-page .btn-trade-updates {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #181922;
+  border: 1px solid #2d3142;
+  color: #f4f4f5;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recommendations-page .btn-trade-updates:hover {
+  background: #232533;
+  border-color: #3b4055;
+  color: #ffffff;
+}
+
+/* =========================================================================
+   6. INFORMATIONAL TRADE UPDATES MODAL
+   ========================================================================= */
+.recommendations-page .trade-updates-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+  animation: recFadeIn 0.15s ease-out;
+}
+
+.recommendations-page .trade-updates-modal {
+  background: #111218;
+  border: 1px solid #27272a;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.recommendations-page .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #222430;
+}
+
+.recommendations-page .modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recommendations-page .modal-title-group h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin: 0;
+}
+
+.recommendations-page .btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.recommendations-page .btn-close-modal:hover {
+  color: #ffffff;
+  background: #27272a;
+}
+
+.recommendations-page .modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recommendations-page .update-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.recommendations-page .update-icon-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.recommendations-page .update-icon-dot.success {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.recommendations-page .update-icon-dot.info {
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+.recommendations-page .update-icon-dot.neutral {
+  background: #a855f7;
+  box-shadow: 0 0 6px #a855f7;
+}
+
+.recommendations-page .update-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recommendations-page .update-time {
+  font-size: 10px;
+  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recommendations-page .update-msg {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.recommendations-page .modal-footer {
+  padding: 12px 18px;
+  border-top: 1px solid #222430;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.recommendations-page .btn-modal-dismiss {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* =========================================================================
+   7. UTILITY & EMPTY/LOADING STATES
+   ========================================================================= */
+.recommendations-page .icon-tiny {
+  width: 12px;
+  height: 12px;
+}
+
+.recommendations-page .icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+.recommendations-page .text-muted {
+  color: #94a3b8;
+}
+
+.recommendations-page .text-accent {
+  color: #a855f7;
+}
+
+.recommendations-page .empty-state-box,
+.recommendations-page .error-state-box {
+  width: 100%;
+  max-width: 480px;
+  margin: 30px auto;
+  padding: 36px 24px;
+  text-align: center;
+  background: #0d0e12;
+  border: 1px solid #22232a;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.recommendations-page .empty-state-icon {
+  width: 44px;
+  height: 44px;
+  color: #71717a;
+  margin-bottom: 4px;
+}
+
+.recommendations-page .empty-state-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin: 0;
+}
+
+.recommendations-page .empty-state-desc {
+  font-size: 13px;
+  color: #a1a1aa;
+  max-width: 360px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.recommendations-page .loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 20px;
+  color: #a1a1aa;
+  font-size: 13px;
+}
+
+.recommendations-page .spin-loader {
+  animation: recSpin 1s linear infinite;
+}
+
+@keyframes recSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes recFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .recommendations-page {
+    padding: 12px 8px 48px 8px;
+  }
+
+  .recommendations-page .card-header-gradient {
+    padding: 16px;
+  }
+
+  .recommendations-page .underlying-symbol {
+    font-size: 21px;
+  }
+
+  .recommendations-page .card-summary-row {
+    padding: 12px 14px;
+  }
+
+  .recommendations-page .metric-value {
+    font-size: 13px;
+  }
+}
