@@ -48,7 +48,7 @@ class OpenAlgoTrader:
     """
 
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = secret_key or os.getenv("OPENALGO_SECRET_KEY", "openalgo-copilot-secret-key-2026")
+        self.secret_key = secret_key or os.getenv("OPENALGO_SECRET_KEY", "")
         self._pending_confirmations: Dict[str, Dict[str, Any]] = {}
 
     # =========================================================================

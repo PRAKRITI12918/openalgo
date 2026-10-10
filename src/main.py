@@ -12,17 +12,24 @@ import time
 from typing import Any, AsyncGenerator, Dict, Optional
 import uuid
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 import structlog
 
-from src.adapters.openalgo_mock import MockBrokerRouter
-from src.api.routes import router
+from src.adapters.factory import create_broker_adapter
+from src.api.account_routes import account_router
+from src.api.routes import root_router, router
 from src.core.config import ExecutionConfig, get_config, setup_logger
+from src.database.account_models import init_account_db
+from src.database.execution_db import init_execution_db
+from src.database.signals_db import init_signals_db
+from src.engine.pending_signals import PendingSignalManager
 from src.engine.sequence_parser import AsyncOrderQueueManager, ExecutionSequenceEngine
 from src.engine.tick_replay import SyntheticTickGenerator, WebSocketConnectionManager
+from src.realtime import FeedSource, RealtimeWebSocketManager
+from src.services.square_off_service import SquareOffService
 
 logger = structlog.get_logger("openalgo.main")
 
@@ -72,11 +79,22 @@ def create_app(config: Optional[ExecutionConfig] = None) -> FastAPI:
 
     # Initialize State Components
     app.state.config = cfg
-    broker_adapter = MockBrokerRouter(config=cfg)
+    broker_adapter = create_broker_adapter(cfg.broker_mode, config=cfg)
     app.state.broker_adapter = broker_adapter
 
     ws_manager = WebSocketConnectionManager()
     app.state.ws_manager = ws_manager
+
+    realtime_ws_manager = RealtimeWebSocketManager(
+        feed_source=FeedSource.MOCK if cfg.broker_mode.value.upper() in ("MOCK", "SIMULATED") else (FeedSource.SANDBOX if "SANDBOX" in cfg.broker_mode.value.upper() or "PAPER" in cfg.broker_mode.value.upper() else FeedSource.LIVE)
+    )
+    app.state.realtime_ws_manager = realtime_ws_manager
+
+    square_off_service = SquareOffService(
+        broker_adapter=broker_adapter,
+        event_broadcaster=ws_manager.broadcast_execution_event,
+    )
+    app.state.square_off_service = square_off_service
 
     sequence_engine = ExecutionSequenceEngine(
         broker_adapter=broker_adapter,
@@ -87,6 +105,9 @@ def create_app(config: Optional[ExecutionConfig] = None) -> FastAPI:
 
     queue_manager = AsyncOrderQueueManager(engine=sequence_engine)
     app.state.queue_manager = queue_manager
+
+    pending_manager = PendingSignalManager()
+    app.state.pending_manager = pending_manager
 
     tick_generator = SyntheticTickGenerator(ws_manager=ws_manager, config=cfg)
     app.state.tick_generator = tick_generator
@@ -123,17 +144,45 @@ def create_app(config: Optional[ExecutionConfig] = None) -> FastAPI:
         )
         return response
 
+    # Initialize Database Schemas
+    init_signals_db()
+    init_execution_db()
+    init_account_db()
+
     # Explicit 422 Request Validation Error Handler with Structured Logging
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
         correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
         error_details = exc.errors()
 
-        logger.error(
+        structured_errors = []
+        safe_log_errors = []
+        for err in error_details:
+            loc = err.get("loc", ())
+            field_parts = [str(x) for x in loc if x != "body"]
+            field_name = ".".join(field_parts) if field_parts else "payload"
+            reason = err.get("msg", "Validation error")
+            rejected_val = err.get("input")
+
+            # Redact secrets or sensitive fields from logging/error representation
+            if any(k in field_name.lower() for k in ("secret", "token", "password", "key", "auth", "credential")):
+                rejected_val = "***REDACTED***"
+
+            structured_errors.append({
+                "field": field_name,
+                "reason": reason,
+                "rejected_value": rejected_val,
+            })
+            safe_log_errors.append({
+                "field": field_name,
+                "reason": reason,
+            })
+
+        logger.warn(
             "validation_error_422",
             method=request.method,
             path=request.url.path,
-            errors=error_details,
+            errors=safe_log_errors,
             correlation_id=correlation_id,
         )
 
@@ -144,13 +193,64 @@ def create_app(config: Optional[ExecutionConfig] = None) -> FastAPI:
                 "error_code": "SCHEMA_VALIDATION_FAILED",
                 "message": "Malformed signal payload rejected by validation schema",
                 "correlation_id": correlation_id,
-                "validation_errors": error_details,
+                "errors": structured_errors,
+                "validation_errors": structured_errors,
+            },
+            headers={"X-Correlation-ID": correlation_id},
+        )
+
+    # Centralized HTTP Exception Handler
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        logger.warn(
+            "http_exception_raised",
+            method=request.method,
+            path=request.url.path,
+            status_code=exc.status_code,
+            detail=exc.detail,
+            correlation_id=correlation_id,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "status": "error",
+                "error_code": "HTTP_ERROR",
+                "message": exc.detail,
+                "detail": exc.detail,
+                "correlation_id": correlation_id,
+            },
+            headers={"X-Correlation-ID": correlation_id},
+        )
+
+    # Centralized Global Unhandled Exception Handler (Catches 500s)
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        logger.error(
+            "unhandled_server_error",
+            method=request.method,
+            path=request.url.path,
+            error=str(exc),
+            error_type=exc.__class__.__name__,
+            correlation_id=correlation_id,
+            exc_info=True,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "status": "error",
+                "error_code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected internal server error occurred",
+                "correlation_id": correlation_id,
             },
             headers={"X-Correlation-ID": correlation_id},
         )
 
     # Mount REST & WebSocket API Routes
+    app.include_router(account_router)
     app.include_router(router)
+    app.include_router(root_router)
 
     # Mount Static Directory and Serve Root Interactive Dashboard
     static_dir = os.path.join(os.path.dirname(__file__), "static")

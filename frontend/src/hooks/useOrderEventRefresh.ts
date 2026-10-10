@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { useSocketContext } from '@/components/socket/SocketProvider'
+import { getSocketUrl } from '@/utils/socketUrl'
 
 /**
  * Supported Socket.IO event types for order-related updates
@@ -123,11 +124,9 @@ export function useSocketConnection(enabled = true): {
   useEffect(() => {
     if (!enabled) return
 
-    const protocol = window.location.protocol
-    const host = window.location.hostname
-    const port = window.location.port
+    const socketUrl = getSocketUrl()
 
-    socketRef.current = io(`${protocol}//${host}:${port}`, {
+    socketRef.current = io(socketUrl, {
       transports: ['polling'],
       upgrade: false,
     })

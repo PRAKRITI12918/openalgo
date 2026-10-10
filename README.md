@@ -315,25 +315,76 @@ OpenAlgo is part of a larger open-source trading ecosystem:
 
 ### Quick Start with UV
 
-OpenAlgo uses the modern `uv` package manager for faster, more reliable installations:
+OpenAlgo uses the modern `uv` package manager for fast, deterministic Python environment management:
 
 ```bash
 # Clone the repository
 git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
 cd openalgo
 
-# Install UV package manager
+# Install UV package manager (if not already installed)
 pip install uv
 
-# Configure environment
-cp .sample.env .env
-# Edit .env with your broker API credentials as per documentation
+# Configure environment variables from template
+cp .env.example .env
+# Edit .env with your broker API credentials, or use default MOCK mode for testing
 
-# Run the application using UV
-uv run app.py
+# Synchronize dependencies
+uv sync
 ```
 
-The application will be available at `http://127.0.0.1:5000`
+### Running the Services Locally
+
+#### 1. OpenAlgo Flask Core Server & Web Portal
+Runs the unified broker REST API (`/api/v1`), broker authentication panel, Flow builder, Python strategy host, and serves the pre-built React frontend:
+```bash
+uv run app.py
+```
+*Access in browser at:* `http://127.0.0.1:5000`
+
+#### 2. Phase 2 Quantitative Options Execution Engine
+Runs the high-throughput asynchronous execution sequencing engine, margin safety controls, and WebSocket order feeds:
+```bash
+uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+```
+*Access API docs at:* `http://127.0.0.1:8000/docs` (Health check: `http://127.0.0.1:8000/api/v1/health`)
+
+#### 3. Frontend Development Server (Optional — for UI contributors)
+The Flask server already serves the production-ready React app from `frontend/dist/`. To run the Vite hot-module-replacement (HMR) development server:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Access Vite dev server at:* `http://localhost:5173`
+
+### Running Tests
+
+Run the test suites using `pytest` via `uv`:
+
+```bash
+# Run Phase 2 Execution Engine, Strategy Engine, and Broker Pipeline tests (57 tests)
+uv run pytest tests/
+
+# Run specific Phase 2 execution lifecycle test suite
+uv run pytest tests/test_execution_flow.py
+
+# Run OpenAlgo core test suite
+uv run pytest test/
+
+# Run Frontend unit tests (requires Node.js)
+cd frontend && npm run test:run
+```
+
+### Linting and Code Quality
+
+```bash
+# Python linting and formatting checks (Ruff)
+uv run ruff check .
+
+# Frontend linting and formatting (Biome)
+cd frontend && npm run check
+```
 
 For detailed installation instructions, deployment options (Docker, AWS, etc.), and configuration guides, visit [docs.openalgo.in/installation-guidelines/getting-started](https://docs.openalgo.in/installation-guidelines/getting-started)
 
@@ -442,7 +493,80 @@ OpenAlgo is built upon the shoulders of giants. We extend our gratitude to all t
 
 ## Repo Activity
 
-![Alt](https://repobeats.axiom.co/api/embed/0b6b18194a3089cb47ab8ae588caabb14aa9972b.svg "Repobeats analytics image")
+## Phase 2: Trade Signal Ingestion System
+
+The Phase 2 Signal Ingestion System receives quantitative trade signals from external strategy engines, strictly validates contracts, assigns unique IDs, persists state with full audit trails, and prevents duplicate processing.
+
+> **CRITICAL ARCHITECTURAL DISCLAIMER (MOCK/SIMULATION ONLY):**
+> Execution in this engine is 100% simulated (`MOCK_MODE = True`). It is **NOT** connected to live broker order routing, and real money is **NEVER** risked. All prices, fills, latencies, and portfolio positions are virtual simulations.
+
+### Endpoint Contracts
+
+| Method | Endpoint | Description | Status Code |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/signals` | Ingests a new strategy signal (or deduplicates retries) | `201 Created` / `200 OK` (Duplicate) |
+| `GET` | `/api/v1/signals/{signal_id}` | Retrieves signal details with complete status audit history | `200 OK` / `404 Not Found` |
+| `GET` | `/api/v1/signals` | Lists & filters signals by `status`, `underlying`, `strategy_name` | `200 OK` |
+| `POST` | `/api/v1/signals/{signal_id}/transition` | Explicitly transitions signal status according to state machine | `200 OK` / `400 Bad Request` |
+| `POST` | `/api/v1/signals/{signal_id}/execute` | Executes an `APPROVED` signal through the Mock Execution Engine | `200 OK` / `400 Bad Request` |
+| `POST` | `/api/v1/signals/{signal_id}/execute-mock` | Executes simulated fill pipeline (`MOCK_ONLY`) | `200 OK` |
+| `GET` | `/api/v1/signals/{signal_id}/events` | Retrieves chronological order lifecycle & execution events | `200 OK` |
+| `GET` | `/api/v1/mock/positions` | Retrieves simulated positions and realized/unrealized P&L | `200 OK` |
+
+### Signal Status State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> RECEIVED
+    RECEIVED --> VALIDATED
+    RECEIVED --> REJECTED
+    VALIDATED --> PENDING_APPROVAL
+    VALIDATED --> APPROVED
+    VALIDATED --> REJECTED
+    PENDING_APPROVAL --> APPROVED
+    PENDING_APPROVAL --> REJECTED
+    APPROVED --> EXECUTING
+    APPROVED --> REJECTED
+    EXECUTING --> COMPLETED: All Required Legs Filled
+    EXECUTING --> FAILED: Any Leg Rejected/Failed
+```
+
+### Mock Order Lifecycle & Hedge Dependency Gating
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: Order Created
+    PENDING --> OPEN: Accepted by Mock Broker
+    OPEN --> FILLED: Price Matched (Full/Partial)
+    OPEN --> REJECTED: Broker Domain Rejection
+    OPEN --> CANCELLED: User/Hedge Failure Cancel
+    OPEN --> FAILED: Simulated Infrastructure Failure
+```
+
+- **Hedge-Before-Short Ordering**: If a leg is flagged with `leg_role="HEDGE"` or is referenced by `depends_on_leg_id`, the engine enforces that the hedge leg must reach `FILLED` before dependent short legs move past `PENDING`. If the hedge leg rejects or fails, dependent legs are automatically transitioned to `CANCELLED` and never submitted to the broker.
+- **Sequential Execution**: Multi-leg signals are processed in `execution_sequence` order. Sequence ties are broken deterministically by hedge priority then leg ID. Later sequence groups wait until all current legs reach a terminal state.
+- **Pluggable Price & Broker Layer**: `BasePriceProvider` (`MockPriceProvider`) ensures non-violating limit fills, trigger-activated SL orders, and configurable slippage. `BaseMockBrokerClient` isolates order placement for zero-rewrite future broker integration.
+- **Atomic Position & P&L Engine**: Every fill atomically updates signed net quantities, calculates realized P&L on position reductions/flips, and tracks mark-to-market unrealized P&L in `mock_positions`.
+- **Fault Injector**: Deterministic failure, rejection, and partial fill simulation for automated unit testing (`FaultInjector`).
+
+### Idempotency & Duplicate Prevention
+
+- Invariant enforced at the database level with a unique constraint on `idempotency_key`.
+- If an engine retries submission with an existing key:
+  - **No duplicate record** is created.
+  - Returns `HTTP 200 OK` with `{ "signal_id": "...", "status": "...", "is_duplicate": true }`.
+
+### Strict Validation Rules
+
+1. **Lot Sizes:** Derivatives (`FUTURE`, `OPTION`) on known indices (`NIFTY`, `BANKNIFTY`, `FINNIFTY`, etc.) must have quantities as exact multiples of standard lot sizes.
+2. **Prices & Triggers:**
+   - `LIMIT` orders require `price > 0`.
+   - `SL` orders require both `price > 0` and `trigger_price > 0`.
+   - `BUY SL`: limit price must be $\ge$ trigger price.
+   - `SELL SL`: limit price must be $\le$ trigger price.
+3. **Execution Sequences:** Multi-leg signals must contain contiguous sequences starting from 1 (e.g. `1, 2, 3`) with zero collisions.
+4. **Metadata Cap:** Arbitrary metadata payloads are capped at 5KB serialized to prevent abuse.
+5. **Safe Logging:** Sensitive credentials, tokens, and keys are automatically masked.
 
 ## Disclaimer
 

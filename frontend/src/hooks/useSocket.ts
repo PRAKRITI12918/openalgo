@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { type AlertCategories, useAlertStore } from '@/stores/alertStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useSessionStore } from '@/stores/sessionStore'
+import { getSocketUrl } from '@/utils/socketUrl'
 
 // Audio throttling configuration
 const AUDIO_THROTTLE_MS = 1000
@@ -142,13 +143,11 @@ export function useSocket() {
     })
 
     // Connect to socket server
-    const protocol = window.location.protocol
-    const host = window.location.hostname
-    const port = window.location.port
+    const socketUrl = getSocketUrl()
 
     // Use polling transport only - WebSocket upgrade fails with threading async mode
     // Polling is still real-time via HTTP long-polling
-    socketRef.current = io(`${protocol}//${host}:${port}`, {
+    socketRef.current = io(socketUrl, {
       transports: ['polling'],
       upgrade: false,
       reconnectionAttempts: 5,

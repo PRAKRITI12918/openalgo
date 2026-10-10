@@ -112,16 +112,18 @@ class ExecutionSequenceEngine:
             except Exception as e:
                 logger.warn("event_broadcast_failed", error=str(e))
 
-    async def execute_signal(self, signal: StrategySignalPayload) -> OrderExecutionSequence:
+    async def execute_signal(self, signal: StrategySignalPayload, account_id: Optional[str] = None) -> OrderExecutionSequence:
         """
         Execute a full StrategySignalPayload enforcing margin safety sequencing and circuit breakers.
         """
+        effective_account_id = account_id or getattr(signal, "account_id", None)
         log = logger.bind(
             signal_id=signal.signal_id,
             correlation_id=signal.correlation_id,
             strategy=signal.strategy_name,
             signal_type=signal.signal_type.value,
             underlying=signal.underlying.value,
+            account_id=effective_account_id,
         )
         log.info("sequence_execution_started", total_legs=len(signal.legs))
 
@@ -130,6 +132,8 @@ class ExecutionSequenceEngine:
             correlation_id=signal.correlation_id,
             strategy_name=signal.strategy_name,
             underlying=signal.underlying,
+            account_id=effective_account_id,
+            user_id=getattr(signal, "user_id", None),
             status="IN_PROGRESS",
             total_legs=len(signal.legs),
             execution_start_time=datetime.utcnow(),
@@ -170,7 +174,7 @@ class ExecutionSequenceEngine:
         tier0_states: List[LegExecutionState] = []
 
         for leg in tier0_legs:
-            state = await self.broker.place_order(leg, correlation_id=signal.correlation_id)
+            state = await self.broker.place_order(leg, correlation_id=signal.correlation_id, account_id=effective_account_id)
             sequence.leg_states.append(state)
             tier0_states.append(state)
 
@@ -227,7 +231,7 @@ class ExecutionSequenceEngine:
             log.info("tier_0_confirmed_executing_tier_1", tier=tier1_name, count=len(tier1_legs))
 
             for leg in tier1_legs:
-                state = await self.broker.place_order(leg, correlation_id=signal.correlation_id)
+                state = await self.broker.place_order(leg, correlation_id=signal.correlation_id, account_id=effective_account_id)
                 sequence.leg_states.append(state)
 
                 await self._emit_event(
@@ -307,7 +311,7 @@ class ExecutionSequenceEngine:
                 quantity=state.filled_quantity,
                 is_hedge_leg=False,
             )
-            rb_state = await self.broker.place_order(rollback_leg, correlation_id=correlation_id)
+            rb_state = await self.broker.place_order(rollback_leg, correlation_id=correlation_id, account_id=sequence.account_id)
             rolled_back_states.append(rb_state)
 
         report = RollbackReport(
@@ -329,15 +333,21 @@ class ExecutionSequenceEngine:
             report.model_dump(mode="json"),
         )
 
-    async def get_sequence(self, sequence_id: str) -> Optional[OrderExecutionSequence]:
-        """Retrieve historical sequence by ID."""
+    async def get_sequence(self, sequence_id: str, account_id: Optional[str] = None) -> Optional[OrderExecutionSequence]:
+        """Retrieve historical sequence by ID, optionally validating account ownership."""
         async with self._lock:
-            return self._history.get(sequence_id)
+            seq = self._history.get(sequence_id)
+            if seq and account_id and seq.account_id and seq.account_id != account_id:
+                return None
+            return seq
 
-    async def get_all_sequences(self) -> List[OrderExecutionSequence]:
-        """Retrieve all recorded execution sequences."""
+    async def get_all_sequences(self, account_id: Optional[str] = None) -> List[OrderExecutionSequence]:
+        """Retrieve recorded execution sequences, optionally scoped by active account_id."""
         async with self._lock:
-            return list(self._history.values())
+            all_seqs = list(self._history.values())
+            if account_id:
+                return [s for s in all_seqs if s.account_id == account_id]
+            return all_seqs
 
 
 class AsyncOrderQueueManager:

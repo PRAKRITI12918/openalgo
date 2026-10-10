@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations - OpenAlgo{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="page-header d-flex justify-content-between align-items-start px-4 py-3 mb-4">
+    <div class="page-header-text">
+      <h2 class="page-title">Recommendations</h2>
+      <p class="page-subtitle text-muted mb-0">
+        AI-generated trade ideas and options strategies
+      </p>
+    </div>
+    <div class="page-header-actions d-flex align-items-center gap-2">
+      <button class="btn btn-outline-secondary btn-page-action" id="refreshRecommendations">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="recommendations-container" style="max-width: 520px; margin: 0 auto;">
+    <!-- Existing Recommendation Card(s) -->
+    <div class="recommendation-card" id="recommendationsCard">
+      <!-- Dynamically loaded card content -->
+    </div>
+  </div>
+</div>
+{% endblock %}

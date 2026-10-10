@@ -1250,7 +1250,8 @@ def get_dashboard_data():
             ), 401
 
         # Check if in analyze mode
-        if get_analyze_mode():
+        is_analyze = get_analyze_mode()
+        if is_analyze:
             api_key = get_api_key_for_tradingview(login_username)
             if api_key:
                 success, response, status_code = get_funds(api_key=api_key)
@@ -1263,9 +1264,10 @@ def get_dashboard_data():
 
         if not success:
             logger.error(f"Failed to get funds data: {response.get('message', 'Unknown error')}")
-            return jsonify(
-                {"status": "error", "message": response.get("message", "Failed to get funds")}
-            ), status_code
+            err_payload = {"status": "error", "message": response.get("message", "Failed to get funds")}
+            if response.get("code"):
+                err_payload["code"] = response["code"]
+            return jsonify(err_payload), status_code
 
         margin_data = response.get("data", {})
 
@@ -1273,7 +1275,19 @@ def get_dashboard_data():
             logger.error(f"Failed to get margin data for user {login_username}")
             return jsonify({"status": "error", "message": "Failed to get margin data"}), 500
 
-        return jsonify({"status": "success", "data": margin_data})
+        source = "Sandbox – virtual funds" if is_analyze else f"Live – {broker.title()}"
+        mode = "analyze" if is_analyze else "live"
+        logger.info(
+            f"Dashboard funds returned from source '{source}' for user {login_username}: {margin_data}"
+        )
+
+        return jsonify({
+            "status": "success",
+            "data": margin_data,
+            "mode": mode,
+            "source": source,
+            "broker": broker,
+        })
 
     except Exception as e:
         logger.exception(f"Error fetching dashboard data: {e}")

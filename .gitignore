@@ -39,10 +39,23 @@ tmp/
 *.log
 *.jsonl
 *.tmp
+logs/
+log/**
+!log/readme.md
+!log/**/readme.md
+!log/strategies/.gitignore
 checkpoint.txt
 checkpoints.json
 log/ws_proxy_stats.json
 log/test/
+
+# Test, lint, and coverage output
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
 
 # Strategy encryption key
@@ -125,9 +138,12 @@ workspace/**
 env.backup
 !.sample.env
 !**/.sample.env
+!.env.example
+!**/.env.example
 # ...but the negation above must not punch a hole in workspace/, whose
 # promise is that only readmes are tracked. Last matching rule wins.
 workspace/**/.sample.env
+workspace/**/.env.example
 
 # Local Git worktrees created for isolated feature and documentation work.
 .worktrees/

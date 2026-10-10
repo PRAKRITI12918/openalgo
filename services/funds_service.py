@@ -72,8 +72,21 @@ def get_funds_with_auth(
     try:
         # Get funds data using broker's implementation
         funds = broker_module.get_margin_data(auth_token)
+        if not funds:
+            return False, {"status": "error", "message": "Failed to get margin data from broker"}, 500
 
         return True, {"status": "success", "data": funds}, 200
+    except PermissionError as e:
+        logger.error(f"Broker authentication error: {e}")
+        return (
+            False,
+            {
+                "status": "error",
+                "code": "BROKER_SESSION_EXPIRED",
+                "message": str(e),
+            },
+            401,
+        )
     except Exception as e:
         logger.exception(f"Error in broker_module.get_margin_data: {e}")
         return False, {"status": "error", "message": str(e)}, 500

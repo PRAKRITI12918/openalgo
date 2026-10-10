@@ -121,27 +121,32 @@ export default function Recommendations() {
   }, [fetchData])
 
   return (
-    <div className="recommendations-page">
-      {/* Top Header Bar */}
-      <div className="page-header-strip">
-        <div className="page-title-badge">
-          <Sparkles className="icon-tiny" />
-          <span>Recommendations</span>
+    <div className="container mx-auto px-4 py-6">
+      {/* Standard Page Header */}
+      <div className="page-header d-flex justify-content-between align-items-start px-4 py-3 mb-4">
+        <div className="page-header-text">
+          <h2 className="page-title">Recommendations</h2>
+          <p className="page-subtitle text-muted mb-0">
+            AI-generated trade ideas and options strategies
+          </p>
         </div>
-
-        <button
-          type="button"
-          className="btn-refresh-pill"
-          onClick={() => fetchData(true)}
-          disabled={isLoading || isRefreshing}
-          title="Refresh recommendation feeds"
-        >
-          <RefreshCw
-            className={`icon-tiny ${isRefreshing ? 'spin-loader' : ''}`}
-          />
-          <span>{lastUpdated ? `Updated ${lastUpdated}` : 'Refresh'}</span>
-        </button>
+        <div className="page-header-actions d-flex align-items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-page-action"
+            id="refreshRecommendations"
+            onClick={() => fetchData(true)}
+            disabled={isLoading || isRefreshing}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
+
+      <div className="recommendations-page" style={{ padding: 0 }}>
 
       {/* Loading State */}
       {isLoading && (
@@ -197,6 +202,8 @@ export default function Recommendations() {
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }
+
