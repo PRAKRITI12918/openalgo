@@ -65,4 +65,4 @@ def init_cors(app):
             "CORS is enabled but no allowed origins are configured; denying cross-origin requests"
         )
 
-    CORS(app, resources={r"/api/*": cors_config})
+    CORS(app, resources={r"/*": cors_config})

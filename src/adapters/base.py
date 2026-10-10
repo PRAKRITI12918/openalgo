@@ -24,6 +24,7 @@ class BaseBrokerAdapter(ABC):
         self,
         leg: LegOrderRequest,
         correlation_id: str = "",
+        account_id: Optional[str] = None,
     ) -> LegExecutionState:
         """
         Place an individual single-leg option order.
@@ -36,6 +37,7 @@ class BaseBrokerAdapter(ABC):
         self,
         legs: List[LegOrderRequest],
         correlation_id: str = "",
+        account_id: Optional[str] = None,
     ) -> List[LegExecutionState]:
         """
         Place a batch of multi-leg option orders concurrently or sequentially.
@@ -64,14 +66,14 @@ class BaseBrokerAdapter(ABC):
         pass
 
     @abstractmethod
-    async def get_positions(self) -> List[PositionStateModel]:
+    async def get_positions(self, account_id: Optional[str] = None) -> List[PositionStateModel]:
         """
         Query active open portfolio positions from the broker.
         """
         pass
 
     @abstractmethod
-    async def get_funds(self) -> Dict[str, Any]:
+    async def get_funds(self, account_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Retrieve available cash, margin used, and account leverage limits.
         """
@@ -81,5 +83,12 @@ class BaseBrokerAdapter(ABC):
     async def health_check(self) -> bool:
         """
         Verify connection vitality and broker API responsiveness.
+        """
+        pass
+
+    @abstractmethod
+    async def square_off_all(self, account_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Emergency square-off: liquidate all open positions for the specified account.
         """
         pass

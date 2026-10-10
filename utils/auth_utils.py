@@ -430,6 +430,20 @@ def handle_auth_success(auth_token, user_session_key, broker, feed_token=None, u
     )
     if inserted_id:
         logger.info(f"Database record upserted with ID: {inserted_id}")
+        # Save into isolated Account Context Layer
+        try:
+            from utils.account_context import save_connected_account
+            save_connected_account(
+                username=user_session_key,
+                broker=broker,
+                client_id=user_id or "default",
+                auth_token=auth_token,
+                feed_token=feed_token,
+                make_active=True,
+            )
+        except Exception as acc_err:
+            logger.warning(f"Could not register connected account: {acc_err}")
+
         # Initialize master contract status for this broker
         init_broker_status(broker)
 

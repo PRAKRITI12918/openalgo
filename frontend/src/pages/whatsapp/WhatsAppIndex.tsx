@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { io, type Socket } from 'socket.io-client'
+import { getSocketUrl } from '@/utils/socketUrl'
 
 import { whatsappApi } from '@/api/whatsapp'
 import { Badge } from '@/components/ui/badge'
@@ -58,10 +59,7 @@ export default function WhatsAppIndex() {
   useEffect(() => {
     refresh()
 
-    const protocol = window.location.protocol
-    const host = window.location.hostname
-    const port = window.location.port
-    const url = port ? `${protocol}//${host}:${port}` : `${protocol}//${host}`
+    const url = getSocketUrl()
 
     const socket = io(url, {
       transports: ['polling'],

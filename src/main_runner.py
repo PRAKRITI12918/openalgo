@@ -9,11 +9,12 @@ import signal
 import sys
 from typing import Dict, List, Optional
 
+from src.adapters.factory import create_broker_adapter
 from src.broker_pipeline.config import PipelineConfig
 from src.broker_pipeline.market_feed import MarketDataFeed
-from src.broker_pipeline.openalgo_client import OpenAlgoClient
 from src.broker_pipeline.order_router import OrderRouter
 from src.broker_pipeline.position_tracker import PositionTracker
+from src.core.config import ExecutionConfig
 from src.strategy_engine.hedge_manager import HedgeManager
 from src.strategy_engine.models import (
     MarketRegime,
@@ -49,8 +50,16 @@ class StrategyExecutionEngine:
         self.config = config or PipelineConfig()
         self.target_indices = target_indices or [UnderlyingIndex.NIFTY]
 
-        # Pipeline components
-        self.client = OpenAlgoClient(config=self.config)
+        # Pipeline components - instantiated strictly behind the mode-selection factory
+        mode = getattr(self.config, "trading_mode", "SANDBOX")
+        exec_cfg = ExecutionConfig(
+            openalgo_host=self.config.openalgo_host,
+            openalgo_api_key=self.config.openalgo_api_key or "pipeline_runner_key",
+            strategy_tag=self.config.strategy_tag,
+            live_trading_enabled=(mode == "LIVE"),
+        )
+        adapter = create_broker_adapter(mode=mode, config=exec_cfg)
+        self.client = getattr(adapter, "client", None)
         self.regime_detector = RegimeDetector()
         self.strike_selector = StrikeSelector()
         self.signal_generator = SignalGenerator(strike_selector=self.strike_selector)

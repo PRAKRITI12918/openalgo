@@ -2,6 +2,10 @@
  * Real-time Intraday Cumulative MTM Chart.
  * Renders smooth high-density SVG line chart with dynamic gradient fill,
  * peak P&L tracking, and drawdown bounds.
+ *
+ * HARD CONSTRAINT:
+ * - Shows an explicit "No MTM data yet — awaiting order fills" state before
+ *   any fills occur, never a flat fake line or mock data.
  */
 
 import { BarChart3, Clock, Sparkles, TrendingUp } from 'lucide-react'
@@ -10,7 +14,7 @@ import { useExecutionStore } from '@/stores/executionStore'
 import { Badge } from '@/components/ui/badge'
 
 export function IntradayMtmChart() {
-  const { mtmHistory, totalDayMtm } = useExecutionStore()
+  const { mtmHistory, totalDayMtm, activeAccount } = useExecutionStore()
   const [hoveredPoint, setHoveredPoint] = useState<{
     time: string
     mtm: number
@@ -18,17 +22,18 @@ export function IntradayMtmChart() {
   } | null>(null)
 
   const isPositive = totalDayMtm >= 0
+  const hasHistory = mtmHistory && mtmHistory.length > 0
 
   // Calculate scaling for SVG
   const { minVal, maxVal, pathD, areaD, points } = useMemo(() => {
-    if (!mtmHistory || mtmHistory.length === 0) {
-      return { minVal: 0, maxVal: 1000, pathD: '', areaD: '', points: [] }
+    if (!hasHistory) {
+      return { minVal: 0, maxVal: 0, pathD: '', areaD: '', points: [] }
     }
 
     const values = mtmHistory.map((h) => h.mtm)
     const rawMin = Math.min(...values, 0)
-    const rawMax = Math.max(...values, 1000)
-    const padding = (rawMax - rawMin) * 0.1 || 100
+    const rawMax = Math.max(...values, 0)
+    const padding = Math.max((rawMax - rawMin) * 0.1, 50)
     const min = rawMin - padding
     const max = rawMax + padding
 
@@ -54,26 +59,26 @@ export function IntradayMtmChart() {
 
     let d = `M ${pts[0].x},${pts[0].y}`
     for (let i = 1; i < pts.length; i++) {
-      // Smooth cubic bezier or linear
       const prev = pts[i - 1]
       const curr = pts[i]
       const midX = (prev.x + curr.x) / 2
       d += ` C ${midX},${prev.y} ${midX},${curr.y} ${curr.x},${curr.y}`
     }
 
-    const zeroY = height - ((0 - min) / (max - min)) * height
     const area = `${d} L ${width},${height} L 0,${height} Z`
 
     return { minVal: min, maxVal: max, pathD: d, areaD: area, points: pts }
-  }, [mtmHistory])
+  }, [mtmHistory, hasHistory])
 
   const peakMtm = useMemo(() => {
+    if (!hasHistory) return 0
     return Math.max(...mtmHistory.map((h) => h.mtm), totalDayMtm)
-  }, [mtmHistory, totalDayMtm])
+  }, [mtmHistory, totalDayMtm, hasHistory])
 
   const maxDrawdown = useMemo(() => {
+    if (!hasHistory) return 0
     return Math.min(...mtmHistory.map((h) => h.mtm), 0)
-  }, [mtmHistory])
+  }, [mtmHistory, hasHistory])
 
   return (
     <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4 shadow-lg flex flex-col gap-3">
@@ -85,95 +90,86 @@ export function IntradayMtmChart() {
           </h3>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-[10px] font-mono text-zinc-400">
-            Peak: ₹{peakMtm.toFixed(0)}
-          </Badge>
-          <Badge
-            variant="outline"
-            className="text-[10px] font-mono text-rose-400 border-rose-500/30"
-          >
-            Max DD: ₹{maxDrawdown.toFixed(0)}
-          </Badge>
-        </div>
+        {hasHistory && (
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] font-mono text-zinc-400">
+              Peak: ₹{peakMtm.toFixed(0)}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="text-[10px] font-mono text-rose-400 border-rose-500/30"
+            >
+              Max DD: ₹{maxDrawdown.toFixed(0)}
+            </Badge>
+          </div>
+        )}
       </div>
 
-      {/* SVG Chart Area */}
-      <div className="relative w-full h-[180px] bg-zinc-950/80 rounded-lg p-2 overflow-hidden border border-zinc-850">
-        <svg
-          viewBox="0 0 600 180"
-          preserveAspectRatio="none"
-          className="w-full h-full"
-        >
-          <defs>
-            <linearGradient id="mtmGradientGreen" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-            </linearGradient>
-            <linearGradient id="mtmGradientRed" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
+      {/* SVG Chart Area or Honest Empty State */}
+      <div className="relative w-full h-[180px] bg-zinc-950/80 rounded-lg p-2 overflow-hidden border border-zinc-850 flex items-center justify-center">
+        {!hasHistory ? (
+          <div className="flex flex-col items-center justify-center gap-1.5 text-center font-mono text-xs text-zinc-500">
+            <BarChart3 className="w-6 h-6 text-zinc-700" />
+            <span className="text-zinc-400 font-medium">No MTM Data Yet</span>
+            <span className="text-[11px] text-zinc-600 max-w-xs">
+              MTM tracking commences once trades execute and mark-to-market prices fluctuate.
+            </span>
+          </div>
+        ) : (
+          <svg
+            viewBox="0 0 600 180"
+            preserveAspectRatio="none"
+            className="w-full h-full"
+          >
+            <defs>
+              <linearGradient id="mtmGradientGreen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+              </linearGradient>
+              <linearGradient id="mtmGradientRed" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
 
-          {/* Grid lines */}
-          <line
-            x1="0"
-            y1="45"
-            x2="600"
-            y2="45"
-            stroke="#27272a"
-            strokeDasharray="4 4"
-          />
-          <line
-            x1="0"
-            y1="90"
-            x2="600"
-            y2="90"
-            stroke="#27272a"
-            strokeDasharray="4 4"
-          />
-          <line
-            x1="0"
-            y1="135"
-            x2="600"
-            y2="135"
-            stroke="#27272a"
-            strokeDasharray="4 4"
-          />
+            {/* Grid lines */}
+            <line x1="0" y1="45" x2="600" y2="45" stroke="#27272a" strokeDasharray="4 4" />
+            <line x1="0" y1="90" x2="600" y2="90" stroke="#27272a" strokeDasharray="4 4" />
+            <line x1="0" y1="135" x2="600" y2="135" stroke="#27272a" strokeDasharray="4 4" />
 
-          {/* Area Fill */}
-          {areaD && (
-            <path
-              d={areaD}
-              fill={isPositive ? 'url(#mtmGradientGreen)' : 'url(#mtmGradientRed)'}
-            />
-          )}
+            {/* Area Fill */}
+            {areaD && (
+              <path
+                d={areaD}
+                fill={isPositive ? 'url(#mtmGradientGreen)' : 'url(#mtmGradientRed)'}
+              />
+            )}
 
-          {/* Stroke Line */}
-          {pathD && (
-            <path
-              d={pathD}
-              fill="none"
-              stroke={isPositive ? '#10b981' : '#f43f5e'}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          )}
+            {/* Stroke Line */}
+            {pathD && (
+              <path
+                d={pathD}
+                fill="none"
+                stroke={isPositive ? '#10b981' : '#f43f5e'}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            )}
 
-          {/* Hover interactive markers */}
-          {points.map((pt, i) => (
-            <circle
-              key={i}
-              cx={pt.x}
-              cy={pt.y}
-              r="3.5"
-              className="fill-zinc-950 stroke-emerald-400 stroke-2 hover:r-5 cursor-pointer transition-all"
-              onMouseEnter={() => setHoveredPoint(pt.data)}
-              onMouseLeave={() => setHoveredPoint(null)}
-            />
-          ))}
-        </svg>
+            {/* Hover interactive markers */}
+            {points.map((pt, i) => (
+              <circle
+                key={i}
+                cx={pt.x}
+                cy={pt.y}
+                r="3.5"
+                className="fill-zinc-950 stroke-emerald-400 stroke-2 hover:r-5 cursor-pointer transition-all"
+                onMouseEnter={() => setHoveredPoint(pt.data)}
+                onMouseLeave={() => setHoveredPoint(null)}
+              />
+            ))}
+          </svg>
+        )}
 
         {/* Hover Tooltip Overlay */}
         {hoveredPoint && (

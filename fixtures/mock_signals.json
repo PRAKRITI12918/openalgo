@@ -1,0 +1,161 @@
+{
+  "valid_single_leg_equity_buy_market": {
+    "strategy_name": "MOMENTUM_ALPHA",
+    "underlying": "RELIANCE",
+    "instrument": "EQUITY",
+    "action": "BUY",
+    "quantity": 10,
+    "order_type": "MARKET",
+    "execution_sequence": 1,
+    "signal_timestamp": "2026-09-24T10:00:00Z",
+    "idempotency_key": "idemp-equity-buy-001",
+    "metadata": {
+      "source": "trend_detector_v1",
+      "tags": ["equity", "breakout"]
+    }
+  },
+  "valid_single_leg_option_sell_limit": {
+    "strategy_name": "THETA_HARVEST",
+    "underlying": "NIFTY",
+    "instrument": "OPTION",
+    "action": "SELL",
+    "quantity": 50,
+    "order_type": "LIMIT",
+    "price": 145.5,
+    "strike": 24500.0,
+    "expiry": "2026-09-25",
+    "option_type": "CE",
+    "execution_sequence": 1,
+    "signal_timestamp": "2026-09-24T10:05:00Z",
+    "idempotency_key": "idemp-opt-sell-002",
+    "metadata": {
+      "delta": -0.25,
+      "iv": 14.2
+    }
+  },
+  "valid_multi_leg_option_spread": {
+    "strategy_name": "BULL_CALL_SPREAD",
+    "underlying": "NIFTY",
+    "instrument": "OPTION",
+    "action": "BUY",
+    "quantity": 25,
+    "order_type": "MARKET",
+    "execution_sequence": 1,
+    "signal_timestamp": "2026-09-24T10:10:00Z",
+    "idempotency_key": "idemp-spread-003",
+    "legs": [
+      {
+        "leg_id": "leg-001-buy-call",
+        "instrument": "OPTION",
+        "underlying": "NIFTY",
+        "action": "BUY",
+        "quantity": 25,
+        "order_type": "LIMIT",
+        "price": 120.0,
+        "strike": 24000.0,
+        "expiry": "2026-09-25",
+        "option_type": "CE",
+        "execution_sequence": 1
+      },
+      {
+        "leg_id": "leg-002-sell-call",
+        "instrument": "OPTION",
+        "underlying": "NIFTY",
+        "action": "SELL",
+        "quantity": 25,
+        "order_type": "LIMIT",
+        "price": 45.0,
+        "strike": 24300.0,
+        "expiry": "2026-09-25",
+        "option_type": "CE",
+        "execution_sequence": 2
+      }
+    ],
+    "metadata": {
+      "strategy_family": "vertical_spread",
+      "target_profit": 1875.0
+    }
+  },
+  "invalid_missing_quantity": {
+    "strategy_name": "BAD_QUANTITY_STRATEGY",
+    "underlying": "RELIANCE",
+    "instrument": "EQUITY",
+    "action": "BUY",
+    "order_type": "MARKET",
+    "execution_sequence": 1,
+    "signal_timestamp": "2026-09-24T10:15:00Z",
+    "idempotency_key": "idemp-invalid-qty-004"
+  },
+  "invalid_limit_order_without_price": {
+    "strategy_name": "BAD_PRICE_STRATEGY",
+    "underlying": "NIFTY",
+    "instrument": "FUTURE",
+    "action": "BUY",
+    "quantity": 25,
+    "order_type": "LIMIT",
+    "execution_sequence": 1,
+    "signal_timestamp": "2026-09-24T10:20:00Z",
+    "idempotency_key": "idemp-invalid-price-005"
+  },
+  "invalid_duplicate_idempotency_pair": {
+    "signal_a": {
+      "strategy_name": "ALPHA_DUPLICATE_CHECK",
+      "underlying": "BANKNIFTY",
+      "instrument": "FUTURE",
+      "action": "BUY",
+      "quantity": 15,
+      "order_type": "MARKET",
+      "execution_sequence": 1,
+      "signal_timestamp": "2026-09-24T10:25:00Z",
+      "idempotency_key": "idemp-dup-paired-006"
+    },
+    "signal_a_prime": {
+      "strategy_name": "ALPHA_DUPLICATE_CHECK",
+      "underlying": "BANKNIFTY",
+      "instrument": "FUTURE",
+      "action": "BUY",
+      "quantity": 15,
+      "order_type": "MARKET",
+      "execution_sequence": 1,
+      "signal_timestamp": "2026-09-24T10:25:01Z",
+      "idempotency_key": "idemp-dup-paired-006"
+    }
+  },
+  "invalid_execution_sequence_duplicated_across_legs": {
+    "strategy_name": "STRADDLE_BAD_SEQUENCE",
+    "underlying": "NIFTY",
+    "instrument": "OPTION",
+    "action": "BUY",
+    "quantity": 25,
+    "order_type": "MARKET",
+    "execution_sequence": 1,
+    "signal_timestamp": "2026-09-24T10:30:00Z",
+    "idempotency_key": "idemp-bad-seq-007",
+    "legs": [
+      {
+        "leg_id": "leg-001",
+        "instrument": "OPTION",
+        "underlying": "NIFTY",
+        "action": "BUY",
+        "quantity": 25,
+        "order_type": "MARKET",
+        "strike": 24200.0,
+        "expiry": "2026-09-25",
+        "option_type": "CE",
+        "execution_sequence": 1
+      },
+      {
+        "leg_id": "leg-002",
+        "instrument": "OPTION",
+        "underlying": "NIFTY",
+        "action": "BUY",
+        "quantity": 25,
+        "order_type": "MARKET",
+        "strike": 24200.0,
+        "expiry": "2026-09-25",
+        "option_type": "PE",
+        "execution_sequence": 1
+      }
+    ]
+  }
+}

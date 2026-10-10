@@ -90,18 +90,31 @@ def get_margin_data(auth_token):
         list(margin_data.keys()) if isinstance(margin_data, dict) else type(margin_data).__name__,
     )
 
-    # Check for any API errors (auth errors, service errors, after-hours etc.)
-    if margin_data.get("errorType") or margin_data.get("status") in ("error", "failed"):
-        error_type = margin_data.get("errorType", "")
-        error_msg = margin_data.get("errorMessage") or margin_data.get("errors", "Unknown error")
-        logger.error(f"Error fetching margin data: [{error_type}] {error_msg}")
-        return {
-            "availablecash": "0.00",
-            "collateral": "0.00",
-            "m2munrealized": "0.00",
-            "m2mrealized": "0.00",
-            "utiliseddebits": "0.00",
-        }
+    error_type = str(margin_data.get("errorType") or "")
+    status = str(margin_data.get("status") or "").lower()
+
+    # Check for authentication errors first
+    is_auth_error = (
+        res.status_code == 401
+        or "invalid_authentication" in error_type.lower()
+        or "token" in error_type.lower()
+        or "auth" in error_type.lower()
+        or "session" in error_type.lower()
+    )
+    if is_auth_error:
+        error_msg = margin_data.get("errorMessage") or margin_data.get("message") or "Invalid authentication token or Dhan sandbox session expired"
+        logger.error(f"Dhan sandbox authentication error: {error_msg}")
+        raise PermissionError(f"Dhan sandbox authentication error: {error_msg}")
+
+    if error_type or status in {"error", "failed", "failure"} or res.status_code >= 400:
+        error_msg = (
+            margin_data.get("errors")
+            or margin_data.get("errorMessage")
+            or margin_data.get("message")
+            or f"HTTP {res.status_code}"
+        )
+        logger.error(f"Error fetching Dhan sandbox margin data: [{error_type or status}] {error_msg}")
+        raise ValueError(f"Dhan sandbox API error: {error_msg}")
 
     try:
         position_book = get_positions(auth_token)
@@ -112,9 +125,23 @@ def get_margin_data(auth_token):
         )
 
         # Check if position_book is an error response
-        if isinstance(position_book, dict) and position_book.get("errorType"):
+        if isinstance(position_book, dict) and (
+            position_book.get("errorType") or str(position_book.get("status", "")).lower() in {"error", "failed", "failure"}
+        ):
+            pos_err_type = str(position_book.get("errorType") or "")
+            pos_is_auth_error = (
+                "invalid_authentication" in pos_err_type.lower()
+                or "token" in pos_err_type.lower()
+                or "auth" in pos_err_type.lower()
+                or "session" in pos_err_type.lower()
+            )
+            if pos_is_auth_error:
+                error_msg = position_book.get("errorMessage") or position_book.get("message") or "Dhan sandbox session expired"
+                logger.error(f"Dhan sandbox positions authentication error: {error_msg}")
+                raise PermissionError(f"Dhan sandbox authentication error: {error_msg}")
+
             logger.error(
-                f"Error getting positions: {position_book.get('errorMessage', 'Unknown error')}"
+                f"Error getting positions: [{pos_err_type}] {position_book.get('errorMessage') or position_book.get('errors') or 'Unknown error'}"
             )
             total_realised = 0
             total_unrealised = 0
@@ -125,10 +152,10 @@ def get_margin_data(auth_token):
                 total_unrealised = 0
                 if isinstance(position_book, list):
                     total_realised = sum(
-                        position.get("realizedProfit", 0) for position in position_book
+                        float(position.get("realizedProfit", 0) or 0) for position in position_book
                     )
                     total_unrealised = sum(
-                        position.get("unrealizedProfit", 0) for position in position_book
+                        float(position.get("unrealizedProfit", 0) or 0) for position in position_book
                     )
                 return total_realised, total_unrealised
 
@@ -138,10 +165,15 @@ def get_margin_data(auth_token):
         # collateral, confirmed against a live account -- double-counting
         # against the separately reported "collateral" field below, same
         # class of bug as GitHub issue #1582. Subtract collateralAmount to
-        # get the actual cash-only balance.
-        available_cash = (margin_data.get("availabelBalance") or 0) - (
-            margin_data.get("collateralAmount") or 0
-        )
+        # get the actual cash-only balance. Also check "availableBalance" as fallback.
+        raw_avail = (
+            margin_data.get("availabelBalance")
+            if "availabelBalance" in margin_data
+            else margin_data.get("availableBalance", 0)
+        ) or 0
+        collateral = margin_data.get("collateralAmount") or 0
+        available_cash = float(raw_avail) - float(collateral)
+        utilized = float(margin_data.get("utilizedAmount") or 0)
 
         # Construct and return the processed margin data with null checks
         processed_margin_data = {

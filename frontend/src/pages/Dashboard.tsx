@@ -21,7 +21,7 @@ interface MasterContractStatus {
   total_symbols?: number
 }
 
-// Format number in Indian format with Cr/L suffixes
+// Format number in Indian format with Cr/L suffixes and comma separation
 function formatIndianNumber(value: string | number): string {
   const num = typeof value === 'string' ? parseFloat(value) : value
   if (Number.isNaN(num)) return '0.00'
@@ -37,11 +37,26 @@ function formatIndianNumber(value: string | number): string {
     // 1 Lakh or more
     formatted = `${(absNum / 100000).toFixed(2)}L`
   } else {
-    // Less than 1 Lakh - just decimal format
-    formatted = absNum.toFixed(2)
+    // Less than 1 Lakh - format with Indian comma grouping
+    formatted = new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(absNum)
   }
 
   return isNegative ? `-${formatted}` : formatted
+}
+
+// Format full exact currency for hover tooltips and uncompacted displays
+function formatExactCurrency(value: string | number): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  if (Number.isNaN(num)) return '₹0.00'
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num)
 }
 
 // Get color class based on P&L value
@@ -61,6 +76,8 @@ function getPnLBadgeVariant(value: string | number): 'default' | 'destructive' |
 
 export default function Dashboard() {
   const [marginData, setMarginData] = useState<MarginData | null>(null)
+  const [dataSource, setDataSource] = useState<string | null>(null)
+  const [dataMode, setDataMode] = useState<'live' | 'analyze' | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [masterContract, setMasterContract] = useState<MasterContractStatus>({
@@ -94,6 +111,8 @@ export default function Dashboard() {
 
       if (data.status === 'success' && data.data) {
         setMarginData(data.data)
+        setDataSource(data.source || null)
+        setDataMode(data.mode || null)
         setError(null)
       } else {
         setError(data.message || 'Failed to fetch margin data')
@@ -310,19 +329,45 @@ export default function Dashboard() {
             Overview of your trading account and market positions
           </p>
         </div>
-        {/* Master Contract Status Indicator */}
-        <div className="flex items-center gap-2 md:gap-3 bg-muted rounded-lg px-3 md:px-4 py-2 md:py-3 w-fit lg:ml-auto lg:self-start">
-          <span className="text-xs md:text-sm font-medium whitespace-nowrap">Master Contract:</span>
-          <div className="flex items-center gap-2">
+        {/* Source and Master Contract Status Indicators */}
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 w-fit lg:ml-auto lg:self-start">
+          {/* Active Data Source Indicator */}
+          {dataSource && (
             <div
-              className={cn('w-2.5 h-2.5 md:w-3 md:h-3 rounded-full', getMasterContractLedColor())}
-            />
-            <span
-              className={cn('text-xs md:text-sm', getMasterContractTextColor())}
-              title={masterContract.message}
+              className={cn(
+                'flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 rounded-lg border text-xs md:text-sm font-medium',
+                dataMode === 'analyze'
+                  ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                  : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+              )}
             >
-              {getMasterContractStatusText()}
-            </span>
+              <span className="text-muted-foreground whitespace-nowrap">Source:</span>
+              <div className="flex items-center gap-1.5 font-semibold">
+                <span
+                  className={cn(
+                    'w-2.5 h-2.5 rounded-full',
+                    dataMode === 'analyze' ? 'bg-purple-500' : 'bg-emerald-500 animate-pulse'
+                  )}
+                />
+                <span>{dataSource}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Master Contract Status Indicator */}
+          <div className="flex items-center gap-2 md:gap-3 bg-muted rounded-lg px-3 md:px-4 py-2 md:py-3">
+            <span className="text-xs md:text-sm font-medium whitespace-nowrap">Master Contract:</span>
+            <div className="flex items-center gap-2">
+              <div
+                className={cn('w-2.5 h-2.5 md:w-3 md:h-3 rounded-full', getMasterContractLedColor())}
+              />
+              <span
+                className={cn('text-xs md:text-sm', getMasterContractTextColor())}
+                title={masterContract.message}
+              >
+                {getMasterContractStatusText()}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -333,17 +378,45 @@ export default function Dashboard() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Available Balance</p>
-              <p className="text-2xl font-bold text-primary">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Available Balance</p>
+                {dataSource && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'text-[10px] px-1.5 py-0 h-4 border font-medium',
+                      dataMode === 'analyze'
+                        ? 'border-purple-500/40 text-purple-400 bg-purple-500/10'
+                        : 'border-emerald-500/40 text-emerald-500 bg-emerald-500/10'
+                    )}
+                  >
+                    {dataMode === 'analyze' ? 'Sandbox' : 'Live'}
+                  </Badge>
+                )}
+              </div>
+              <p
+                className="text-2xl font-bold text-primary"
+                title={marginData ? formatExactCurrency(marginData.availablecash) : undefined}
+              >
                 {isLoading
                   ? '...'
                   : marginData
                     ? formatIndianNumber(marginData.availablecash)
                     : '0.00'}
               </p>
-              <Badge variant="secondary" className="mt-2">
-                Cash Balance
-              </Badge>
+              <div className="flex items-center justify-between gap-1 mt-2">
+                <Badge variant="secondary">
+                  Cash Balance
+                </Badge>
+                {marginData && (
+                  <span
+                    className="text-[11px] text-muted-foreground font-mono"
+                    title="Exact uncompacted value"
+                  >
+                    {formatExactCurrency(marginData.availablecash)}
+                  </span>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -353,7 +426,10 @@ export default function Dashboard() {
           <CardContent className="pt-6">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Collateral</p>
-              <p className="text-2xl font-bold text-violet-500 dark:text-violet-400">
+              <p
+                className="text-2xl font-bold text-violet-500 dark:text-violet-400"
+                title={marginData ? formatExactCurrency(marginData.collateral) : undefined}
+              >
                 {isLoading
                   ? '...'
                   : marginData
@@ -377,6 +453,7 @@ export default function Dashboard() {
                   'text-2xl font-bold',
                   marginData ? getPnLColor(marginData.m2munrealized) : ''
                 )}
+                title={marginData ? formatExactCurrency(marginData.m2munrealized) : undefined}
               >
                 {isLoading
                   ? '...'
@@ -404,6 +481,7 @@ export default function Dashboard() {
                   'text-2xl font-bold',
                   marginData ? getPnLColor(marginData.m2mrealized) : ''
                 )}
+                title={marginData ? formatExactCurrency(marginData.m2mrealized) : undefined}
               >
                 {isLoading
                   ? '...'
@@ -426,7 +504,10 @@ export default function Dashboard() {
           <CardContent className="pt-6">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Utilised Margin</p>
-              <p className="text-2xl font-bold text-cyan-500 dark:text-cyan-400">
+              <p
+                className="text-2xl font-bold text-cyan-500 dark:text-cyan-400"
+                title={marginData ? formatExactCurrency(marginData.utiliseddebits) : undefined}
+              >
                 {isLoading
                   ? '...'
                   : marginData

@@ -28,7 +28,8 @@ def dashboard():
         return "Broker not set in session", 400
 
     # Check if in analyze mode and route accordingly
-    if get_analyze_mode():
+    is_analyze = get_analyze_mode()
+    if is_analyze:
         # Get API key for sandbox mode
         api_key = get_api_key_for_tradingview(login_username)
         if api_key:
@@ -55,14 +56,23 @@ def dashboard():
         )
         return redirect(url_for("auth.logout"))
 
+    source = "Sandbox – virtual funds" if is_analyze else f"Live – {broker.title()}"
+    logger.info(
+        f"Dashboard (legacy) funds returned from source '{source}' for user {login_username}: {margin_data}"
+    )
+
     # Check if all values are zero (but don't log warning during known service hours)
     if (
-        margin_data.get("availablecash") == "0.00"
-        and margin_data.get("collateral") == "0.00"
-        and margin_data.get("utiliseddebits") == "0.00"
+        str(margin_data.get("availablecash")) in ("0.00", "0", "0.0")
+        and str(margin_data.get("collateral")) in ("0.00", "0", "0.0")
+        and str(margin_data.get("utiliseddebits")) in ("0.00", "0", "0.0")
     ):
-        # This could be service hours or authentication issue
-        # The service already logs the appropriate message
         logger.debug(f"All margin data values are zero for user {login_username}")
 
-    return render_template("dashboard.html", margin_data=margin_data)
+    return render_template(
+        "dashboard.html",
+        margin_data=margin_data,
+        source=source,
+        is_analyze=is_analyze,
+        broker=broker,
+    )

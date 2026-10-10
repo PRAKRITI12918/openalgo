@@ -125,41 +125,30 @@ export default function News() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-        {/* Page Top Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-                <Newspaper className="h-4.5 w-4.5" />
-              </div>
-              <h1 className="text-xl font-bold tracking-tight text-foreground">
-                Market News
-              </h1>
-              {/* Real-Time Live Indicator */}
-              <div className="flex items-center gap-1.5 rounded-full bg-emerald-950/40 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-800/50">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>{lastUpdatedSec < 10 ? 'Live' : `Updated ${lastUpdatedSec}s ago`}</span>
-              </div>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Institutional intelligence, multi-source event clusters, and algorithmic market impact ranking
+      <div className="container-fluid px-4">
+        {/* Canonical Page Top Header */}
+        <div className="page-header d-flex justify-content-between align-items-start px-4 py-3 mb-4">
+          <div className="page-header-text">
+            <h2 className="page-title d-flex align-items-center">
+              Market News
+              <span className="badge bg-success-subtle text-success ms-2">Live Feed</span>
+            </h2>
+            <p className="page-subtitle text-muted mb-0">
+              Real-time market intelligence, multi-source event clusters, and algorithmic trending ranking
             </p>
           </div>
 
           {/* Top Actions: Search & Refresh */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="page-header-actions d-flex align-items-center gap-2">
+            <div className="relative">
               <input
                 type="text"
+                id="oa-news-search-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search news, stocks, RBI, Fed..."
-                className="w-full rounded-md border border-border/70 bg-card/80 py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary backdrop-blur-sm"
+                className="form-control-sm"
+                style={{ width: '240px' }}
               />
               {searchQuery && (
                 <button
@@ -174,19 +163,24 @@ export default function News() {
 
             <button
               type="button"
+              id="oa-news-refresh-btn"
               onClick={() => loadNews()}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-card/80 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary disabled:opacity-50 transition-colors"
+              className="btn btn-outline-secondary btn-page-action"
               title="Refresh News"
             >
               <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
           </div>
         </div>
 
-        {/* Navigation Tabs & Dropdown Filters Bar */}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-border/40 pb-2.5">
+        {/* Filter Pill Row (Sitting below .page-header with px-4 pb-3 and no top margin collision) */}
+        <div
+          className="d-flex flex-wrap items-center justify-between gap-3 px-4 pb-3"
+          id="oa-news-tabs-bar"
+          style={{ borderBottom: '1px solid var(--bs-border-color, #27272a)', marginTop: 0 }}
+        >
           {/* Horizontal Scrollable Tabs */}
           <div className="flex overflow-x-auto no-scrollbar gap-1.5 py-0.5">
             {TABS.map((tab) => (

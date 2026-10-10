@@ -20,8 +20,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class BrokerMode(str, Enum):
     """Supported broker execution modes."""
     MOCK = "MOCK"
+    SANDBOX = "SANDBOX"
+    PAPER = "PAPER"
     OPENALGO_SANDBOX = "OPENALGO_SANDBOX"
     OPENALGO_LIVE = "OPENALGO_LIVE"
+    LIVE = "LIVE"
     ZERODHA = "ZERODHA"
     DHAN = "DHAN"
 
@@ -68,15 +71,23 @@ class ExecutionConfig(BaseSettings):
     @field_validator("broker_mode", mode="before")
     @classmethod
     def normalize_broker_mode(cls, v: Any) -> BrokerMode:
+        if v is None:
+            return BrokerMode.MOCK
+        if isinstance(v, BrokerMode):
+            return v
         if isinstance(v, str):
             clean = v.strip().upper()
+            if not clean:
+                return BrokerMode.MOCK
             for mode in BrokerMode:
                 if mode.value == clean:
                     return mode
-        return BrokerMode.MOCK
+            raise ValueError(f"Unrecognized broker mode: '{v}'. Fails closed.")
+        raise ValueError(f"Invalid broker mode type: {type(v)}. Fails closed.")
 
     # Broker & Execution Mode
     broker_mode: BrokerMode = Field(default=BrokerMode.MOCK, alias="BROKER_MODE")
+    live_trading_enabled: bool = Field(default=False, alias="LIVE_TRADING_ENABLED")
     openalgo_host: str = Field(default="http://127.0.0.1:5000", alias="OPENALGO_HOST")
     openalgo_api_key: str = Field(default="", alias="OPENALGO_API_KEY")
     strategy_tag: str = Field(default="HedgedAOS", alias="STRATEGY_TAG")

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { io, type Socket } from 'socket.io-client'
 import { webClient } from '@/api/client'
+import { getSocketUrl } from '@/utils/socketUrl'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -140,11 +141,9 @@ export default function ActionCenterPage() {
     audioRef.current.preload = 'auto'
 
     // Connect to socket server
-    const protocol = window.location.protocol
-    const host = window.location.hostname
-    const port = window.location.port
+    const socketUrl = getSocketUrl()
 
-    socketRef.current = io(`${protocol}//${host}:${port}`, {
+    socketRef.current = io(socketUrl, {
       transports: ['polling'],
       upgrade: false,
     })

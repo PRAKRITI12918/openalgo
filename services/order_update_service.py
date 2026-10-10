@@ -235,7 +235,7 @@ def start_order_update_adapters_on_boot(db_ready=None) -> None:
 
             sessions = Auth.query.filter_by(is_revoked=False).all()
             for auth_obj in sessions:
-                if not (auth_obj.name and auth_obj.broker):
+                if not (auth_obj.name and auth_obj.broker) or auth_obj.name.startswith("account:"):
                     continue
                 # is_revoked alone is not proof the token still works. Indian
                 # broker tokens die at the daily rollover (~03:00 IST), but the

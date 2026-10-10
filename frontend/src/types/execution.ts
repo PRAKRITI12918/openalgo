@@ -49,6 +49,41 @@ export type BrokerConnectionStatus =
   | 'CONNECTING'
   | 'DISCONNECTED'
   | 'TOKEN_EXPIRED'
+  | 'AUTHENTICATION_FAILED'
+
+export interface BrokerAccountDisplay {
+  account_id: string
+  broker_id: string
+  broker_display_name: string
+  account_label: string
+  masked_external_id: string
+  status: BrokerConnectionStatus
+  is_active: boolean
+  connected_at?: string
+  last_verified_at?: string
+}
+
+export interface PendingSignalSummary {
+  signal_id: string
+  strategy_name: string
+  underlying: UnderlyingIndex
+  legs_count: number
+  requires_approval: boolean
+  received_at: string
+  expires_at: string
+  remaining_seconds: number
+  legs: LegOrderRequest[]
+  max_loss?: number
+  max_profit?: number
+  reason?: string
+}
+
+export interface PendingSignalListResponse {
+  success: boolean
+  count: number
+  signals: PendingSignalSummary[]
+  timestamp: string
+}
 
 export interface Greeks {
   delta: number

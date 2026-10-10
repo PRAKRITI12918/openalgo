@@ -5,6 +5,7 @@ import {
   CandlestickChart,
   ClipboardList,
   Code2,
+  Cpu,
   Database,
   FileBarChart,
   FileStack,
@@ -20,6 +21,7 @@ import {
   Newspaper,
   Search,
   Settings,
+  Sparkles,
   TrendingUp,
   User,
   Workflow,
@@ -43,9 +45,38 @@ export const navItems: NavItem[] = [
   { href: '/positions', label: 'Positions', icon: TrendingUp },
   { href: '/trading', label: 'Trading', icon: CandlestickChart, external: true },
   { href: '/news', label: 'News', icon: Newspaper },
+  { href: '/recommendations', label: 'Recommendations', icon: Sparkles },
   { href: '/platforms', label: 'Platforms', icon: Layers },
   { href: '/strategy', label: 'Strategy', icon: Code2 },
   { href: '/logs', label: 'Logs', icon: FileBarChart },
+  { href: '/tools', label: 'Tools', icon: Wrench },
+]
+
+// Structured groupings for the redesigned top navbar
+export interface HeaderMainNavItem {
+  href: string
+  label: string
+  external?: boolean
+}
+
+export const mainNavItems: HeaderMainNavItem[] = [
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/trading', label: 'Trading', external: true },
+  { href: '/positions', label: 'Positions' },
+  { href: '/orderbook', label: 'Orders' },
+  { href: '/strategy', label: 'Strategy' },
+]
+
+export const reportsNavItems: NavItem[] = [
+  { href: '/tradebook', label: 'Tradebook', icon: FileText },
+  { href: '/logs', label: 'Logs', icon: FileBarChart },
+  { href: '/pnl-tracker', label: 'P&L Tracker', icon: BarChart3 },
+]
+
+export const moreNavItems: NavItem[] = [
+  { href: '/news', label: 'News', icon: Newspaper },
+  { href: '/recommendations', label: 'Recommendations', icon: Sparkles },
+  { href: '/platforms', label: 'Platforms', icon: Layers },
   { href: '/tools', label: 'Tools', icon: Wrench },
 ]
 
@@ -66,6 +97,7 @@ export const mobileSheetItems = navItems.filter((item) => !bottomNavPaths.includ
 
 // Profile dropdown menu items
 export const profileMenuItems: NavItem[] = [
+  { href: '/execution-dashboard', label: 'Execution HUD', icon: Cpu },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/apikey', label: 'API Key', icon: Key },
   { href: '/action-center', label: 'Action Center', icon: Bell },

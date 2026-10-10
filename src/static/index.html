@@ -144,7 +144,7 @@
           <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
           <span>Simulate Signal</span>
         </button>
-        <button onclick="openSquareOffModal()" class="h-8 px-3 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-600/30 transition active:scale-95">
+        <button id="btnHeaderSquareOff" onclick="openSquareOffModal()" class="h-8 px-3 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-600/30 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
           <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i>
           <span>Square-Off All</span>
         </button>
@@ -340,6 +340,63 @@
     </div>
 
     <!-- =================================================================== -->
+    <!-- 3B. PENDING TRADE SIGNALS (PRE-EXECUTION APPROVAL QUEUE)           -->
+    <!-- =================================================================== -->
+    <div class="bg-zinc-900/80 border border-amber-500/40 rounded-xl p-4 shadow-md flex flex-col gap-3 font-mono">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+          </span>
+          <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+          <h3 class="font-bold text-sm text-zinc-100 uppercase tracking-wider">Pending Trade Signals (Pre-Execution Approval Queue)</h3>
+          <span class="text-[10px] px-2 py-0.5 rounded border border-amber-500/40 bg-amber-950/60 text-amber-300 font-bold" id="pendingSignalCountTag">
+            0 Pending
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <select id="pendingFilterStatus" onchange="fetchPendingSignals()" class="h-7 px-2 text-[11px] rounded bg-zinc-800 border border-zinc-700 text-zinc-300">
+            <option value="">All Signals</option>
+            <option value="PENDING" selected>Pending Only</option>
+            <option value="APPROVED">Approved / Executed</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="EXPIRED">Expired</option>
+            <option value="FAILED">Failed</option>
+          </select>
+          <button onclick="fetchPendingSignals()" class="h-7 px-2 text-[11px] rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center gap-1 transition">
+            <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Pending Signals Table Container -->
+      <div class="rounded-lg border border-zinc-800 overflow-x-auto bg-zinc-950/40 custom-scrollbar">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-zinc-950 border-b border-zinc-800 text-[11px] text-zinc-400">
+            <tr>
+              <th class="p-2.5">Created</th>
+              <th class="p-2.5">Signal ID</th>
+              <th class="p-2.5">Strategy / Asset</th>
+              <th class="p-2.5">Action</th>
+              <th class="p-2.5 text-right">Qty / Legs</th>
+              <th class="p-2.5 text-right">Order Type / Price</th>
+              <th class="p-2.5 text-right">Est Margin / Credit</th>
+              <th class="p-2.5 text-center">TTL / Expiry</th>
+              <th class="p-2.5 text-center">Status</th>
+              <th class="p-2.5 text-center">Audit Actor</th>
+              <th class="p-2.5 text-center min-w-[150px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pendingSignalTableBody" class="divide-y divide-zinc-850">
+            <!-- Rendered by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
     <!-- 4. LIVE ORDER BOOK & EXECUTION AUDIT TABLE                          -->
     <!-- =================================================================== -->
     <div class="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4 shadow-md flex flex-col gap-3 font-mono">
@@ -429,6 +486,13 @@
           <input type="number" id="simQty" value="50" class="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-zinc-100" />
         </div>
 
+        <div class="flex items-center gap-2 p-2 rounded bg-zinc-900/90 border border-amber-500/30">
+          <input type="checkbox" id="simRequireApproval" class="rounded bg-zinc-950 border-zinc-700 text-amber-500 focus:ring-0 cursor-pointer" checked />
+          <label for="simRequireApproval" class="text-zinc-300 text-xs cursor-pointer select-none">
+            Route to <strong class="text-amber-400">Pending Approval Queue</strong> (Gated for Trader Authorization)
+          </label>
+        </div>
+
         <div class="p-2.5 rounded bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400">
           <strong class="text-emerald-400">Margin Safety Sequence:</strong> Protection wings submitted in Tier 0 before short credit legs in Tier 1.
         </div>
@@ -447,25 +511,104 @@
 
   <!-- EMERGENCY SQUARE-OFF MODAL -->
   <div id="modalSquareOff" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-zinc-950 border border-rose-600/50 rounded-xl p-5 max-w-md w-full font-mono shadow-2xl">
+    <div class="bg-zinc-950 border border-rose-600/50 rounded-xl p-5 max-w-lg w-full font-mono shadow-2xl">
       <div class="flex items-center gap-2 pb-3 border-b border-zinc-800">
         <div class="p-1.5 rounded bg-rose-950 border border-rose-600">
           <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-500 animate-pulse"></i>
         </div>
-        <h3 class="font-bold text-sm text-rose-400">Confirm Emergency Square-Off</h3>
+        <div>
+          <h3 class="font-bold text-sm text-rose-400">Emergency Square-Off All</h3>
+          <p class="text-[10px] text-zinc-400">Two-step risk-control liquidation</p>
+        </div>
       </div>
 
-      <div class="py-3 text-xs text-zinc-300 leading-relaxed">
-        Immediate market liquidation of all open derivatives positions.
-        Short legs will be bought back first to eliminate naked risk, followed by closing long wings.
+      <div id="squareOffBody" class="py-3 text-xs text-zinc-300 leading-relaxed space-y-3">
+        <div id="squareOffPreparing" class="p-4 flex flex-col items-center justify-center gap-2 text-zinc-400">
+          <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-rose-500"></i>
+          <span>Fetching live open positions & generating confirmation token...</span>
+        </div>
+
+        <div id="squareOffContent" class="hidden space-y-3">
+          <div class="p-2.5 rounded bg-rose-950/30 border border-rose-500/30 text-rose-200 text-xs">
+            <p class="font-bold flex items-center gap-1 text-rose-400 mb-1">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> High-Risk Irreversible Market Order
+            </p>
+            <p>Target Account: <span id="squareOffAccountLabel" class="font-bold text-zinc-100">GLOBAL</span>. Total positions: <span id="squareOffPosCount" class="font-bold text-amber-400">0</span></p>
+          </div>
+
+          <div id="squareOffPosList" class="max-h-36 overflow-y-auto border border-zinc-800 rounded bg-zinc-900/40 p-2 space-y-1">
+            <!-- Dynamic positions snapshot -->
+          </div>
+
+          <div class="p-2.5 rounded bg-zinc-900 border border-zinc-800 space-y-1.5">
+            <label class="text-[11px] text-zinc-300">Type <strong class="text-rose-400 tracking-wider">CONFIRM</strong> to authorize execution:</label>
+            <input id="squareOffConfirmInput" type="text" placeholder="Type CONFIRM" oninput="validateSquareOffInput()" class="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-100 uppercase tracking-widest focus:outline-none focus:border-rose-500" />
+          </div>
+        </div>
+
+        <div id="squareOffResult" class="hidden p-3 rounded bg-zinc-900 border border-zinc-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs text-zinc-100">Execution Outcome</span>
+            <span id="squareOffResultBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500">SUCCESS</span>
+          </div>
+          <div id="squareOffResultList" class="max-h-36 overflow-y-auto text-[11px] space-y-1">
+            <!-- Dynamic order results -->
+          </div>
+        </div>
       </div>
 
-      <div class="flex gap-2 justify-end pt-2 border-t border-zinc-800">
-        <button onclick="closeSquareOffModal()" class="px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs">
+      <div id="squareOffFooter" class="flex gap-2 justify-end pt-2 border-t border-zinc-800">
+        <button id="squareOffCancelBtn" onclick="closeSquareOffModal()" class="px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs">
           Cancel
         </button>
-        <button onclick="executeSquareOffAll()" class="px-4 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30">
-          Confirm Liquidate All
+        <button id="squareOffExecuteBtn" onclick="executeSquareOffAll()" disabled class="px-4 py-1.5 rounded bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-lg shadow-rose-600/30">
+          Execute Square-Off All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REJECT SIGNAL REASON MODAL -->
+  <div id="modalRejectSignal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-zinc-950 border border-rose-900/40 rounded-xl p-5 max-w-md w-full font-mono shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 rounded bg-rose-950/80 border border-rose-800 text-rose-400">
+            <i data-lucide="shield-x" class="w-4 h-4"></i>
+          </div>
+          <h3 class="font-bold text-sm text-zinc-100">Reject Trade Signal</h3>
+        </div>
+        <button onclick="closeRejectModal()" class="text-zinc-400 hover:text-zinc-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 py-3 text-xs">
+        <p class="text-zinc-400">
+          You are rejecting signal <span id="rejectSignalIdText" class="text-amber-400 font-bold"></span>.
+          This transitions the signal to <strong class="text-rose-400">REJECTED</strong> state and archives it for audit.
+          Zero broker orders will be sent.
+        </p>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-zinc-400">Rejection Rationale / Audit Reason</label>
+          <select id="rejectReasonPreset" onchange="if(this.value) document.getElementById('rejectReasonInput').value = this.value" class="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-zinc-100 text-xs">
+            <option value="">-- Choose Common Rationale --</option>
+            <option value="Excessive margin requirement / Insufficient free capital">Excessive margin requirement</option>
+            <option value="Adverse market regime change / High IV volatility spike">Adverse market regime change</option>
+            <option value="Liquidity / Option strike bid-ask spread too wide">Wide bid-ask spread</option>
+            <option value="Manual risk officer intervention">Manual risk officer intervention</option>
+          </select>
+          <textarea id="rejectReasonInput" rows="2" placeholder="Describe rationale for rejecting this strategy signal..." class="bg-zinc-900 border border-zinc-800 rounded p-2 text-zinc-100 text-xs mt-1"></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-zinc-800 justify-end">
+        <button onclick="closeRejectModal()" class="px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs">
+          Cancel
+        </button>
+        <button id="btnConfirmReject" onclick="confirmRejectSignal()" class="px-4 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 flex items-center gap-1.5">
+          <i data-lucide="shield-x" class="w-3.5 h-3.5"></i> Confirm Rejection
         </button>
       </div>
     </div>
@@ -529,7 +672,9 @@
         { time: '14:28:10', id: 'MOCK_ORD_4E31C98D', symbol: 'NIFTY26AUG24600CE', action: 'BUY', qty: '50/50', reqPrice: 25.00, fillPrice: 24.95, slippage: -0.05, latency: '14.8ms', status: 'COMPLETE', isHedge: true },
         { time: '14:28:11', id: 'MOCK_ORD_9A12DF4E', symbol: 'NIFTY26AUG24000PE', action: 'SELL', qty: '50/50', reqPrice: 68.00, fillPrice: 67.90, slippage: -0.10, latency: '11.2ms', status: 'COMPLETE', isHedge: false },
         { time: '14:28:11', id: 'MOCK_ORD_2B88AE9C', symbol: 'NIFTY26AUG24400CE', action: 'SELL', qty: '50/50', reqPrice: 74.50, fillPrice: 74.60, slippage: 0.10, latency: '13.5ms', status: 'COMPLETE', isHedge: false },
-      ]
+      ],
+      pendingSignals: [],
+      activeRejectSignalId: null
     };
 
     // Initialize UI
@@ -537,8 +682,11 @@
       lucide.createIcons();
       renderStrategies();
       renderOrders();
+      fetchPendingSignals();
+      setInterval(fetchPendingSignals, 3000);
       connectWebSockets();
       fetchFundsAndPositions();
+      fetchLatestOrders();
     }
 
     // Render Strategy Cards
@@ -635,6 +783,282 @@
       document.getElementById('orderCountTag').innerText = `${state.orders.length} Orders`;
     }
 
+    // Fetch and Render Pending Signals
+    async function fetchPendingSignals() {
+      try {
+        const filterVal = document.getElementById('pendingFilterStatus')?.value || '';
+        const url = filterVal ? `/api/v1/signals/pending?status=${filterVal}` : '/api/v1/signals/pending';
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          state.pendingSignals = data.signals || [];
+          renderPendingSignals();
+        }
+      } catch (err) {
+        console.warn('fetchPendingSignals failed', err);
+      }
+    }
+
+    function renderPendingSignals() {
+      const tbody = document.getElementById('pendingSignalTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const pendingOnlyCount = state.pendingSignals.filter(s => s.status === 'PENDING').length;
+      document.getElementById('pendingSignalCountTag').innerText = `${pendingOnlyCount} Pending`;
+
+      if (state.pendingSignals.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td colspan="11" class="p-8 text-center text-zinc-500 text-xs">
+            <div class="flex flex-col items-center justify-center gap-1.5">
+              <i data-lucide="shield-check" class="w-6 h-6 text-zinc-600"></i>
+              <span>No trade signals currently in this queue. Ingested signals requiring approval appear here before execution.</span>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+        lucide.createIcons();
+        return;
+      }
+
+      state.pendingSignals.forEach(s => {
+        const isPending = s.status === 'PENDING';
+        const isApproving = s.status === 'APPROVING';
+        const isApproved = s.status === 'APPROVED';
+        const isRejected = s.status === 'REJECTED';
+        const isExpired = s.is_expired || s.status === 'EXPIRED';
+        const isFailed = s.status === 'FAILED';
+
+        let ttlDisplay = '—';
+        let ttlClass = 'text-zinc-500';
+        if (s.time_remaining_seconds !== null && s.time_remaining_seconds !== undefined) {
+          if (s.time_remaining_seconds > 0 && isPending) {
+            const mins = Math.floor(s.time_remaining_seconds / 60);
+            const secs = s.time_remaining_seconds % 60;
+            ttlDisplay = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            ttlClass = 'text-amber-400 font-bold bg-amber-950/40 border border-amber-800/60 px-1.5 py-0.5 rounded';
+          } else {
+            ttlDisplay = 'EXPIRED';
+            ttlClass = 'text-rose-400 font-bold bg-rose-950/40 border border-rose-800/60 px-1.5 py-0.5 rounded';
+          }
+        }
+
+        const createdFormatted = s.created_at ? new Date(s.created_at).toLocaleTimeString() : '—';
+        const shortSignalId = s.signal_id ? s.signal_id.slice(0, 8) : '—';
+        const shortCorrId = s.correlation_id ? s.correlation_id.slice(0, 8) : '—';
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-zinc-850/60 hover:bg-zinc-900/60 font-mono text-xs';
+
+        tr.innerHTML = `
+          <td class="p-2.5 text-zinc-400 text-[11px] whitespace-nowrap">${createdFormatted}</td>
+          <td class="p-2.5">
+            <span class="font-bold text-amber-300" title="Signal: ${s.signal_id}\nCorrelation: ${s.correlation_id}">${shortSignalId}</span>
+            <div class="text-[9px] text-zinc-500">req:${shortCorrId}</div>
+          </td>
+          <td class="p-2.5">
+            <div class="font-bold text-zinc-100">${s.strategy_name}</div>
+            <div class="text-[10px] text-zinc-400">${s.underlying}</div>
+          </td>
+          <td class="p-2.5">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${
+              s.action === 'BUY' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+              s.action === 'SELL' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' :
+              'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+            }">${s.action}</span>
+          </td>
+          <td class="p-2.5 text-right">
+            <span class="text-zinc-100 font-bold">${s.quantity} units</span>
+            <div class="text-[10px] text-zinc-400">${s.legs_count} Leg${s.legs_count > 1 ? 's' : ''}</div>
+          </td>
+          <td class="p-2.5 text-right">
+            <span class="text-zinc-300">${s.order_type}</span>
+            <div class="text-[10px] text-zinc-400">₹${s.price > 0 ? s.price.toFixed(2) : 'MKT'}</div>
+          </td>
+          <td class="p-2.5 text-right">
+            <div class="text-cyan-300 font-bold" title="Rough margin estimate based on short credit leg exposures">~₹${(s.margin_estimate || 0).toLocaleString('en-IN')}</div>
+            <div class="text-[10px] ${s.entry_credit_debit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+              ${s.entry_credit_debit >= 0 ? '+' : ''}₹${(s.entry_credit_debit || 0).toFixed(2)}
+            </div>
+          </td>
+          <td class="p-2.5 text-center">
+            <span class="text-[10px] ${ttlClass}">${ttlDisplay}</span>
+          </td>
+          <td class="p-2.5 text-center">
+            <span class="text-[10px] px-2 py-0.5 rounded border font-bold ${
+              isPending ? 'border-amber-500/40 bg-amber-500/10 text-amber-400' :
+              isApproving ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-400 animate-pulse' :
+              isApproved ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' :
+              isRejected ? 'border-rose-500/40 bg-rose-500/10 text-rose-400' :
+              isExpired ? 'border-zinc-700 bg-zinc-800 text-zinc-400' :
+              'border-red-600 bg-red-950/60 text-red-300'
+            }">
+              ${s.status}
+            </span>
+          </td>
+          <td class="p-2.5 text-center text-[10px] text-zinc-400">
+            ${s.actor || '—'}
+          </td>
+          <td class="p-2.5 text-center">
+            ${
+              isPending && !isExpired ? `
+                <div class="flex items-center justify-center gap-1.5" id="actions_${s.signal_id}">
+                  <button id="btnApprove_${s.signal_id}" onclick="approveSignal('${s.signal_id}')" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-md shadow-emerald-950 transition active:scale-95">
+                    <i data-lucide="check" class="w-3 h-3"></i> Approve
+                  </button>
+                  <button id="btnReject_${s.signal_id}" onclick="openRejectModal('${s.signal_id}')" class="px-2 py-1 rounded bg-rose-950/60 hover:bg-rose-900 border border-rose-700/50 text-rose-300 text-[11px] font-bold flex items-center gap-1 transition active:scale-95">
+                    <i data-lucide="x" class="w-3 h-3"></i> Reject
+                  </button>
+                </div>
+              ` : isApproving ? `
+                <div class="flex items-center justify-center gap-1 text-[11px] text-cyan-400 animate-pulse font-bold">
+                  <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Submitting to execution...
+                </div>
+              ` : isApproved ? `
+                <span class="text-[10px] text-emerald-400 flex items-center justify-center gap-1">
+                  <i data-lucide="check-circle-2" class="w-3 h-3"></i> Seq: ${s.sequence_id ? s.sequence_id.slice(0, 8) : 'OK'}
+                </span>
+              ` : isRejected ? `
+                <span class="text-[10px] text-rose-400 flex items-center justify-center gap-1" title="${s.rejection_reason || 'Rejected'}">
+                  <i data-lucide="x-circle" class="w-3 h-3"></i> Archived
+                </span>
+              ` : isExpired ? `
+                <span class="text-[10px] text-zinc-500">TTL Expired</span>
+              ` : `
+                <span class="text-[10px] text-red-400" title="${s.error_message || 'Placement failed'}">Execution Failed</span>
+              `
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Approve Signal Action
+    async function approveSignal(signalId) {
+      const actionsDiv = document.getElementById(`actions_${signalId}`);
+      if (actionsDiv) {
+        actionsDiv.innerHTML = `
+          <div class="flex items-center justify-center gap-1 text-[11px] text-cyan-400 animate-pulse font-bold">
+            <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Submitting to execution...
+          </div>
+        `;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch(`/api/v1/signals/${signalId}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actor: 'dashboard-trader' })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 200 && data.success) {
+          showToast(`Signal Approved & Executed! Seq: ${data.sequence_id?.slice(0, 8)}`, 'success');
+          await fetchPendingSignals();
+          await fetchLatestOrders();
+        } else if (res.status === 409) {
+          showToast(`Duplicate Approval Prevented: ${data.detail || data.message}`, 'warning');
+          await fetchPendingSignals();
+        } else if (res.status === 400) {
+          showToast(`Approval Blocked: ${data.detail || data.message}`, 'error');
+          await fetchPendingSignals();
+        } else {
+          showToast(`Approval Error: ${data.detail || data.message || 'Execution failed'}`, 'error');
+          await fetchPendingSignals();
+        }
+      } catch (err) {
+        showToast(`Approval request failed: ${err.message}`, 'error');
+        await fetchPendingSignals();
+      }
+    }
+
+    // Reject Modal Handlers
+    function openRejectModal(signalId) {
+      state.activeRejectSignalId = signalId;
+      document.getElementById('rejectSignalIdText').innerText = signalId.slice(0, 8);
+      document.getElementById('rejectReasonInput').value = '';
+      document.getElementById('rejectReasonPreset').value = '';
+      document.getElementById('modalRejectSignal').classList.remove('hidden');
+      document.getElementById('modalRejectSignal').classList.add('flex');
+    }
+
+    function closeRejectModal() {
+      state.activeRejectSignalId = null;
+      document.getElementById('modalRejectSignal').classList.add('hidden');
+      document.getElementById('modalRejectSignal').classList.remove('flex');
+    }
+
+    async function confirmRejectSignal() {
+      if (!state.activeRejectSignalId) return;
+      const signalId = state.activeRejectSignalId;
+      const reason = document.getElementById('rejectReasonInput').value.trim() || 'Manual rejection by dashboard trader';
+      
+      closeRejectModal();
+
+      try {
+        const res = await fetch(`/api/v1/signals/${signalId}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: reason, actor: 'dashboard-trader' })
+        });
+
+        const data = await res.json();
+        if (res.status === 200 && data.success) {
+          showToast(`Signal Rejected & Archived without execution`, 'info');
+        } else {
+          showToast(`Rejection notice: ${data.detail || data.message}`, 'warning');
+        }
+        await fetchPendingSignals();
+      } catch (err) {
+        showToast(`Reject failed: ${err.message}`, 'error');
+        await fetchPendingSignals();
+      }
+    }
+
+    // Fetch Latest Real Orders
+    async function fetchLatestOrders() {
+      try {
+        const res = await fetch('/api/v1/orders');
+        if (res.ok) {
+          const sequences = await res.json();
+          if (Array.isArray(sequences) && sequences.length > 0) {
+            const mappedOrders = [];
+            sequences.forEach(seq => {
+              if (seq.leg_states) {
+                seq.leg_states.forEach(ls => {
+                  mappedOrders.push({
+                    time: ls.placed_at ? new Date(ls.placed_at).toLocaleTimeString() : new Date().toLocaleTimeString(),
+                    id: ls.order_id || seq.sequence_id.slice(0, 8),
+                    symbol: ls.symbol,
+                    action: ls.action,
+                    qty: `${ls.filled_quantity}/${ls.quantity}`,
+                    reqPrice: ls.requested_price,
+                    fillPrice: ls.execution_price,
+                    slippage: ls.slippage,
+                    latency: `${ls.latency_ms}ms`,
+                    status: ls.status,
+                    isHedge: ls.is_hedge_leg
+                  });
+                });
+              }
+            });
+            if (mappedOrders.length > 0) {
+              state.orders = mappedOrders;
+              renderOrders();
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('fetchLatestOrders failed', err);
+      }
+    }
+
     // Connect WebSockets
     function connectWebSockets() {
       const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -669,6 +1093,11 @@
             const msg = JSON.parse(e.data);
             if (msg.event_type === 'ORDER_UPDATE' && msg.data) {
               addOrder(msg.data);
+              fetchPendingSignals();
+              fetchLatestOrders();
+            } else if (msg.event_type === 'SEQUENCE_UPDATE') {
+              fetchPendingSignals();
+              fetchLatestOrders();
             } else if (msg.event_type === 'CIRCUIT_BREAKER') {
               tripCircuitBreaker(msg.data?.error || 'Circuit breaker tripped');
             }
@@ -766,8 +1195,6 @@
     // Modal helpers
     function openSimulateModal() { document.getElementById('modalSimulate').classList.remove('hidden'); document.getElementById('modalSimulate').classList.add('flex'); }
     function closeSimulateModal() { document.getElementById('modalSimulate').classList.add('hidden'); document.getElementById('modalSimulate').classList.remove('flex'); }
-    function openSquareOffModal() { document.getElementById('modalSquareOff').classList.remove('hidden'); document.getElementById('modalSquareOff').classList.add('flex'); }
-    function closeSquareOffModal() { document.getElementById('modalSquareOff').classList.add('hidden'); document.getElementById('modalSquareOff').classList.remove('flex'); }
 
     // Submit Simulated Signal
     async function submitSimulatedSignal(simulateFailure = false) {
@@ -843,57 +1270,260 @@
       };
 
       try {
-        showToast(`Submitting ${strat} to Phase 2 Execution Pipeline...`, 'info');
-        const res = await fetch('/api/v1/signals/ingest?sync=true', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (data.execution_status === 'FULLY_FILLED') {
-          showToast(`Executed & Filled: ${strat} via Tier 0 Hedge-First Sequence!`, 'success');
-          // Add to orders table
-          if (data.sequence && data.sequence.leg_states) {
-            data.sequence.leg_states.forEach(ls => {
-              state.orders.unshift({
-                time: new Date().toLocaleTimeString(),
-                id: ls.order_id || 'ORD_OK',
-                symbol: ls.symbol,
-                action: ls.action,
-                qty: `${ls.filled_quantity}/${ls.quantity}`,
-                reqPrice: ls.requested_price,
-                fillPrice: ls.execution_price,
-                slippage: ls.slippage,
-                latency: `${ls.latency_ms}ms`,
-                status: ls.status,
-                isHedge: ls.is_hedge_leg
-              });
-            });
-            renderOrders();
+        const requiresApproval = document.getElementById('simRequireApproval')?.checked ?? false;
+        payload.requires_approval = requiresApproval;
+        payload.validity_seconds = 300;
+
+        if (requiresApproval) {
+          showToast(`Submitting ${strat} to Pending Approval Queue...`, 'info');
+          const res = await fetch('/api/v1/signals/ingest?requires_approval=true', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.status === 'PENDING_APPROVAL') {
+            showToast(`Signal Queued for Review! Signal ID: ${data.signal_id?.slice(0, 8)}`, 'warning');
+            await fetchPendingSignals();
+          } else {
+            showToast(`Status: ${data.status}`, 'info');
           }
-        } else if (data.execution_status === 'ABORTED_CIRCUIT_BREAKER') {
-          tripCircuitBreaker('Hedge Wing Rejected — Short legs aborted');
         } else {
-          showToast(`Execution: ${data.execution_status || data.status}`, 'warning');
+          showToast(`Submitting ${strat} directly to Execution Pipeline...`, 'info');
+          const res = await fetch('/api/v1/signals/ingest?sync=true', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          
+          if (data.execution_status === 'FULLY_FILLED') {
+            showToast(`Executed & Filled: ${strat} via Tier 0 Hedge-First Sequence!`, 'success');
+            await fetchLatestOrders();
+          } else if (data.execution_status === 'ABORTED_CIRCUIT_BREAKER') {
+            tripCircuitBreaker('Hedge Wing Rejected — Short legs aborted');
+          } else {
+            showToast(`Execution: ${data.execution_status || data.status}`, 'warning');
+          }
         }
       } catch(err) {
-        showToast(`Signal executed locally: ${strat}`, 'success');
+        showToast(`Signal error: ${err.message}`, 'error');
       }
 
       closeSimulateModal();
     }
 
-    // Emergency Square Off All
-    function executeSquareOffAll() {
-      state.strategies.forEach(s => s.status = 'Exited');
-      state.usedMargin = 0;
-      state.availMargin = 1000000 + state.dayMtm;
-      document.getElementById('headerAvailMargin').innerText = `₹${state.availMargin.toLocaleString('en-IN')}`;
-      document.getElementById('headerUsedMargin').innerText = `₹0`;
-      renderStrategies();
-      closeSquareOffModal();
-      showToast('Emergency Square-Off Complete: All positions liquidated', 'success');
+    // Emergency Square Off All — Two-Step Risk-Control Workflow
+    let currentSquareOffToken = null;
+    let isSquareOffInFlight = false;
+
+    async function openSquareOffModal() {
+      const modal = document.getElementById('modalSquareOff');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const preparingEl = document.getElementById('squareOffPreparing');
+      const contentEl = document.getElementById('squareOffContent');
+      const resultEl = document.getElementById('squareOffResult');
+      const inputEl = document.getElementById('squareOffConfirmInput');
+      const execBtn = document.getElementById('squareOffExecuteBtn');
+      const cancelBtn = document.getElementById('squareOffCancelBtn');
+
+      preparingEl.classList.remove('hidden');
+      contentEl.classList.add('hidden');
+      resultEl.classList.add('hidden');
+      inputEl.value = '';
+      execBtn.disabled = true;
+      execBtn.classList.remove('hidden');
+      execBtn.innerText = 'Execute Square-Off All';
+      cancelBtn.disabled = false;
+      cancelBtn.innerText = 'Cancel';
+      currentSquareOffToken = null;
+
+      try {
+        const res = await fetch('/api/v1/positions/square-off/prepare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_id: state.activeAccountId || 'GLOBAL',
+            reason: 'Emergency Square-off from Dashboard'
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+        currentSquareOffToken = data.confirmation_token;
+
+        document.getElementById('squareOffAccountLabel').innerText = data.account_id || 'GLOBAL';
+        document.getElementById('squareOffPosCount').innerText = data.position_count;
+
+        const posListEl = document.getElementById('squareOffPosList');
+        posListEl.innerHTML = '';
+
+        if (!data.positions || data.positions.length === 0) {
+          posListEl.innerHTML = `
+            <div class="p-3 text-center text-zinc-400 bg-zinc-950/60 rounded border border-zinc-800">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 mx-auto mb-1"></i>
+              <span>No open positions on active account (${data.account_id}). Confirming will be a safe, audited no-op.</span>
+            </div>
+          `;
+        } else {
+          data.positions.forEach(p => {
+            const sym = p.symbol || p.trading_symbol || 'UNKNOWN';
+            const qty = Math.abs(p.quantity || p.net_quantity || 0);
+            const side = (p.quantity || 0) > 0 ? 'LONG' : 'SHORT';
+            const exitSide = side === 'LONG' ? 'SELL' : 'BUY';
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-2 rounded bg-zinc-950 border border-zinc-800 text-[11px]';
+            item.innerHTML = `
+              <div class="flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${exitSide === 'SELL' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'}">EXIT ${exitSide}</span>
+                <span class="font-bold text-zinc-100">${sym}</span>
+                <span class="text-zinc-500">(${side})</span>
+              </div>
+              <div class="text-zinc-300 font-bold">${qty} units @ MARKET</div>
+            `;
+            posListEl.appendChild(item);
+          });
+        }
+
+        preparingEl.classList.add('hidden');
+        contentEl.classList.remove('hidden');
+        lucide.createIcons();
+        inputEl.focus();
+      } catch (err) {
+        preparingEl.innerHTML = `
+          <div class="p-3 text-center text-rose-400">
+            <i data-lucide="alert-triangle" class="w-5 h-5 mx-auto mb-1"></i>
+            <div>Failed to prepare square-off: ${err.message}</div>
+          </div>
+        `;
+        lucide.createIcons();
+        showToast(`Prepare failed: ${err.message}`, 'error');
+      }
+    }
+
+    function closeSquareOffModal() {
+      if (isSquareOffInFlight) return;
+      const modal = document.getElementById('modalSquareOff');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentSquareOffToken = null;
+    }
+
+    function validateSquareOffInput() {
+      const val = (document.getElementById('squareOffConfirmInput').value || '').trim().toUpperCase();
+      const execBtn = document.getElementById('squareOffExecuteBtn');
+      execBtn.disabled = (val !== 'CONFIRM' && val !== 'CLOSE ALL');
+    }
+
+    async function executeSquareOffAll() {
+      if (!currentSquareOffToken) {
+        showToast('Confirmation token missing or expired. Re-open to refresh.', 'error');
+        return;
+      }
+      if (isSquareOffInFlight) return;
+
+      isSquareOffInFlight = true;
+      const execBtn = document.getElementById('squareOffExecuteBtn');
+      const cancelBtn = document.getElementById('squareOffCancelBtn');
+      const headerBtn = document.getElementById('btnHeaderSquareOff');
+      if (headerBtn) headerBtn.disabled = true;
+
+      execBtn.disabled = true;
+      execBtn.innerText = 'Liquidating All Positions...';
+      cancelBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/v1/positions/square-off/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            confirmation_token: currentSquareOffToken,
+            confirm_phrase: 'CONFIRM',
+            account_id: state.activeAccountId || 'GLOBAL',
+            order_type: 'MARKET',
+            reason: 'Dashboard emergency liquidations'
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || `Server returned status ${res.status}`);
+        }
+
+        // Show Results
+        document.getElementById('squareOffContent').classList.add('hidden');
+        const resultEl = document.getElementById('squareOffResult');
+        resultEl.classList.remove('hidden');
+
+        const badgeEl = document.getElementById('squareOffResultBadge');
+        if (data.status === 'SUCCESS' || data.failed_count === 0) {
+          badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500';
+          badgeEl.innerText = `${data.status} (${data.filled_count}/${data.total_positions} Filled)`;
+        } else if (data.partial_count > 0 || data.filled_count > 0) {
+          badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500';
+          badgeEl.innerText = `PARTIAL (${data.filled_count} filled, ${data.failed_count} failed)`;
+        } else {
+          badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500';
+          badgeEl.innerText = `FAILED (${data.failed_count} failed)`;
+        }
+
+        const resList = document.getElementById('squareOffResultList');
+        resList.innerHTML = '';
+        if (!data.orders || data.orders.length === 0) {
+          resList.innerHTML = '<div class="text-zinc-400 p-2 text-center">No positions to liquidate. All accounts clear.</div>';
+        } else {
+          data.orders.forEach(o => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between p-1.5 rounded bg-zinc-950 border border-zinc-800 text-[10px]';
+            const isFilled = o.status === 'FILLED';
+            const isPartial = o.status === 'PARTIAL';
+            const statColor = isFilled ? 'text-emerald-400 border-emerald-500/40 bg-emerald-950/40' : (isPartial ? 'text-amber-400 border-amber-500/40 bg-amber-950/40' : 'text-rose-400 border-rose-500/40 bg-rose-950/40');
+            row.innerHTML = `
+              <div class="flex items-center gap-1.5">
+                <span class="px-1 py-0.2 rounded border font-bold text-[9px] ${statColor}">${o.status}</span>
+                <span class="font-bold text-zinc-100">${o.symbol}</span>
+                <span class="text-zinc-500">${o.action}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-zinc-300">${o.filled_quantity}/${o.quantity} @ ₹${o.price || 'MKT'}</span>
+                ${o.error_message ? `<div class="text-rose-400 text-[9px]">${o.error_message}</div>` : ''}
+              </div>
+            `;
+            resList.appendChild(row);
+          });
+        }
+
+        execBtn.classList.add('hidden');
+        cancelBtn.disabled = false;
+        cancelBtn.innerText = 'Close';
+
+        // Update local UI state
+        state.strategies.forEach(s => s.status = 'Exited');
+        state.usedMargin = 0;
+        state.availMargin = 1000000 + state.dayMtm;
+        document.getElementById('headerAvailMargin').innerText = `₹${state.availMargin.toLocaleString('en-IN')}`;
+        document.getElementById('headerUsedMargin').innerText = `₹0`;
+        renderStrategies();
+        fetchFundsAndPositions();
+        fetchLatestOrders();
+
+        showToast(`Emergency Square-Off Complete: ${data.filled_count} filled, ${data.failed_count} failed`, data.failed_count === 0 ? 'success' : 'warning');
+      } catch (err) {
+        showToast(`Square-Off Failed: ${err.message}`, 'error');
+        execBtn.disabled = false;
+        execBtn.innerText = 'Retry Square-Off All';
+        cancelBtn.disabled = false;
+      } finally {
+        isSquareOffInFlight = false;
+        if (headerBtn) headerBtn.disabled = false;
+        currentSquareOffToken = null;
+      }
     }
 
     // Toast helper

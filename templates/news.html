@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Market News - OpenAlgo{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header d-flex justify-content-between align-items-start px-4 py-3 mb-4">
+    <div class="page-header-text">
+      <h2 class="page-title d-flex align-items-center">
+        Market News
+        <span class="badge bg-success-subtle text-success ms-2">Live Feed</span>
+      </h2>
+      <p class="page-subtitle text-muted mb-0">
+        Real-time market intelligence, multi-source event clusters, and algorithmic trending ranking
+      </p>
+    </div>
+    <div class="page-header-actions d-flex align-items-center gap-2">
+      <input 
+        type="text" 
+        id="oa-news-search-input" 
+        class="form-control form-control-sm" 
+        placeholder="Search news, stocks, RBI, Fed..." 
+        style="width: 240px;" 
+      />
+      <button type="button" class="btn btn-outline-secondary btn-page-action" id="oa-news-refresh-btn">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Pill Row (Sitting below .page-header with px-4 pb-3 and no top margin collision) -->
+  <div class="d-flex overflow-auto gap-2 px-4 pb-3" id="oa-news-tabs-bar" style="border-bottom: 1px solid var(--bs-border-color, #27272a); margin-top: 0;">
+    <button class="btn btn-sm btn-outline-secondary active" data-tab="All">All</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Trending">Trending</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Breaking">Breaking</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="India">India</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Global">Global</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Stocks">Stocks</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Indices">Indices</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Sectors">Sectors</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Commodities">Commodities</button>
+    <button class="btn btn-sm btn-outline-secondary" data-tab="Economy">Economy</button>
+  </div>
+
+  <!-- News Content -->
+  <div class="news-content mt-3">
+    <!-- News articles and sidebar -->
+  </div>
+</div>
+{% endblock %}

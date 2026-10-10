@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connect Dhan Account | OpenAlgo</title>
-  <meta name="description" content="Connect your Dhan trading account seamlessly with OpenAlgo.">
+  <title>Connect Broker Account | OpenAlgo</title>
+  <meta name="description" content="Connect and switch multiple broker accounts seamlessly on OpenAlgo with full data isolation.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,186 +12,329 @@
   <link rel="stylesheet" href="broker.css">
 </head>
 <body>
-  <div class="broker-page-container">
-    <div class="broker-layout">
-      
-      <!-- LEFT COLUMN: Information & Help Panel -->
-      <aside class="left-panel">
-        <div class="brand-header">
-          <div class="brand-badge">OpenAlgo Engine</div>
+
+  <div class="hub-container">
+    
+    <!-- Top Header Bar -->
+    <header class="hub-header">
+      <div class="brand-group">
+        <div class="brand-logo-badge">OA</div>
+        <div class="brand-titles">
+          <h1>OpenAlgo <span class="badge-tag">Multi-Broker Hub</span></h1>
+          <p>Connect and switch broker accounts with isolated session encryption</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="active-session-indicator" class="active-pill hidden">
+          <span class="active-pill-dot"></span>
+          <span id="active-session-text">Live: Dhan</span>
+        </div>
+        <a href="/dashboard" class="btn-dashboard-link" id="btn-go-dashboard">
+          <span>Go to Dashboard</span>
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Layout Grid -->
+    <div class="hub-grid">
+
+      <!-- LEFT SIDEBAR: Connected Accounts & Info -->
+      <aside class="sidebar-panel">
+
+        <!-- Connected Accounts Card -->
+        <div class="hub-card">
+          <div class="card-heading">
+            <span>Connected Accounts</span>
+            <span id="accounts-count-badge" class="badge-tag" style="background:#27272a;color:#a1a1aa;border:none;">0</span>
+          </div>
+
+          <div id="connected-accounts-container" class="accounts-list">
+            <!-- Dynamically populated via broker.js -->
+            <div style="padding:16px 10px;text-align:center;color:var(--text-subtle);font-size:12px;" id="no-accounts-placeholder">
+              No accounts connected yet. Choose a broker to link your first account.
+            </div>
+          </div>
         </div>
 
-        <h1 class="main-title">Connect Your <span class="highlight-text">Dhan</span> Account</h1>
-        
-        <p class="subtitle">
-          Link your Dhan trading account to start executing algorithmic trades seamlessly through OpenAlgo.
-        </p>
-
-        <div class="help-card">
-          <div class="help-card-header">
-            <div class="help-icon-wrapper">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <!-- Security & Architecture Info Card -->
+        <div class="hub-card">
+          <div class="card-heading">
+            <span>Isolated Architecture</span>
+          </div>
+          <ul class="feature-list">
+            <li>
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
+              <span><strong>Account Isolation:</strong> Each broker session is independently stored with symmetric Fernet encryption.</span>
+            </li>
+            <li>
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+              <span><strong>Instant Switching:</strong> Switch between Dhan, Zerodha, and other brokers in 1 click without losing session auth.</span>
+            </li>
+            <li>
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span><strong>Zero Mock Data:</strong> Direct communication with live broker endpoints for orders, positions, and margin.</span>
+            </li>
+          </ul>
+        </div>
+
+      </aside>
+
+      <!-- RIGHT MAIN PANEL: Broker Selection & Auth Form -->
+      <main class="main-panel">
+
+        <!-- 1. Choose Your Broker Section -->
+        <div class="hub-card">
+          <h2 class="section-title">Choose Your Broker</h2>
+          <p class="section-desc">Select an installed broker to authenticate and add to your active accounts.</p>
+
+          <div id="broker-picker-container" class="broker-picker-grid">
+            <!-- Dhan -->
+            <div class="broker-tile selected" data-broker="dhan" id="tile-dhan">
+              <div class="tile-icon dhan">D</div>
+              <span class="tile-name">Dhan</span>
+              <span class="tile-badge" style="color:#60a5fa;">Direct TOTP</span>
             </div>
-            <div class="help-card-text">
-              <h3 class="help-title">Direct Authentication</h3>
-              <p class="help-desc">No complicated developer app setup. Authenticate directly with your Client ID, PIN, and TOTP.</p>
+
+            <!-- Zerodha -->
+            <div class="broker-tile" data-broker="zerodha" id="tile-zerodha">
+              <div class="tile-icon zerodha">Z</div>
+              <span class="tile-name">Zerodha Kite</span>
+              <span class="tile-badge" style="color:#fb923c;">OAuth / API</span>
+            </div>
+
+            <!-- Angel One -->
+            <div class="broker-tile" data-broker="angel" id="tile-angel">
+              <div class="tile-icon angel">A</div>
+              <span class="tile-name">Angel One</span>
+              <span class="tile-badge">SmartAPI</span>
+            </div>
+
+            <!-- Fyers -->
+            <div class="broker-tile" data-broker="fyers" id="tile-fyers">
+              <div class="tile-icon fyers">F</div>
+              <span class="tile-name">Fyers</span>
+              <span class="tile-badge">API v3</span>
+            </div>
+
+            <!-- Upstox -->
+            <div class="broker-tile" data-broker="upstox" id="tile-upstox">
+              <div class="tile-icon upstox">U</div>
+              <span class="tile-name">Upstox</span>
+              <span class="tile-badge">OAuth</span>
+            </div>
+
+            <!-- Flattrade -->
+            <div class="broker-tile" data-broker="flattrade" id="tile-flattrade">
+              <div class="tile-icon flattrade">FL</div>
+              <span class="tile-name">Flattrade</span>
+              <span class="tile-badge">Wall</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Dynamic Broker Authentication Card -->
+        <div class="auth-form-card" id="auth-form-card">
+          
+          <div class="auth-form-header">
+            <div class="active-broker-avatar" id="current-avatar">D</div>
+            <div class="active-broker-meta">
+              <h3 id="current-broker-title">Dhan Direct Authentication</h3>
+              <p id="current-broker-subtitle">Direct Client ID, PIN, and TOTP authentication</p>
             </div>
           </div>
 
-          <a href="https://docs.openalgo.in" target="_blank" rel="noopener noreferrer" class="btn-documentation" id="btn-docs-link">
-            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-            <span>Documentation</span>
-            <svg class="icon-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-          </a>
-        </div>
+          <!-- Status Message Banner -->
+          <div id="status-message-banner" class="status-banner hidden" style="margin-bottom:16px;">
+            <span id="status-banner-text"></span>
+          </div>
 
-        <div class="system-status-indicator">
-          <span class="status-dot online"></span>
-          <span class="status-text">Server Status: <strong id="server-status-label">Ready (Port 5000)</strong></span>
-        </div>
-      </aside>
-
-      <!-- RIGHT COLUMN: Direct Dhan Authentication Form -->
-      <main class="right-panel">
-        <div class="broker-card">
-          
-          <form id="dhan-auth-form" class="credentials-form" onsubmit="return false;">
-            
-            <div class="form-header">
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <div style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #4f46e5); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 20px; box-shadow: 0 4px 10px rgba(37,99,235,0.3);">
-                  D
-                </div>
-                <div>
-                  <h2 class="form-title" style="margin: 0;">Dhan Authentication</h2>
-                  <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Enter your Dhan account credentials to connect</p>
-                </div>
+          <!-- A. DHAN FORM -->
+          <form id="dhan-auth-form" class="fields-stack" onsubmit="return false;">
+            <div class="field-group">
+              <label class="field-label" for="dhanClientId">
+                <span>Client ID <span class="req-star">*</span></span>
+              </label>
+              <div class="input-container">
+                <input 
+                  type="text" 
+                  id="dhanClientId" 
+                  class="form-input" 
+                  placeholder="Enter 10-digit Dhan Client ID (e.g. 1113284554)" 
+                  required
+                />
               </div>
+              <span class="field-hint">Your confidential 10-digit Dhan Client ID.</span>
             </div>
 
-            <div class="fields-container">
-              
-              <!-- 1. Client ID Field -->
-              <div class="field-group">
-                <div class="field-label-row">
-                  <label class="field-label" for="dhanClientId">
-                    Client ID <span class="required-indicator">*</span>
-                  </label>
-                </div>
-                <div class="input-wrapper">
-                  <input 
-                    type="text" 
-                    id="dhanClientId" 
-                    name="dhanClientId" 
-                    class="form-input" 
-                    placeholder="Enter Dhan Client ID (e.g. 1113284554)" 
-                    autocomplete="username" 
-                    required 
-                  />
-                </div>
-                <span class="field-description">Your 10-digit Dhan Client ID.</span>
+            <div class="field-group">
+              <label class="field-label" for="pin">
+                <span>Dhan PIN <span class="req-star">*</span></span>
+              </label>
+              <div class="input-container">
+                <input 
+                  type="password" 
+                  id="pin" 
+                  class="form-input" 
+                  placeholder="Enter 6-digit Dhan PIN" 
+                  maxlength="6"
+                  required
+                />
+                <button type="button" class="btn-toggle-eye" id="btn-toggle-pin" title="Toggle PIN visibility">
+                  <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
               </div>
-
-              <!-- 2. PIN Field -->
-              <div class="field-group">
-                <div class="field-label-row">
-                  <label class="field-label" for="pin">
-                    Dhan PIN <span class="required-indicator">*</span>
-                  </label>
-                </div>
-                <div class="input-wrapper">
-                  <input 
-                    type="password" 
-                    id="pin" 
-                    name="pin" 
-                    class="form-input" 
-                    placeholder="Enter 6-digit Dhan PIN" 
-                    autocomplete="current-password" 
-                    maxlength="6" 
-                    required 
-                    style="letter-spacing: 2px;"
-                  />
-                  <button type="button" class="btn-toggle-visibility" id="btn-toggle-pin" title="Toggle PIN Visibility">
-                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                </div>
-                <span class="field-description">Your confidential 6-digit account PIN.</span>
-              </div>
-
-              <!-- 3. TOTP Field -->
-              <div class="field-group">
-                <div class="field-label-row">
-                  <label class="field-label" for="totp">
-                    Authenticator TOTP <span class="required-indicator">*</span>
-                  </label>
-                </div>
-                <div class="input-wrapper">
-                  <input 
-                    type="text" 
-                    id="totp" 
-                    name="totp" 
-                    class="form-input" 
-                    placeholder="Enter 6-digit TOTP code" 
-                    autocomplete="one-time-code" 
-                    inputmode="numeric" 
-                    maxlength="6" 
-                    required 
-                    style="letter-spacing: 2px;"
-                  />
-                </div>
-                <span class="field-description">6-digit code from Google Authenticator, Authy, or your 2FA app.</span>
-              </div>
-
+              <span class="field-hint">Your 6-digit numeric login PIN.</span>
             </div>
 
-            <!-- Notice Box -->
-            <div class="alert-notice-box" style="margin-top: 14px;">
-              <div class="alert-icon-wrapper">
-                <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+            <div class="field-group">
+              <label class="field-label" for="totp">
+                <span>Authenticator TOTP <span class="req-star">*</span></span>
+              </label>
+              <div class="input-container">
+                <input 
+                  type="text" 
+                  id="totp" 
+                  class="form-input" 
+                  placeholder="Enter 6-digit TOTP code" 
+                  maxlength="6"
+                  inputmode="numeric"
+                  required
+                />
               </div>
-              <p class="alert-notice-text">
-                Direct authentication generates an encrypted session token and automatically activates live trading feeds.
-              </p>
+              <span class="field-hint">Current 6-digit code from your 2FA authenticator app.</span>
             </div>
 
-            <!-- Message Alert Banner -->
-            <div id="status-message-banner" class="status-banner hidden">
-              <span class="status-message" id="status-banner-text"></span>
+            <div class="notice-box">
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>Generates an encrypted session token and automatically connects real-time data feeds.</span>
             </div>
 
-            <!-- Action Button -->
-            <div class="action-buttons-group" style="margin-top: 20px;">
-              <button type="submit" id="btn-save-connect" class="btn-primary" style="width: 100%; justify-content: center;">
-                <span class="btn-spinner hidden" id="save-spinner"></span>
-                <span id="save-btn-text">Connect Account</span>
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14"></path>
-                  <path d="m12 5 7 7-7 7"></path>
-                </svg>
-              </button>
+            <button type="submit" id="btn-submit-dhan" class="btn-primary" style="margin-top:8px;">
+              <span class="spinner hidden" id="dhan-spinner"></span>
+              <span id="dhan-btn-text">Connect Dhan Account</span>
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </form>
+
+          <!-- B. ZERODHA KITE FORM -->
+          <form id="zerodha-auth-form" class="fields-stack hidden" onsubmit="return false;">
+            <div class="field-group">
+              <label class="field-label" for="kiteApiKey">
+                <span>Kite API Key <span class="req-star">*</span></span>
+              </label>
+              <div class="input-container">
+                <input 
+                  type="text" 
+                  id="kiteApiKey" 
+                  class="form-input" 
+                  placeholder="Enter Kite Connect API Key" 
+                  required
+                />
+              </div>
+              <span class="field-hint">From your Zerodha Kite Connect Developer Console.</span>
             </div>
 
+            <div class="field-group">
+              <label class="field-label" for="kiteApiSecret">
+                <span>Kite API Secret <span class="req-star">*</span></span>
+              </label>
+              <div class="input-container">
+                <input 
+                  type="password" 
+                  id="kiteApiSecret" 
+                  class="form-input" 
+                  placeholder="Enter Kite Connect API Secret" 
+                  required
+                />
+                <button type="button" class="btn-toggle-eye" id="btn-toggle-kite-secret" title="Toggle Secret visibility">
+                  <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <span class="field-hint">Confidential API Secret for SHA256 checksum generation.</span>
+            </div>
+
+            <!-- Optional Request Token field if user is completing OAuth redirect -->
+            <div class="field-group" style="margin-top:4px;">
+              <label class="field-label" for="kiteRequestToken">
+                <span>Request Token <span style="font-size:11px;color:var(--text-muted);">(optional, if redirect already completed)</span></span>
+              </label>
+              <div class="input-container">
+                <input 
+                  type="text" 
+                  id="kiteRequestToken" 
+                  class="form-input" 
+                  placeholder="Paste request_token from callback URL" 
+                />
+              </div>
+              <span class="field-hint">If you already completed Kite login, paste the token from the redirect URL.</span>
+            </div>
+
+            <div class="notice-box">
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>Zerodha uses Kite Connect OAuth. Click below to open Kite Login and authorize your account.</span>
+            </div>
+
+            <button type="button" id="btn-submit-zerodha-oauth" class="btn-primary" style="margin-top:8px;">
+              <span class="spinner hidden" id="zerodha-spinner"></span>
+              <span id="zerodha-btn-text">Authorize with Kite Connect</span>
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+              </svg>
+            </button>
+
+            <button type="button" id="btn-submit-zerodha-token" class="btn-secondary">
+              <span>Exchange Request Token Directly</span>
+            </button>
+          </form>
+
+          <!-- C. GENERIC BROKER FORM -->
+          <form id="generic-auth-form" class="fields-stack hidden" onsubmit="return false;">
+            <div id="generic-fields-container" class="fields-stack">
+              <!-- Dynamically rendered fields -->
+            </div>
+
+            <div class="notice-box" id="generic-notice-box">
+              <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span id="generic-notice-text">Authentication credentials will be securely encrypted.</span>
+            </div>
+
+            <button type="submit" id="btn-submit-generic" class="btn-primary" style="margin-top:8px;">
+              <span class="spinner hidden" id="generic-spinner"></span>
+              <span id="generic-btn-text">Connect Account</span>
+            </button>
           </form>
 
         </div>
+
       </main>
 
     </div>
+
   </div>
 
   <script src="/static/js/broker.js"></script>

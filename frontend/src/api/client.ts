@@ -13,7 +13,8 @@ export function getStoredAccessToken(): string {
 
 // Helper to fetch CSRF token
 export async function fetchCSRFToken(): Promise<string> {
-  const response = await fetch('/auth/csrf-token', {
+  const url = API_BASE_URL ? `${API_BASE_URL}/auth/csrf-token` : '/auth/csrf-token'
+  const response = await fetch(url, {
     credentials: 'include',
   })
   const data = await response.json()
@@ -172,22 +173,30 @@ webClient.interceptors.response.use(
   }
 )
 
-// Install global fetch interceptor in browser environment so all outgoing fetch calls include access-token
+// Install global fetch interceptor in browser environment so all outgoing fetch calls include access-token and base URL
 if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
   const originalFetch = window.fetch.bind(window)
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    let targetInput = input
+    if (API_BASE_URL && typeof input === 'string' && input.startsWith('/') && !input.startsWith('//')) {
+      targetInput = `${API_BASE_URL}${input}`
+    }
+
     const token = getStoredAccessToken()
+    const options: RequestInit = {
+      credentials: 'include',
+      ...init,
+    }
+
     if (token) {
-      const headers = new Headers(init?.headers || {})
+      const headers = new Headers(options.headers || {})
       if (!headers.has('access-token')) {
         headers.set('access-token', token)
       }
-      init = {
-        ...init,
-        headers,
-      }
+      options.headers = headers
     }
-    return originalFetch(input, init)
+
+    return originalFetch(targetInput, options)
   }
 }
 

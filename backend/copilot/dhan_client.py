@@ -99,7 +99,7 @@ class DhanMarketDataClient:
         access_token: Optional[str] = None,
         rate_limit: float = 10.0,
     ):
-        self.client_id = client_id or os.getenv("DHAN_CLIENT_ID", "1113284554")
+        self.client_id = client_id or os.getenv("DHAN_CLIENT_ID", "")
         self.access_token = access_token or os.getenv("DHAN_ACCESS_TOKEN", "")
         self.rate_limiter = TokenBucketRateLimiter(rate=rate_limit, capacity=rate_limit)
         self.cache = InMemoryTTLCache(default_ttl=2.0)
@@ -107,7 +107,7 @@ class DhanMarketDataClient:
 
     def _get_active_auth(self) -> tuple[str, str]:
         """Fetch credentials from instance or OpenAlgo database session vault."""
-        client_id = self.client_id or os.getenv("DHAN_CLIENT_ID", "1113284554")
+        client_id = self.client_id or os.getenv("DHAN_CLIENT_ID", "")
         token = self.access_token or os.getenv("DHAN_ACCESS_TOKEN", "")
 
         if not token:

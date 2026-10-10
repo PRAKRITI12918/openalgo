@@ -33,14 +33,28 @@ def test_auth_token(auth_token):
         res.status = res.status_code
         response_data = json.loads(res.text)
 
+        error_type = str(response_data.get("errorType") or "")
+        status = str(response_data.get("status") or "").lower()
+
         # Check for authentication errors
-        if response_data.get("errorType") == "Invalid_Authentication":
-            error_msg = response_data.get("errorMessage", "Invalid authentication token")
+        if (
+            res.status_code == 401
+            or "invalid_authentication" in error_type.lower()
+            or "auth" in error_type.lower()
+            or "token" in error_type.lower()
+            or "session" in error_type.lower()
+        ):
+            error_msg = response_data.get("errorMessage") or response_data.get("message") or "Invalid authentication token"
             return False, error_msg
 
         # Check for other error types
-        if response_data.get("status") == "error":
-            error_msg = response_data.get("errors", "Unknown error occurred")
+        if error_type or status in {"error", "failed", "failure"} or res.status_code >= 400:
+            error_msg = (
+                response_data.get("errors")
+                or response_data.get("errorMessage")
+                or response_data.get("message")
+                or f"API error (HTTP {res.status_code})"
+            )
             return False, str(error_msg)
 
         # If we get here, authentication is valid
@@ -68,57 +82,77 @@ def get_margin_data(auth_token):
     res = client.get(url, headers=headers)
     # Add status attribute for compatibility with existing codebase
     res.status = res.status_code
-    margin_data = json.loads(res.text)
+    try:
+        margin_data = json.loads(res.text)
+    except Exception as e:
+        logger.error(f"Failed to parse Dhan margin data response: {res.text}")
+        raise ValueError(f"Failed to parse Dhan API response (HTTP {res.status_code}): {e}")
 
-    logger.info(f"Funds Details: {margin_data}")
+    logger.info(f"Dhan /v2/fundlimit raw response: {margin_data}")
+
+    error_type = str(margin_data.get("errorType") or "")
+    status = str(margin_data.get("status") or "").lower()
 
     # Check for authentication errors first
-    if margin_data.get("errorType") == "Invalid_Authentication":
-        logger.error(f"Authentication error: {margin_data.get('errorMessage')}")
-        return {
-            "availablecash": "0.00",
-            "collateral": "0.00",
-            "m2munrealized": "0.00",
-            "m2mrealized": "0.00",
-            "utiliseddebits": "0.00",
-        }
+    is_auth_error = (
+        res.status_code == 401
+        or "invalid_authentication" in error_type.lower()
+        or "token" in error_type.lower()
+        or "auth" in error_type.lower()
+        or "session" in error_type.lower()
+    )
+    if is_auth_error:
+        error_msg = margin_data.get("errorMessage") or margin_data.get("message") or "Invalid authentication token or Dhan session expired"
+        logger.error(f"Dhan authentication error: {error_msg}")
+        raise PermissionError(f"Dhan authentication error: {error_msg}")
 
-    if margin_data.get("status") == "error":
-        # Log the error or return an empty dictionary to indicate failure
-        logger.error(f"Error fetching margin data: {margin_data.get('errors')}")
-        return {
-            "availablecash": "0.00",
-            "collateral": "0.00",
-            "m2munrealized": "0.00",
-            "m2mrealized": "0.00",
-            "utiliseddebits": "0.00",
-        }
+    if error_type or status in {"error", "failed", "failure"} or res.status_code >= 400:
+        error_msg = (
+            margin_data.get("errors")
+            or margin_data.get("errorMessage")
+            or margin_data.get("message")
+            or f"HTTP {res.status_code}"
+        )
+        logger.error(f"Error fetching Dhan margin data: [{error_type or status}] {error_msg}")
+        raise ValueError(f"Dhan API error: {error_msg}")
 
     try:
         position_book = get_positions(auth_token)
 
-        logger.info(f"Positionbook: {position_book}")
+        logger.info(f"Dhan /v2/positions raw response: {position_book}")
 
         # Check if position_book is an error response
-        if isinstance(position_book, dict) and position_book.get("errorType"):
+        if isinstance(position_book, dict) and (
+            position_book.get("errorType") or str(position_book.get("status", "")).lower() in {"error", "failed", "failure"}
+        ):
+            pos_err_type = str(position_book.get("errorType") or "")
+            pos_is_auth_error = (
+                "invalid_authentication" in pos_err_type.lower()
+                or "token" in pos_err_type.lower()
+                or "auth" in pos_err_type.lower()
+                or "session" in pos_err_type.lower()
+            )
+            if pos_is_auth_error:
+                error_msg = position_book.get("errorMessage") or position_book.get("message") or "Dhan session expired"
+                logger.error(f"Dhan positions authentication error: {error_msg}")
+                raise PermissionError(f"Dhan authentication error: {error_msg}")
+
             logger.error(
-                f"Error getting positions: {position_book.get('errorMessage', 'Unknown error')}"
+                f"Error getting positions: [{pos_err_type}] {position_book.get('errorMessage') or position_book.get('errors') or 'Unknown error'}"
             )
             total_realised = 0
             total_unrealised = 0
         else:
             # If successful, process the positions
-            # position_book = map_position_data(position_book)
-
             def sum_realised_unrealised(position_book):
                 total_realised = 0
                 total_unrealised = 0
                 if isinstance(position_book, list):
                     total_realised = sum(
-                        position.get("realizedProfit", 0) for position in position_book
+                        float(position.get("realizedProfit", 0) or 0) for position in position_book
                     )
                     total_unrealised = sum(
-                        position.get("unrealizedProfit", 0) for position in position_book
+                        float(position.get("unrealizedProfit", 0) or 0) for position in position_book
                     )
                 return total_realised, total_unrealised
 
@@ -129,19 +163,30 @@ def get_margin_data(auth_token):
         # against the separately reported "collateral" field below, same
         # class of bug as GitHub issue #1582. Subtract collateralAmount to
         # get the actual cash-only balance.
-        available_cash = (margin_data.get("availabelBalance") or 0) - (
-            margin_data.get("collateralAmount") or 0
-        )
+        raw_avail = (
+            margin_data.get("availabelBalance")
+            if "availabelBalance" in margin_data
+            else margin_data.get("availableBalance", 0)
+        ) or 0
+        collateral = margin_data.get("collateralAmount") or 0
+        available_cash = float(raw_avail) - float(collateral)
+        utilized = float(margin_data.get("utilizedAmount") or 0)
 
         # Construct and return the processed margin data with null checks
         processed_margin_data = {
             "availablecash": f"{available_cash:.2f}",
-            "collateral": "{:.2f}".format(margin_data.get("collateralAmount") or 0),
-            "m2munrealized": f"{total_unrealised or 0:.2f}",
-            "m2mrealized": f"{total_realised or 0:.2f}",
-            "utiliseddebits": "{:.2f}".format(margin_data.get("utilizedAmount") or 0),
+            "collateral": f"{float(collateral):.2f}",
+            "m2munrealized": f"{total_unrealised:.2f}",
+            "m2mrealized": f"{total_realised:.2f}",
+            "utiliseddebits": f"{utilized:.2f}",
         }
+        logger.info(f"Dhan processed margin data: {processed_margin_data}")
         return processed_margin_data
-    except KeyError:
-        # Return an empty dictionary in case of unexpected data structure
-        return {}
+    except (PermissionError, ValueError):
+        raise
+    except KeyError as e:
+        logger.error(f"KeyError in processing Dhan margin data: {e}")
+        raise ValueError(f"Unexpected Dhan margin data structure: missing key {e}")
+    except Exception as e:
+        logger.exception(f"Unexpected error processing Dhan margin data: {e}")
+        raise ValueError(f"Error processing Dhan margin data: {e}")
